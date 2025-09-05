@@ -29,6 +29,8 @@ const LoginPage = () => {
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
     
+    // logo图片已通过HTML预加载，无需额外处理
+    
     return () => {
       window.removeEventListener('settings-changed' as any, settingsHandler)
     }
@@ -91,8 +93,14 @@ const LoginPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-8 border border-white/40">
           <div className="text-center">
-            <div className="logo-preload">
-              <img src="/image/logo.png" alt="Logo" className="mx-auto h-20 w-20 object-cover rounded-full" />
+            <div className="flex justify-center">
+              <img 
+                src="/image/logo.png" 
+                alt="Logo" 
+                className="mx-auto h-20 w-20 object-cover rounded-full"
+                loading="eager"
+                fetchpriority="high"
+              />
             </div>
             <h2 className="mt-4 text-3xl font-bold text-gray-900">科技刘笔记</h2>
           </div>
