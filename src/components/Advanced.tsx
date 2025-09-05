@@ -26,6 +26,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showOptions, setShowOptions] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
     useRegex: false,
     caseSensitive: false,
@@ -103,6 +104,46 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     debouncedSearch(searchTerm, searchOptions)
   }, [searchTerm, searchOptions, debouncedSearch])
 
+  // 生成搜索建议
+  const getSuggestions = useMemo(() => {
+    if (!searchTerm.trim() || searchTerm.length < 2) return []
+    
+    const suggestions = new Set<string>()
+    const searchText = searchTerm.toLowerCase()
+    
+    notes.forEach(note => {
+      // 标题建议
+      if (note.title && note.title.toLowerCase().includes(searchText)) {
+        suggestions.add(note.title)
+      }
+      
+      // 标签建议
+      if (note.tags) {
+        note.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(searchText)) {
+            suggestions.add(tag)
+          }
+        })
+      }
+      
+      // 内容关键词建议（提取前几个词）
+      if (note.content) {
+        const words = note.content.split(/\s+/).filter(word => 
+          word.length > 2 && word.toLowerCase().includes(searchText)
+        )
+        words.slice(0, 3).forEach(word => suggestions.add(word))
+      }
+    })
+    
+    return Array.from(suggestions).slice(0, 8) // 最多显示8个建议
+  }, [searchTerm, notes])
+
+  // 处理建议点击
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion)
+    setShowSuggestions(false)
+  }
+
   return (
     <div className={`relative ${className}`}>
       {/* 搜索输入框 */}
@@ -113,6 +154,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setShowSuggestions(true)}
           className="w-full pl-10 pr-12 py-2 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
         />
         
@@ -210,11 +252,34 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         </div>
       )}
 
+      {/* 搜索建议面板 */}
+      {showSuggestions && getSuggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[100]">
+          <div className="p-2">
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {getSuggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-900"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  <Search className="h-3 w-3 mr-2 text-gray-400" />
+                  <span className="truncate">{suggestion}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 点击外部关闭面板 */}
-      {showOptions && (
+      {(showOptions || showSuggestions) && (
         <div
           className="fixed inset-0 z-40"
-          onClick={() => setShowOptions(false)}
+          onClick={() => {
+            setShowOptions(false)
+            setShowSuggestions(false)
+          }}
         />
       )}
     </div>
