@@ -47,3 +47,4 @@ INSERT OR IGNORE INTO settings (key, value, updated_at)
 VALUES ('password_set', 'false', datetime('now'));
 ```
 
+## .github/workflows/backup.yml每日0点自动备份笔记
