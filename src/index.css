@@ -1,0 +1,338 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 简单的 Logo 预加载 */
+@layer base {
+  /* 预加载 logo 图片到浏览器缓存 */
+  .logo-preload::before {
+    content: '';
+    background-image: url('/image/logo.png');
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@layer base {
+  html, body, h1, h2, h3, h4, h5, h6, p,
+  button, input, select, textarea,
+  a, span, div, label, small, strong, em,
+  table, th, td, ul, ol, li {
+    font-family: var(--editor-font-family, 'Segoe UI', system-ui, sans-serif);
+    font-size: var(--global-font-size, 14px);
+    line-height: var(--global-line-height, 1.6);
+  }
+  
+  /* 确保按钮文字也使用全局字体大小 */
+  button, input[type="button"], input[type="submit"], input[type="reset"] {
+    font-size: var(--global-font-size, 14px) !important;
+  }
+  
+  /* 确保所有文本元素都使用全局字体大小 */
+  * {
+    font-size: inherit;
+  }
+  
+  /* 应用背景图设置 */
+  body {
+    /* 默认背景图，立即显示 */
+    background-image: url('/image/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    /* 用户自定义背景图覆盖默认背景 */
+    background-image: var(--app-bg-image, url('/image/background.png'));
+  }
+  
+  /* 移除CSS预加载，使用HTML标准预加载 */
+}
+
+@layer components {
+  .prose {
+    @apply text-gray-900 leading-relaxed;
+  }
+  
+  .prose h1 {
+    @apply text-3xl font-bold mb-4 text-gray-900;
+  }
+  
+  .prose h2 {
+    @apply text-2xl font-semibold mb-3 text-gray-800;
+  }
+  
+  .prose h3 {
+    @apply text-xl font-semibold mb-2 text-gray-800;
+  }
+  
+  .prose p {
+    @apply mb-4;
+  }
+  
+  .prose code {
+    @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono;
+  }
+  
+  .prose pre {
+    @apply bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+  }
+  
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
+  }
+  
+  .prose ul, .prose ol {
+    @apply mb-4 pl-6;
+  }
+  
+  .prose li {
+    @apply mb-1;
+  }
+  
+  .prose strong {
+    @apply font-semibold;
+  }
+  
+  .prose em {
+    @apply italic;
+  }
+  
+  .prose a {
+    @apply text-blue-600 hover:text-blue-800 underline;
+  }
+  
+  .prose img {
+    @apply max-w-full h-auto rounded-lg shadow-sm mb-4;
+  }
+  
+  .prose table {
+    @apply w-full border-collapse border border-gray-300 mb-4;
+  }
+  
+  .prose th, .prose td {
+    @apply border border-gray-300 px-4 py-2 text-left;
+  }
+  
+  .prose th {
+    @apply bg-gray-100 font-semibold;
+  }
+}
+
+/* EasyMDE 编辑器基础样式 */
+@layer utilities {
+  /* 确保编辑器容器有正确的尺寸 */
+  .EasyMDEContainer {
+    @apply w-full;
+  }
+  
+  /* 修复编辑器文本区域的光标问题 */
+  .EasyMDEContainer .CodeMirror {
+    @apply min-h-[400px] border-0;
+  }
+  
+  /* 确保光标可见 */
+  .EasyMDEContainer .CodeMirror-cursor {
+    @apply border-l-2 border-gray-900;
+  }
+  
+  /* 确保编辑器状态栏正常显示 */
+  .EasyMDEContainer .editor-statusbar {
+    @apply border-gray-300 bg-gray-50 text-gray-600;
+  }
+  
+  /* 修复编辑器在暗色主题下的显示问题 */
+  .EasyMDEContainer .CodeMirror.CodeMirror-fullscreen {
+    @apply z-50;
+  }
+}
+
+/* 全局强制修复 EasyMDE 工具栏图标问题 */
+html body .editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px !important;
+}
+
+html body .editor-toolbar button,
+html body .editor-toolbar a {
+  color: #000000 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  margin: 2px !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html body .editor-toolbar button:hover,
+html body .editor-toolbar a:hover {
+  background: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  color: #000000 !important;
+}
+
+html body .editor-toolbar button.active,
+html body .editor-toolbar a.active {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+}
+
+html body .editor-toolbar button.separator,
+html body .editor-toolbar a.separator {
+  border: none !important;
+  background: #d1d5db !important;
+  width: 1px !important;
+  height: 20px !important;
+  margin: 8px 4px !important;
+  padding: 0 !important;
+}
+
+html body .editor-toolbar button i,
+html body .editor-toolbar button span,
+html body .editor-toolbar a i,
+html body .editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+html body .editor-toolbar * {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* 强制覆盖所有可能的样式 - 使用最高优先级 */
+.editor-toolbar,
+.editor-toolbar *,
+.editor-toolbar button,
+.editor-toolbar button *,
+.editor-toolbar a,
+.editor-toolbar a * {
+  color: #000000 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 工具栏容器强制样式 */
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+/* 工具栏按钮强制样式 */
+.editor-toolbar button {
+  color: #000000 !important;
+  background: transparent !important;
+}
+
+/* 工具栏图标强制样式 */
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* 使用!important覆盖所有可能的样式 */
+.editor-toolbar,
+.editor-toolbar * {
+  color: #000000 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.editor-toolbar button,
+.editor-toolbar a {
+  color: #000000 !important;
+  background: transparent !important;
+}
+
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* 强制覆盖 EasyMDE 默认样式 */
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px !important;
+}
+
+.editor-toolbar button,
+.editor-toolbar a {
+  color: #000000 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  margin: 2px !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.editor-toolbar button:hover,
+.editor-toolbar a:hover {
+  background: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  color: #000000 !important;
+}
+
+.editor-toolbar button.active,
+.editor-toolbar a.active {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.editor-toolbar button.separator,
+.editor-toolbar a.separator {
+  border: none !important;
+  background: #d1d5db !important;
+  width: 1px !important;
+  height: 20px !important;
+  margin: 8px 4px !important;
+  padding: 0 !important;
+}
+
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.editor-toolbar * {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
