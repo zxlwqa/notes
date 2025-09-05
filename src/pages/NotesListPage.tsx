@@ -55,6 +55,7 @@ const NotesListPage: React.FC = () => {
   const [displayTitle, setDisplayTitle] = useState('')
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [draggedTag, setDraggedTag] = useState<string | null>(null)
+  const [tagOrder, setTagOrder] = useState<string[]>([])
   // 记录页面首次加载时是否已有缓存，用于避免刷新后骨架闪烁
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
@@ -91,6 +92,20 @@ const NotesListPage: React.FC = () => {
       } catch {}
     }
     loadSettingsTitle()
+    
+    // 加载标签排序
+    const loadTagOrder = () => {
+      try {
+        const saved = localStorage.getItem('tag-order')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed)) {
+            setTagOrder(parsed)
+          }
+        }
+      } catch {}
+    }
+    loadTagOrder()
     
     // 监听设置变更事件
     const settingsHandler = (event: SettingsChangedEvent) => {
@@ -327,7 +342,17 @@ const NotesListPage: React.FC = () => {
         note.tags.forEach((tag: string) => allTags.add(tag))
       }
     })
-    return Array.from(allTags).sort()
+    const tagsArray = Array.from(allTags)
+    
+    // 如果有自定义排序，使用自定义排序；否则使用字母排序
+    if (tagOrder.length > 0) {
+      // 合并自定义排序和新增标签
+      const orderedTags = [...tagOrder]
+      const newTags = tagsArray.filter(tag => !tagOrder.includes(tag))
+      return [...orderedTags, ...newTags.sort()]
+    }
+    
+    return tagsArray.sort()
   }
 
   // 笔记拖拽排序处理
@@ -389,9 +414,23 @@ const NotesListPage: React.FC = () => {
     const draggedTagName = e.dataTransfer.getData('text/plain')
     if (!draggedTagName || draggedTagName === targetTag) return
 
-    // 这里可以实现标签的重新排序逻辑
-    // 由于标签是从笔记中提取的，我们可以通过调整笔记的顺序来间接影响标签顺序
-    console.log(`拖拽标签 ${draggedTagName} 到 ${targetTag}`)
+    const currentTags = getAllTags()
+    const draggedIndex = currentTags.findIndex(tag => tag === draggedTagName)
+    const targetIndex = currentTags.findIndex(tag => tag === targetTag)
+    
+    if (draggedIndex === -1 || targetIndex === -1) return
+
+    const newTagOrder = [...currentTags]
+    const draggedTag = newTagOrder[draggedIndex]
+    newTagOrder.splice(draggedIndex, 1)
+    newTagOrder.splice(targetIndex, 0, draggedTag)
+
+    setTagOrder(newTagOrder)
+    
+    // 保存标签排序到localStorage
+    try {
+      localStorage.setItem('tag-order', JSON.stringify(newTagOrder))
+    } catch {}
   }
 
   // 不再整体早返回 Loading，改为页面内局部骨架占位，以保证即时渲染
