@@ -15,10 +15,14 @@ interface NoteCardProps {
   note: Note
   onView: (note: Note) => void
   onDelete: (noteId: string) => void
+  onDragStart?: (e: React.DragEvent, noteId: string) => void
+  onDragEnd?: (e: React.DragEvent) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDrop?: (e: React.DragEvent, noteId: string) => void
   className?: string
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, className }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart, onDragEnd, onDragOver, onDrop, className }) => {
   // 格式化日期
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -58,6 +62,28 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, className }
     onDelete(note.id)
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', note.id)
+    e.dataTransfer.effectAllowed = 'move'
+    onDragStart?.(e, note.id)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    onDragOver?.(e)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    onDrop?.(e, note.id)
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1'
+    onDragEnd?.(e)
+  }
+
   return (
     <div
       className={cn(
@@ -65,6 +91,11 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, className }
         className
       )}
       onClick={handleCardClick}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {/* 卡片头部 */}
       <div className="flex items-start justify-between mb-3">
@@ -79,7 +110,8 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, className }
         </div>
         <button
           onClick={handleDeleteClick}
-          className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+          className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md opacity-0 group-hover:opacity-100"
+          style={{ transition: 'none' }}
           title="删除笔记"
         >
           <Trash2 className="h-4 w-4" />
