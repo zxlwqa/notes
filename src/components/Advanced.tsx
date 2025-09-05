@@ -196,7 +196,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} data-search-component>
       {/* 搜索输入框 */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -225,7 +225,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
               {/* 搜索选项面板 */}
         {showOptions && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg p-4 z-[900]">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg p-4 z-[1100]">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-900">搜索选项</h3>
@@ -305,7 +305,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
               {/* 搜索建议面板 */}
         {showSuggestions && getSuggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[900]">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[1100]">
           <div className="p-2">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {getSuggestions.map((suggestion, index) => (
@@ -326,22 +326,22 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       {/* 点击外部关闭面板 */}
       {(showOptions || showSuggestions) && (
         <div
-          className="fixed inset-0 z-[850]"
+          className="fixed inset-0 z-[1050]"
           onClick={(e) => {
-            // 如果点击的是输入框或其子元素，不关闭面板
+            // 如果点击的是搜索组件内的任何元素，不关闭面板
             const target = e.target as HTMLElement
-            const inputElement = target.closest('input')
-            if (inputElement) {
+            const searchComponent = target.closest('[data-search-component]')
+            if (searchComponent) {
               return
             }
             setShowOptions(false)
             setShowSuggestions(false)
           }}
           onContextMenu={(e) => {
-            // 允许右键菜单在输入框上正常工作
+            // 允许右键菜单在搜索组件内正常工作
             const target = e.target as HTMLElement
-            const inputElement = target.closest('input')
-            if (inputElement) {
+            const searchComponent = target.closest('[data-search-component]')
+            if (searchComponent) {
               e.stopPropagation()
             }
           }}
