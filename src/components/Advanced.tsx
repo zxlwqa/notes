@@ -1,20 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Search, Regex, Filter, X, Tag, FileText, Hash } from 'lucide-react'
+import { Search, FileText, Hash } from 'lucide-react'
 import { debounce } from '@/lib/utils'
 import type { Note } from '@/types'
 
-interface SearchSuggestion {
-  text: string
-  type: 'title' | 'tag' | 'sentence' | 'phrase' | 'keyword'
-}
-
-interface SearchOptions {
-  useRegex: boolean
-  caseSensitive: boolean
-  searchInTitle: boolean
-  searchInContent: boolean
-  searchInTags: boolean
-}
 
 interface AdvancedSearchProps {
   notes: Note[]
@@ -30,75 +18,40 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   className = ""
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [showOptions, setShowOptions] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [searchOptions, setSearchOptions] = useState<SearchOptions>({
-    useRegex: false,
-    caseSensitive: false,
-    searchInTitle: true,
-    searchInContent: true,
-    searchInTags: true
-  })
 
-  // 高级搜索逻辑
-  const performSearch = useCallback((query: string, options: SearchOptions): Note[] => {
+  // 简单搜索逻辑
+  const performSearch = useCallback((query: string): Note[] => {
     if (!query.trim()) return notes
 
-    const searchText = options.caseSensitive ? query : query.toLowerCase()
+    const searchText = query.toLowerCase()
     
     return notes.filter(note => {
       let matches = false
 
-      try {
-        if (options.useRegex) {
-          // 正则表达式搜索
-          const flags = options.caseSensitive ? 'g' : 'gi'
-          const regex = new RegExp(query, flags)
-          
-          if (options.searchInTitle && note.title) {
-            matches = matches || regex.test(note.title)
-          }
-          
-          if (options.searchInContent && note.content) {
-            matches = matches || regex.test(note.content)
-          }
-          
-          if (options.searchInTags && note.tags) {
-            matches = matches || note.tags.some(tag => regex.test(tag))
-          }
-        } else {
-          // 普通文本搜索
-          if (options.searchInTitle && note.title) {
-            const title = options.caseSensitive ? note.title : note.title.toLowerCase()
-            matches = matches || title.includes(searchText)
-          }
-          
-          if (options.searchInContent && note.content) {
-            const content = options.caseSensitive ? note.content : note.content.toLowerCase()
-            matches = matches || content.includes(searchText)
-          }
-          
-          if (options.searchInTags && note.tags) {
-            matches = matches || note.tags.some(tag => {
-              const tagText = options.caseSensitive ? tag : tag.toLowerCase()
-              return tagText.includes(searchText)
-            })
-            }
-          }
-        } catch (error) {
-          // 正则表达式错误处理
-          console.error('Regex error:', error)
-          return false
-        }
-
-        return matches
-      })
-    }, [notes, searchOptions])
+      // 搜索标题
+      if (note.title && note.title.toLowerCase().includes(searchText)) {
+        matches = true
+      }
+      
+      // 搜索内容
+      if (note.content && note.content.toLowerCase().includes(searchText)) {
+        matches = true
+      }
+      
+      // 搜索标签
+      if (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchText))) {
+        matches = true
+      }
+      
+      return matches
+    })
+  }, [notes])
 
   // 防抖搜索
   const debouncedSearch = useMemo(
-    () => debounce((query: string, options: SearchOptions) => {
-      const results = performSearch(query, options)
+    () => debounce((query: string) => {
+      const results = performSearch(query)
       onSearch(results)
     }, 300),
     [performSearch, onSearch]
@@ -106,8 +59,8 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
   // 搜索输入变化处理
   useEffect(() => {
-    debouncedSearch(searchTerm, searchOptions)
-  }, [searchTerm, searchOptions, debouncedSearch])
+    debouncedSearch(searchTerm)
+  }, [searchTerm, debouncedSearch])
 
   // 生成搜索建议
   const getSuggestions = useMemo(() => {
@@ -206,102 +159,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setShowSuggestions(true)}
-          className="w-full pl-10 pr-12 py-2 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
+          className="w-full pl-10 pr-4 py-2 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
         />
-        
-        {/* 搜索选项按钮 */}
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-          <button
-            onClick={() => setShowOptions(!showOptions)}
-            className={`p-1 rounded transition-colors ${
-              showOptions ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
-            }`}
-            title="搜索选项"
-          >
-            <Filter className="h-4 w-4" />
-          </button>
-        </div>
       </div>
 
-              {/* 搜索选项面板 */}
-        {showOptions && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg p-4 z-[1100]">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-900">搜索选项</h3>
-              <button
-                onClick={() => setShowOptions(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={searchOptions.useRegex}
-                  onChange={(e) => setSearchOptions(prev => ({ ...prev, useRegex: e.target.checked }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 flex items-center">
-                  <Regex className="h-3 w-3 mr-1" />
-                  正则表达式
-                </span>
-              </label>
-              
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={searchOptions.caseSensitive}
-                  onChange={(e) => setSearchOptions(prev => ({ ...prev, caseSensitive: e.target.checked }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">区分大小写</span>
-              </label>
-            </div>
-            
-            <div className="border-t border-gray-200 pt-2">
-              <div className="text-xs text-gray-500 mb-2">搜索范围：</div>
-              <div className="space-y-1">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={searchOptions.searchInTitle}
-                    onChange={(e) => setSearchOptions(prev => ({ ...prev, searchInTitle: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">标题</span>
-                </label>
-                
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={searchOptions.searchInContent}
-                    onChange={(e) => setSearchOptions(prev => ({ ...prev, searchInContent: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">内容</span>
-                </label>
-                
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={searchOptions.searchInTags}
-                    onChange={(e) => setSearchOptions(prev => ({ ...prev, searchInTags: e.target.checked }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700 flex items-center">
-                    <Tag className="h-3 w-3 mr-1" />
-                    标签
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
               {/* 搜索建议面板 */}
         {showSuggestions && getSuggestions.length > 0 && (
@@ -324,9 +185,9 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       )}
 
       {/* 点击外部关闭面板 */}
-      {(showOptions || showSuggestions) && (
+      {showSuggestions && (
         <div
-          className="fixed inset-0 z-[1050]"
+          className="fixed inset-0 z-[950]"
           onClick={(e) => {
             // 如果点击的是搜索组件内的任何元素，不关闭面板
             const target = e.target as HTMLElement
@@ -334,7 +195,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             if (searchComponent) {
               return
             }
-            setShowOptions(false)
             setShowSuggestions(false)
           }}
           onContextMenu={(e) => {
