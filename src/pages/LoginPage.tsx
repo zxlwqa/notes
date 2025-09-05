@@ -11,11 +11,26 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [displayTitle, setDisplayTitle] = useState('科技刘笔记')
   const { login } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    // 监听设置变更事件，实时更新背景图
+    // 加载设置中的用户名作为标题
+    const loadSettingsTitle = () => {
+      try {
+        const saved = localStorage.getItem('app-settings')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed.username && typeof parsed.username === 'string') {
+            setDisplayTitle(parsed.username)
+          }
+        }
+      } catch {}
+    }
+    loadSettingsTitle()
+    
+    // 监听设置变更事件，实时更新背景图和标题
     const settingsHandler = (event: any) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -25,6 +40,10 @@ const LoginPage = () => {
         } else {
           document.documentElement.style.removeProperty('--app-bg-image')
         }
+      }
+      // 更新标题
+      if (settings && settings.username && typeof settings.username === 'string') {
+        setDisplayTitle(settings.username)
       }
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
@@ -102,7 +121,7 @@ const LoginPage = () => {
                 fetchpriority="high"
               />
             </div>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">科技刘笔记</h2>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">{displayTitle}</h2>
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
