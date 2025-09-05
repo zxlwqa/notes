@@ -13,6 +13,9 @@
 - **数据库**:  D1 SQL数据库
 - **UI组件**: Lucide React图标库
 
+## Cloudflare Pages部署
+- 框架预设：React (Vite)
+
 ## 环境变量
 
 - `PASSWORD`: 登录密码
