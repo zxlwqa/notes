@@ -16,6 +16,9 @@
 ## 环境变量
 
 - `PASSWORD`: 登录密码
+- `WEBDAV_URL`: WebDAV 服务器地址
+- `WEBDAV_USER`: WebDAV 用户名
+- `WEBDAV_PASS`: WebDAV 密码
 
 
 ## 新建D1 SQL数据库建表SQL 语句
