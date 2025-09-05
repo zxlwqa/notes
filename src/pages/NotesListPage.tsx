@@ -390,7 +390,7 @@ const NotesListPage: React.FC = () => {
                       className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between"
                       style={{
                         backgroundColor: 'transparent',
-                        color: '#4B5563',
+                        color: '#FFFFFF',
                         fontWeight: 'normal',
                         transition: 'none'
                       }}
@@ -401,7 +401,7 @@ const NotesListPage: React.FC = () => {
                       }}
                       onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.color = '#4B5563'
+                        e.currentTarget.style.color = '#FFFFFF'
                         e.currentTarget.style.fontWeight = 'normal'
                       }}
                     >
