@@ -193,6 +193,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             const target = e.target as HTMLElement
             const searchComponent = target.closest('[data-search-component]')
             if (searchComponent) {
+              e.stopPropagation()
               return
             }
             setShowSuggestions(false)
