@@ -327,9 +327,23 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       {(showOptions || showSuggestions) && (
         <div
           className="fixed inset-0 z-40"
-          onClick={() => {
+          onClick={(e) => {
+            // 如果点击的是输入框或其子元素，不关闭面板
+            const target = e.target as HTMLElement
+            const inputElement = target.closest('input')
+            if (inputElement) {
+              return
+            }
             setShowOptions(false)
             setShowSuggestions(false)
+          }}
+          onContextMenu={(e) => {
+            // 允许右键菜单在输入框上正常工作
+            const target = e.target as HTMLElement
+            const inputElement = target.closest('input')
+            if (inputElement) {
+              e.stopPropagation()
+            }
           }}
         />
       )}
