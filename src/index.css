@@ -2,18 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 简单的 Logo 预加载 */
-@layer base {
-  /* 预加载 logo 图片到浏览器缓存 */
-  .logo-preload::before {
-    content: '';
-    background-image: url('/image/logo.png');
-    position: absolute;
-    width: 0;
-    height: 0;
-    opacity: 0;
-  }
-}
+/* Logo 预加载样式已移除，使用HTML标准预加载 */
 
 @layer base {
   html, body, h1, h2, h3, h4, h5, h6, p,
