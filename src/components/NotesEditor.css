@@ -1,0 +1,278 @@
+/* EasyMDE 编辑器工具栏图标可见性修复 - 最高优先级版本 */
+
+/* 使用最高优先级选择器强制覆盖样式 */
+html body div.editor-toolbar,
+html body .editor-toolbar,
+body .editor-toolbar,
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px !important;
+  color: #000000 !important;
+}
+
+/* 工具栏按钮 - 最高优先级 */
+html body div.editor-toolbar button,
+html body div.editor-toolbar a,
+html body .editor-toolbar button,
+html body .editor-toolbar a,
+body .editor-toolbar button,
+body .editor-toolbar a,
+.editor-toolbar button,
+.editor-toolbar a {
+  color: #000000 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  margin: 2px !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 工具栏按钮悬停效果 */
+html body div.editor-toolbar button:hover,
+html body div.editor-toolbar a:hover,
+html body .editor-toolbar button:hover,
+html body .editor-toolbar a:hover,
+body .editor-toolbar button:hover,
+body .editor-toolbar a:hover,
+.editor-toolbar button:hover,
+.editor-toolbar a:hover {
+  background: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  color: #000000 !important;
+}
+
+/* 工具栏按钮激活状态 */
+html body div.editor-toolbar button.active,
+html body div.editor-toolbar a.active,
+html body .editor-toolbar button.active,
+html body .editor-toolbar a.active,
+body .editor-toolbar button.active,
+body .editor-toolbar a.active,
+.editor-toolbar button.active,
+.editor-toolbar a.active {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* 工具栏分隔符 */
+html body div.editor-toolbar button.separator,
+html body div.editor-toolbar a.separator,
+html body .editor-toolbar button.separator,
+html body .editor-toolbar a.separator,
+body .editor-toolbar button.separator,
+body .editor-toolbar a.separator,
+.editor-toolbar button.separator,
+.editor-toolbar a.separator {
+  border: none !important;
+  background: #d1d5db !important;
+  width: 1px !important;
+  height: 20px !important;
+  margin: 8px 4px !important;
+  padding: 0 !important;
+}
+
+/* 工具栏按钮图标和文本 - 最高优先级 */
+html body div.editor-toolbar button i,
+html body div.editor-toolbar button span,
+html body div.editor-toolbar a i,
+html body div.editor-toolbar a span,
+html body .editor-toolbar button i,
+html body .editor-toolbar button span,
+html body .editor-toolbar a i,
+html body .editor-toolbar a span,
+body .editor-toolbar button i,
+body .editor-toolbar button span,
+body .editor-toolbar a i,
+body .editor-toolbar a span,
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 确保所有工具栏元素可见 - 最高优先级 */
+html body div.editor-toolbar *,
+html body .editor-toolbar *,
+body .editor-toolbar *,
+.editor-toolbar * {
+  color: #000000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 强制覆盖所有可能的样式 */
+.editor-toolbar,
+.editor-toolbar *,
+.editor-toolbar button,
+.editor-toolbar button *,
+.editor-toolbar a,
+.editor-toolbar a * {
+  color: #000000 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* 工具栏容器强制样式 */
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+/* 工具栏按钮强制样式 */
+.editor-toolbar button {
+  color: #000000 !important;
+  background: transparent !important;
+}
+
+/* 工具栏图标强制样式 */
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* 使用!important覆盖所有可能的样式 */
+.editor-toolbar,
+.editor-toolbar * {
+  color: #000000 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.editor-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.editor-toolbar button,
+.editor-toolbar a {
+  color: #000000 !important;
+  background: transparent !important;
+}
+
+.editor-toolbar button i,
+.editor-toolbar button span,
+.editor-toolbar a i,
+.editor-toolbar a span {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* ===== 编辑器输入光标样式优化 ===== */
+
+/* CodeMirror 光标样式 - 让光标更粗更明显 */
+.CodeMirror-cursor {
+  border-left: 3px solid #3b82f6 !important;
+  border-right: none !important;
+  width: 0 !important;
+  background: transparent !important;
+  animation: blink 1s infinite !important;
+}
+
+/* 光标闪烁动画 */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* 确保光标在深色主题下也可见 */
+.CodeMirror.CodeMirror-dark .CodeMirror-cursor {
+  border-left-color: #60a5fa !important;
+}
+
+/* 光标悬停效果 */
+.CodeMirror-cursor:hover {
+  border-left-width: 4px !important;
+  border-left-color: #2563eb !important;
+}
+
+/* 编辑器文本区域样式 - 保持原有透明背景 */
+.CodeMirror {
+  font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
+  font-size: var(--editor-font-size, 14px) !important;
+  line-height: var(--editor-line-height, 1.6) !important;
+  background: transparent !important;
+}
+
+/* 确保光标在编辑模式下可见 */
+.CodeMirror.CodeMirror-focused .CodeMirror-cursor {
+  border-left-width: 3px !important;
+  border-left-color: #3b82f6 !important;
+  animation: blink 1s infinite !important;
+}
+
+/* 非聚焦状态下的光标 */
+.CodeMirror:not(.CodeMirror-focused) .CodeMirror-cursor {
+  border-left-width: 2px !important;
+  border-left-color: #9ca3af !important;
+  animation: none !important;
+}
+
+/* 增强光标可见性 - 备用方案 */
+.editor-toolbar + .CodeMirror .CodeMirror-cursor,
+.EasyMDEContainer .CodeMirror .CodeMirror-cursor {
+  border-left: 4px solid #ef4444 !important;
+  border-right: none !important;
+  width: 0 !important;
+  background: transparent !important;
+  animation: blink 0.8s infinite !important;
+}
+
+/* 备用闪烁动画 */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+/* ===== 标签输入框样式优化 ===== */
+
+/* 标签输入框边框增强 */
+.notes-editor-container input[type="text"][placeholder*="标签"],
+.notes-editor-container input[type="text"][placeholder*="tag"] {
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* 标签输入框聚焦状态 */
+.notes-editor-container input[type="text"][placeholder*="标签"]:focus,
+.notes-editor-container input[type="text"][placeholder*="tag"]:focus {
+  border-color: rgba(59, 130, 246, 0.8) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 标签添加按钮样式增强 */
+.notes-editor-container button:has(+ input[type="text"][placeholder*="标签"]),
+.notes-editor-container button:has(+ input[type="text"][placeholder*="tag"]) {
+  border: 2px solid rgba(59, 130, 246, 0.6) !important;
+  background: rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* 标签输入区域容器样式 */
+.notes-editor-container div:has(input[type="text"][placeholder*="标签"]),
+.notes-editor-container div:has(input[type="text"][placeholder*="tag"]) {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
