@@ -53,6 +53,8 @@ const NotesListPage: React.FC = () => {
   const [error, setError] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [displayTitle, setDisplayTitle] = useState('')
+  const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
+  const [draggedTag, setDraggedTag] = useState<string | null>(null)
   // 记录页面首次加载时是否已有缓存，用于避免刷新后骨架闪烁
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
@@ -328,6 +330,70 @@ const NotesListPage: React.FC = () => {
     return Array.from(allTags).sort()
   }
 
+  // 笔记拖拽排序处理
+  const handleNoteDragStart = (e: React.DragEvent, noteId: string) => {
+    setDraggedNoteId(noteId)
+    e.currentTarget.style.opacity = '0.5'
+  }
+
+  const handleNoteDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1'
+    setDraggedNoteId(null)
+  }
+
+  const handleNoteDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleNoteDrop = (e: React.DragEvent, targetNoteId: string) => {
+    e.preventDefault()
+    if (!draggedNoteId || draggedNoteId === targetNoteId) return
+
+    const draggedIndex = filteredNotes.findIndex(note => note.id === draggedNoteId)
+    const targetIndex = filteredNotes.findIndex(note => note.id === targetNoteId)
+    
+    if (draggedIndex === -1 || targetIndex === -1) return
+
+    const newNotes = [...filteredNotes]
+    const draggedNote = newNotes[draggedIndex]
+    newNotes.splice(draggedIndex, 1)
+    newNotes.splice(targetIndex, 0, draggedNote)
+
+    setFilteredNotes(newNotes)
+    setNotes(newNotes)
+    
+    // 更新缓存
+    try {
+      sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
+    } catch {}
+  }
+
+  // 标签拖拽排序处理
+  const handleTagDragStart = (e: React.DragEvent, tag: string) => {
+    setDraggedTag(tag)
+    e.dataTransfer.setData('text/plain', tag)
+    e.currentTarget.style.opacity = '0.5'
+  }
+
+  const handleTagDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1'
+    setDraggedTag(null)
+  }
+
+  const handleTagDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleTagDrop = (e: React.DragEvent, targetTag: string) => {
+    e.preventDefault()
+    const draggedTagName = e.dataTransfer.getData('text/plain')
+    if (!draggedTagName || draggedTagName === targetTag) return
+
+    // 这里可以实现标签的重新排序逻辑
+    // 由于标签是从笔记中提取的，我们可以通过调整笔记的顺序来间接影响标签顺序
+    console.log(`拖拽标签 ${draggedTagName} 到 ${targetTag}`)
+  }
+
   // 不再整体早返回 Loading，改为页面内局部骨架占位，以保证即时渲染
 
   return (
@@ -393,6 +459,11 @@ const NotesListPage: React.FC = () => {
                         fontWeight: 'normal',
                         transition: 'none'
                       }}
+                      draggable
+                      onDragStart={(e) => handleTagDragStart(e, tag)}
+                      onDragEnd={handleTagDragEnd}
+                      onDragOver={handleTagDragOver}
+                      onDrop={(e) => handleTagDrop(e, tag)}
                       onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)'
                         e.currentTarget.style.color = '#111827'
@@ -437,6 +508,10 @@ const NotesListPage: React.FC = () => {
                   note={note}
                   onView={handleViewNote}
                   onDelete={handleDeleteNote}
+                  onDragStart={handleNoteDragStart}
+                  onDragEnd={handleNoteDragEnd}
+                  onDragOver={handleNoteDragOver}
+                  onDrop={handleNoteDrop}
                 />
               ))}
             </div>
