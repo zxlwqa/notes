@@ -464,7 +464,7 @@ const NotesListPage: React.FC = () => {
             </div>
 
             {/* 搜索框 */}
-            <div className="w-80">
+            <div className="w-80 relative z-[200]">
               <AdvancedSearch
                 notes={notes}
                 onSearch={handleSearch}
