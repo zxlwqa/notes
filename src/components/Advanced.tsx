@@ -62,6 +62,22 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     debouncedSearch(searchTerm)
   }, [searchTerm, debouncedSearch])
 
+  // 全局点击事件处理外部点击关闭
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const searchComponent = target.closest('[data-search-component]')
+      if (!searchComponent && showSuggestions) {
+        setShowSuggestions(false)
+      }
+    }
+
+    if (showSuggestions) {
+      document.addEventListener('mousedown', handleGlobalClick)
+      return () => document.removeEventListener('mousedown', handleGlobalClick)
+    }
+  }, [showSuggestions])
+
   // 生成搜索建议
   const getSuggestions = useMemo(() => {
     if (!searchTerm.trim() || searchTerm.length < 2) return []
@@ -184,28 +200,11 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         </div>
       )}
 
-      {/* 点击外部关闭面板 */}
+      {/* 使用全局点击事件处理外部点击关闭 */}
       {showSuggestions && (
         <div
           className="fixed inset-0 z-[950]"
-          onClick={(e) => {
-            // 如果点击的是搜索组件内的任何元素，不关闭面板
-            const target = e.target as HTMLElement
-            const searchComponent = target.closest('[data-search-component]')
-            if (searchComponent) {
-              e.stopPropagation()
-              return
-            }
-            setShowSuggestions(false)
-          }}
-          onContextMenu={(e) => {
-            // 允许右键菜单在搜索组件内正常工作
-            const target = e.target as HTMLElement
-            const searchComponent = target.closest('[data-search-component]')
-            if (searchComponent) {
-              e.stopPropagation()
-            }
-          }}
+          style={{ pointerEvents: 'none' }}
         />
       )}
     </div>
