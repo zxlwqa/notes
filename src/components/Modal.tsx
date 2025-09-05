@@ -383,7 +383,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         <p className="text-gray-700">{message}</p>
         
         {/* 选项列表 */}
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-64 overflow-y-auto">
           {options.map((option) => (
             <label
               key={option.value}
