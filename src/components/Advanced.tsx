@@ -225,7 +225,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
       {/* 搜索选项面板 */}
       {showOptions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg p-4 z-[300]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg p-4 z-[400]">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-900">搜索选项</h3>
@@ -305,7 +305,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
       {/* 搜索建议面板 */}
       {showSuggestions && getSuggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[300]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[400]">
           <div className="p-2">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {getSuggestions.map((suggestion, index) => (
