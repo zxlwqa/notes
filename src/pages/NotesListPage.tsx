@@ -382,12 +382,11 @@ const NotesListPage: React.FC = () => {
               </h3>
               <div className="space-y-2">
                 {getAllTags().map((tag) => {
-                  const tagCount = notes.filter(note => note.tags && note.tags.includes(tag)).length
                   return (
                     <button
                       key={tag}
                       onClick={() => handleTagClick(tag)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center"
                       style={{
                         backgroundColor: 'transparent',
                         color: '#FFFFFF',
@@ -409,7 +408,6 @@ const NotesListPage: React.FC = () => {
                         <Tag className="h-3 w-3 mr-2" />
                         {tag}
                       </span>
-                      <span className="text-xs opacity-75">{tagCount}</span>
                     </button>
                   )
                 })}
