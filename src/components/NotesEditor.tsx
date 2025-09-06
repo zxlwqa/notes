@@ -56,6 +56,40 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [editorInstance, endRender])
 
+  // 处理粘贴事件的函数
+  const handlePaste = useCallback(async (cm: any) => {
+    try {
+      // 获取剪贴板内容
+      const clipboardData = await navigator.clipboard.readText()
+      
+      // 处理粘贴的文本，确保换行符正确处理
+      const processedText = clipboardData
+        .replace(/\r\n/g, '\n')  // 统一换行符
+        .replace(/\r/g, '\n')    // 处理Mac风格的换行符
+      
+      // 获取当前光标位置
+      const cursor = cm.getCursor()
+      const selection = cm.getSelection()
+      
+      // 如果有选中文本，替换选中内容；否则在光标位置插入
+      if (selection) {
+        cm.replaceSelection(processedText)
+      } else {
+        cm.replaceRange(processedText, cursor)
+      }
+      
+      // 确保光标位置正确，避免换行问题
+      const newCursor = cm.getCursor()
+      cm.setCursor(newCursor)
+      cm.focus()
+      
+    } catch (error) {
+      console.warn('粘贴处理失败，使用默认行为:', error)
+      // 如果处理失败，让编辑器使用默认的粘贴行为
+      return false
+    }
+  }, [])
+
   // 插入文本的辅助函数
   const insertText = useCallback((before: string, after: string) => {
     const editor = getEditor()
@@ -169,8 +203,17 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     cursorBlinkRate: 1000,
     cursorHeight: 1.2,
     // 确保光标可见
-    theme: 'default'
-  }), [placeholder])
+    theme: 'default',
+    // 添加粘贴事件处理
+    extraKeys: {
+      'Ctrl-V': function(cm: any) {
+        handlePaste(cm)
+      },
+      'Cmd-V': function(cm: any) {
+        handlePaste(cm)
+      }
+    }
+  }), [placeholder, handlePaste])
 
   // 监听编辑器实例变化
   useEffect(() => {
@@ -178,6 +221,56 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       setEditorInstance(mdeRef.current.simpleMde)
     }
   }, [mdeRef.current])
+
+  // 添加粘贴事件监听器
+  useEffect(() => {
+    const editor = getEditor()
+    if (editor && editor.codemirror) {
+      const cm = editor.codemirror
+      
+      // 添加粘贴事件监听器
+      const handlePasteEvent = async (event: ClipboardEvent) => {
+        event.preventDefault()
+        
+        try {
+          const clipboardData = event.clipboardData?.getData('text/plain') || ''
+          
+          // 处理粘贴的文本，确保换行符正确处理
+          const processedText = clipboardData
+            .replace(/\r\n/g, '\n')  // 统一换行符
+            .replace(/\r/g, '\n')    // 处理Mac风格的换行符
+          
+          // 获取当前光标位置
+          const cursor = cm.getCursor()
+          const selection = cm.getSelection()
+          
+          // 如果有选中文本，替换选中内容；否则在光标位置插入
+          if (selection) {
+            cm.replaceSelection(processedText)
+          } else {
+            cm.replaceRange(processedText, cursor)
+          }
+          
+          // 确保光标位置正确，避免换行问题
+          const newCursor = cm.getCursor()
+          cm.setCursor(newCursor)
+          cm.focus()
+          
+        } catch (error) {
+          console.warn('粘贴处理失败:', error)
+          // 如果处理失败，让浏览器使用默认的粘贴行为
+        }
+      }
+      
+      // 绑定粘贴事件
+      cm.getWrapperElement().addEventListener('paste', handlePasteEvent)
+      
+      return () => {
+        // 清理事件监听器
+        cm.getWrapperElement().removeEventListener('paste', handlePasteEvent)
+      }
+    }
+  }, [editorInstance, getEditor])
 
   // 将用户设置应用到编辑器根容器（通过 CSS 变量）
   useEffect(() => {
@@ -800,6 +893,24 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         
         .notes-editor-container .CodeMirror-lines {
           padding: 16px !important;
+        }
+        
+        /* 粘贴文本格式优化 */
+        .notes-editor-container .CodeMirror pre {
+          white-space: pre-wrap !important;
+          word-wrap: break-word !important;
+          word-break: break-word !important;
+        }
+        
+        /* 确保粘贴后的文本保持正确的换行 */
+        .notes-editor-container .CodeMirror .CodeMirror-line {
+          white-space: pre-wrap !important;
+        }
+        
+        /* 光标在粘贴后的位置优化 */
+        .notes-editor-container .CodeMirror-cursor {
+          position: relative !important;
+          z-index: 10 !important;
         }
       `}</style>
 
