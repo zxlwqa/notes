@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { Search, FileText, Hash } from 'lucide-react'
 import { debounce } from '@/lib/utils'
 import type { Note } from '@/types'
 
+interface SuggestionItem {
+  text: string
+  note: Note
+  type: 'title' | 'tag' | 'content'
+}
 
 interface AdvancedSearchProps {
   notes: Note[]
@@ -22,6 +28,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0, width: 0 })
   const searchRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   // 更新建议面板位置
   const updateSuggestionPosition = useCallback(() => {
@@ -97,20 +104,28 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const getSuggestions = useMemo(() => {
     if (!searchTerm.trim() || searchTerm.length < 2) return []
     
-    const suggestions = new Set<string>()
+    const suggestions: SuggestionItem[] = []
     const searchText = searchTerm.toLowerCase()
     
     notes.forEach(note => {
       // 标题建议
       if (note.title && note.title.toLowerCase().includes(searchText)) {
-        suggestions.add(note.title)
+        suggestions.push({
+          text: note.title,
+          note: note,
+          type: 'title'
+        })
       }
       
       // 标签建议
       if (note.tags) {
         note.tags.forEach(tag => {
           if (tag.toLowerCase().includes(searchText)) {
-            suggestions.add(tag)
+            suggestions.push({
+              text: tag,
+              note: note,
+              type: 'tag'
+            })
           }
         })
       }
@@ -125,7 +140,11 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         sentences.forEach(sentence => {
           const trimmed = sentence.trim()
           if (trimmed.length > 0 && trimmed.length <= 100) {
-            suggestions.add(trimmed)
+            suggestions.push({
+              text: trimmed,
+              note: note,
+              type: 'content'
+            })
           }
         })
         
@@ -134,7 +153,11 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         for (let i = 0; i < words.length - 1; i++) {
           const phrase = words.slice(i, i + 3).join(' ')
           if (phrase.toLowerCase().includes(searchText) && phrase.length >= 3 && phrase.length <= 50) {
-            suggestions.add(phrase)
+            suggestions.push({
+              text: phrase,
+              note: note,
+              type: 'content'
+            })
           }
         }
         
@@ -142,14 +165,25 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         const keywords = words.filter(word => 
           word.length > 2 && word.toLowerCase().includes(searchText)
         )
-        keywords.slice(0, 5).forEach(keyword => suggestions.add(keyword))
+        keywords.slice(0, 5).forEach(keyword => {
+          suggestions.push({
+            text: keyword,
+            note: note,
+            type: 'content'
+          })
+        })
       }
     })
     
+    // 去重并排序
+    const uniqueSuggestions = suggestions.filter((item, index, self) => 
+      index === self.findIndex(t => t.text === item.text && t.note.id === item.note.id)
+    )
+    
     // 按相关性和长度排序
-    const sortedSuggestions = Array.from(suggestions).sort((a, b) => {
-      const aLower = a.toLowerCase()
-      const bLower = b.toLowerCase()
+    const sortedSuggestions = uniqueSuggestions.sort((a, b) => {
+      const aLower = a.text.toLowerCase()
+      const bLower = b.text.toLowerCase()
       
       // 优先显示以搜索词开头的建议
       const aStartsWith = aLower.startsWith(searchText)
@@ -158,25 +192,38 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       if (aStartsWith && !bStartsWith) return -1
       if (!aStartsWith && bStartsWith) return 1
       
-      // 其次按长度排序（较短的优先）
-      return a.length - b.length
+      // 其次按类型排序（标题 > 标签 > 内容）
+      const typeOrder = { title: 0, tag: 1, content: 2 }
+      const typeDiff = typeOrder[a.type] - typeOrder[b.type]
+      if (typeDiff !== 0) return typeDiff
+      
+      // 最后按长度排序（较短的优先）
+      return a.text.length - b.text.length
     })
     
     return sortedSuggestions.slice(0, 10) // 增加到10个建议
   }, [searchTerm, notes])
 
   // 处理建议点击
-  const handleSuggestionClick = (suggestion: string) => {
-    setSearchTerm(suggestion)
+  const handleSuggestionClick = (suggestion: SuggestionItem) => {
+    setSearchTerm(suggestion.text)
     setShowSuggestions(false)
+    // 跳转到对应的笔记阅读页面
+    navigate(`/notes/${suggestion.note.id}`, { state: { note: suggestion.note } })
   }
 
   // 获取建议图标
-  const getSuggestionIcon = (suggestion: string) => {
-    // 简单判断建议类型（可以根据需要进一步优化）
-    if (suggestion.length > 50) return <FileText className="h-3 w-3 mr-2 text-blue-400" />
-    if (suggestion.includes(' ')) return <Hash className="h-3 w-3 mr-2 text-green-400" />
-    return <Search className="h-3 w-3 mr-2 text-gray-400" />
+  const getSuggestionIcon = (suggestion: SuggestionItem) => {
+    switch (suggestion.type) {
+      case 'title':
+        return <FileText className="h-3 w-3 mr-2 text-blue-500" />
+      case 'tag':
+        return <Hash className="h-3 w-3 mr-2 text-green-500" />
+      case 'content':
+        return <Search className="h-3 w-3 mr-2 text-gray-500" />
+      default:
+        return <Search className="h-3 w-3 mr-2 text-gray-400" />
+    }
   }
 
   return (
@@ -213,12 +260,18 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {getSuggestions.map((suggestion, index) => (
                 <div
-                  key={index}
+                  key={`${suggestion.note.id}-${index}`}
                   className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-900"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   {getSuggestionIcon(suggestion)}
-                  <span className="truncate">{suggestion}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate font-medium">{suggestion.text}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {suggestion.type === 'title' ? '标题' : 
+                       suggestion.type === 'tag' ? '标签' : '内容'} · {suggestion.note.title}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
