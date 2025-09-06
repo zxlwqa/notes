@@ -182,7 +182,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
               {/* 搜索建议面板 */}
         {showSuggestions && getSuggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[1100]">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[9999]">
           <div className="p-2">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {getSuggestions.map((suggestion, index) => (
