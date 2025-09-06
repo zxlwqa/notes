@@ -89,14 +89,21 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       const searchComponent = target.closest('[data-search-component]')
-      if (!searchComponent && showSuggestions) {
+      const suggestionPanel = target.closest('[data-suggestion-panel]')
+      if (!searchComponent && !suggestionPanel && showSuggestions) {
         setShowSuggestions(false)
       }
     }
 
     if (showSuggestions) {
-      document.addEventListener('mousedown', handleGlobalClick)
-      return () => document.removeEventListener('mousedown', handleGlobalClick)
+      // 使用 setTimeout 确保在 onClick 事件之后执行
+      const timer = setTimeout(() => {
+        document.addEventListener('click', handleGlobalClick)
+      }, 0)
+      return () => {
+        clearTimeout(timer)
+        document.removeEventListener('click', handleGlobalClick)
+      }
     }
   }, [showSuggestions])
 
@@ -249,6 +256,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       {showSuggestions && getSuggestions.length > 0 && createPortal(
         <div 
           className="fixed bg-white/95 backdrop-blur-md border border-white/40 rounded-lg shadow-xl z-[99999]"
+          data-suggestion-panel
           style={{ 
             top: suggestionPosition.top,
             left: suggestionPosition.left,
@@ -262,7 +270,11 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <div
                   key={`${suggestion.note.id}-${index}`}
                   className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-900"
-                  onClick={() => handleSuggestionClick(suggestion)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleSuggestionClick(suggestion)
+                  }}
                 >
                   {getSuggestionIcon(suggestion)}
                   <div className="flex-1 min-w-0">
