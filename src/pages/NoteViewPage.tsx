@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react'
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit3, Settings, Trash2, Tag, Home } from 'lucide-react'
 import Button from '@/components/ui/Button'
@@ -34,6 +34,16 @@ const NoteViewPage: React.FC = () => {
     } catch {}
     return null
   })
+  
+  // 高亮位置信息
+  const [highlightPosition, setHighlightPosition] = useState<{
+    startIndex: number
+    endIndex: number
+    searchTerm: string
+  } | null>(() => {
+    const state = location.state as { highlightPosition?: any } | null
+    return state?.highlightPosition || null
+  })
   const [loading, setLoading] = useState<boolean>(() => {
     const hasState = Boolean((location.state as any)?.note)
     return !hasState
@@ -44,6 +54,58 @@ const NoteViewPage: React.FC = () => {
   
   // 弹窗管理
   const modal = useModal()
+  
+  // 高亮文本并滚动到指定位置
+  const highlightAndScrollToText = useCallback(() => {
+    if (!highlightPosition || !note?.content) return
+    
+    // 等待内容渲染完成
+    setTimeout(() => {
+      const contentElement = document.querySelector('.prose')
+      if (!contentElement) return
+      
+      // 创建高亮标记
+      const beforeText = note.content.substring(0, highlightPosition.startIndex)
+      const highlightText = note.content.substring(highlightPosition.startIndex, highlightPosition.endIndex)
+      const afterText = note.content.substring(highlightPosition.endIndex)
+      
+      // 创建高亮HTML
+      const highlightedContent = `${beforeText}<mark class="highlight-search-result" style="background-color: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600;">${highlightText}</mark>${afterText}`
+      
+      // 更新内容
+      const markdownElement = contentElement.querySelector('div[data-highlight-content]')
+      if (markdownElement) {
+        markdownElement.innerHTML = highlightedContent
+      }
+      
+      // 滚动到高亮位置
+      const highlightElement = contentElement.querySelector('.highlight-search-result')
+      if (highlightElement) {
+        highlightElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        })
+        
+        // 3秒后清除高亮
+        setTimeout(() => {
+          if (highlightElement) {
+            highlightElement.classList.remove('highlight-search-result')
+            highlightElement.style.backgroundColor = 'transparent'
+            highlightElement.style.padding = '0'
+            highlightElement.style.borderRadius = '0'
+            highlightElement.style.fontWeight = 'normal'
+          }
+        }, 3000)
+      }
+    }, 100)
+  }, [highlightPosition, note?.content])
+  
+  // 当有高亮位置时执行高亮
+  useEffect(() => {
+    if (highlightPosition && note?.content) {
+      highlightAndScrollToText()
+    }
+  }, [highlightPosition, note?.content, highlightAndScrollToText])
 
   useEffect(() => {
     console.log('NoteViewPage mounted with id:', id) // 调试日志
@@ -339,6 +401,7 @@ const NoteViewPage: React.FC = () => {
               {/* 笔记内容 */}
                   {note.content ? (
                     <div className="prose max-w-none" style={{ fontSize: 'var(--editor-font-size, 14px)', lineHeight: 'var(--editor-line-height, 1.6)', fontFamily: 'var(--editor-font-family)' }}>
+                      <div data-highlight-content>
                     <style>{`
                       .prose pre {
                         background: rgba(255, 255, 255, 0.1) !important;
@@ -409,6 +472,7 @@ const NoteViewPage: React.FC = () => {
                       >
                         {note.content}
                       </ReactMarkdown>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-12">
