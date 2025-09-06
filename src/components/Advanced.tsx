@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, FileText, Hash } from 'lucide-react'
 import { debounce } from '@/lib/utils'
 import type { Note } from '@/types'
@@ -19,6 +20,20 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0, width: 0 })
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  // 更新建议面板位置
+  const updateSuggestionPosition = useCallback(() => {
+    if (searchRef.current) {
+      const rect = searchRef.current.getBoundingClientRect()
+      setSuggestionPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      })
+    }
+  }, [])
 
   // 简单搜索逻辑
   const performSearch = useCallback((query: string): Note[] => {
@@ -165,7 +180,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`} data-search-component>
+    <div className={`relative ${className}`} data-search-component ref={searchRef}>
       {/* 搜索输入框 */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -174,15 +189,26 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setShowSuggestions(true)}
+          onFocus={() => {
+            updateSuggestionPosition()
+            setShowSuggestions(true)
+          }}
           className="w-full pl-10 pr-4 py-2 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 backdrop-blur-sm"
         />
       </div>
 
 
-              {/* 搜索建议面板 */}
-        {showSuggestions && getSuggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/40 rounded-lg shadow-lg z-[9999]">
+      {/* 使用Portal渲染搜索建议面板到body */}
+      {showSuggestions && getSuggestions.length > 0 && createPortal(
+        <div 
+          className="fixed bg-white/95 backdrop-blur-md border border-white/40 rounded-lg shadow-xl z-[99999]"
+          style={{ 
+            top: suggestionPosition.top,
+            left: suggestionPosition.left,
+            width: suggestionPosition.width,
+            maxWidth: '90vw'
+          }}
+        >
           <div className="p-2">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {getSuggestions.map((suggestion, index) => (
@@ -197,15 +223,17 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* 使用全局点击事件处理外部点击关闭 */}
-      {showSuggestions && (
+      {/* 使用Portal渲染全局点击处理层 */}
+      {showSuggestions && createPortal(
         <div
-          className="fixed inset-0 z-[950]"
+          className="fixed inset-0 z-[99998]"
           style={{ pointerEvents: 'none' }}
-        />
+        />,
+        document.body
       )}
     </div>
   )
