@@ -9,6 +9,11 @@ interface SuggestionItem {
   text: string
   note: Note
   type: 'title' | 'tag' | 'content'
+  position?: {
+    startIndex: number
+    endIndex: number
+    searchTerm: string
+  }
 }
 
 interface AdvancedSearchProps {
@@ -147,10 +152,19 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         sentences.forEach(sentence => {
           const trimmed = sentence.trim()
           if (trimmed.length > 0 && trimmed.length <= 100) {
+            // 找到句子在原文中的位置
+            const startIndex = note.content.indexOf(trimmed)
+            const searchIndex = trimmed.toLowerCase().indexOf(searchText)
+            
             suggestions.push({
               text: trimmed,
               note: note,
-              type: 'content'
+              type: 'content',
+              position: {
+                startIndex: startIndex + searchIndex,
+                endIndex: startIndex + searchIndex + searchText.length,
+                searchTerm: searchText
+              }
             })
           }
         })
@@ -160,10 +174,19 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         for (let i = 0; i < words.length - 1; i++) {
           const phrase = words.slice(i, i + 3).join(' ')
           if (phrase.toLowerCase().includes(searchText) && phrase.length >= 3 && phrase.length <= 50) {
+            // 找到短语在原文中的位置
+            const startIndex = note.content.indexOf(phrase)
+            const searchIndex = phrase.toLowerCase().indexOf(searchText)
+            
             suggestions.push({
               text: phrase,
               note: note,
-              type: 'content'
+              type: 'content',
+              position: {
+                startIndex: startIndex + searchIndex,
+                endIndex: startIndex + searchIndex + searchText.length,
+                searchTerm: searchText
+              }
             })
           }
         }
@@ -173,10 +196,19 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           word.length > 2 && word.toLowerCase().includes(searchText)
         )
         keywords.slice(0, 5).forEach(keyword => {
+          // 找到关键词在原文中的位置
+          const startIndex = note.content.indexOf(keyword)
+          const searchIndex = keyword.toLowerCase().indexOf(searchText)
+          
           suggestions.push({
             text: keyword,
             note: note,
-            type: 'content'
+            type: 'content',
+            position: {
+              startIndex: startIndex + searchIndex,
+              endIndex: startIndex + searchIndex + searchText.length,
+              searchTerm: searchText
+            }
           })
         })
       }
@@ -215,8 +247,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const handleSuggestionClick = (suggestion: SuggestionItem) => {
     setSearchTerm(suggestion.text)
     setShowSuggestions(false)
-    // 跳转到对应的笔记阅读页面
-    navigate(`/notes/${suggestion.note.id}`, { state: { note: suggestion.note } })
+    // 跳转到对应的笔记阅读页面，传递位置信息
+    navigate(`/notes/${suggestion.note.id}`, { 
+      state: { 
+        note: suggestion.note,
+        highlightPosition: suggestion.position
+      } 
+    })
   }
 
   // 获取建议图标
