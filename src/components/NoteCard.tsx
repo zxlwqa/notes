@@ -1,6 +1,6 @@
 import React from 'react'
 import { Trash2, Calendar, FileText, Tag } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getTagClassName } from '@/lib/utils'
 
 interface Note {
   id: string
@@ -132,14 +132,17 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
           {note.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              className={cn(
+                "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
+                getTagClassName(tag)
+              )}
             >
               <Tag className="h-3 w-3 mr-1" />
               {tag}
             </span>
           ))}
           {note.tags.length > 3 && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
               +{note.tags.length - 3}
             </span>
           )}
