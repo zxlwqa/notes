@@ -255,3 +255,46 @@ export function validatePassword(password: string): {
     }
   }
 }
+
+/**
+ * 标签颜色配置
+ */
+export const TAG_COLORS = [
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+  { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
+  { bg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-200' },
+  { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
+] as const
+
+/**
+ * 根据标签名称生成一致的颜色
+ */
+export function getTagColor(tagName: string): typeof TAG_COLORS[0] {
+  // 使用标签名称的哈希值来确保相同标签总是得到相同颜色
+  let hash = 0
+  for (let i = 0; i < tagName.length; i++) {
+    const char = tagName.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // 转换为32位整数
+  }
+  
+  // 确保索引为正数
+  const index = Math.abs(hash) % TAG_COLORS.length
+  return TAG_COLORS[index]
+}
+
+/**
+ * 获取标签的CSS类名
+ */
+export function getTagClassName(tagName: string): string {
+  const color = getTagColor(tagName)
+  return `${color.bg} ${color.text} ${color.border}`
+}
