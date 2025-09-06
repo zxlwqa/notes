@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Search, FileText, Hash } from 'lucide-react'
-import { debounce } from '@/lib/utils'
+import { debounce, getTagClassName, cn } from '@/lib/utils'
 import type { Note } from '@/types'
 
 interface SuggestionItem {
@@ -278,7 +278,19 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 >
                   {getSuggestionIcon(suggestion)}
                   <div className="flex-1 min-w-0">
-                    <div className="truncate font-medium">{suggestion.text}</div>
+                    <div className="truncate font-medium">
+                      {suggestion.type === 'tag' ? (
+                        <span className={cn(
+                          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mr-2",
+                          getTagClassName(suggestion.text)
+                        )}>
+                          <Hash className="h-3 w-3 mr-1" />
+                          {suggestion.text}
+                        </span>
+                      ) : (
+                        suggestion.text
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 truncate">
                       {suggestion.type === 'title' ? '标题' : 
                        suggestion.type === 'tag' ? '标签' : '内容'} · {suggestion.note.title}
