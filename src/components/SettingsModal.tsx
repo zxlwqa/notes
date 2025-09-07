@@ -240,6 +240,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [logsOpen, setLogsOpen] = useState(false)
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsText, setLogsText] = useState('')
+  const [logsData, setLogsData] = useState<any>(null)
+  const [logsView, setLogsView] = useState<'table' | 'json'>('table')
 
   // 打开上传弹窗
   const handleUploadNotes = () => {
@@ -251,11 +253,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setLogsOpen(true)
     setLogsLoading(true)
     setLogsText('')
+    setLogsData(null)
     try {
       const resp = await logsApi.getLogs()
       const data = resp.data
       const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
       setLogsText(text)
+      setLogsData(typeof data === 'object' ? data : null)
     } catch (error: any) {
       setLogsText(`获取日志失败：${error?.response?.data?.error || error?.message || '未知错误'}`)
     } finally {
@@ -932,13 +936,85 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+            <div className="px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setLogsView(v => v === 'table' ? 'json' : 'table')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {logsView === 'table' ? '切换JSON视图' : '切换表格视图'}
+                </button>
+                <button
+                  onClick={handleViewLogs}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  刷新
+                </button>
+                <button
+                  onClick={async () => {
+                    const ok = confirm('确定要清空所有日志吗？该操作不可恢复。')
+                    if (!ok) return
+                    try {
+                      setLogsLoading(true)
+                      await logsApi.clearLogs()
+                      await handleViewLogs()
+                    } finally {
+                      setLogsLoading(false)
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  清空日志
+                </button>
+              </div>
+            </div>
+            <div className="px-6 pb-4 max-h-[65vh] overflow-y-auto">
               {logsLoading ? (
                 <div className="text-gray-600">加载中...</div>
-              ) : (
+              ) : logsView === 'json' ? (
                 <pre className="text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-md p-3 whitespace-pre-wrap break-words">
                   {logsText || '暂无日志'}
                 </pre>
+              ) : (
+                <div className="border border-gray-200 rounded-md overflow-hidden">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-gray-600">时间</th>
+                        <th className="px-3 py-2 text-gray-600">级别</th>
+                        <th className="px-3 py-2 text-gray-600">消息</th>
+                        <th className="px-3 py-2 text-gray-600">元信息</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(logsData?.items || []).length === 0 ? (
+                        <tr>
+                          <td className="px-3 py-3 text-gray-500" colSpan={4}>暂无日志</td>
+                        </tr>
+                      ) : (
+                        (logsData?.items || []).map((it: any, idx: number) => {
+                          let meta: any = null
+                          try { meta = it.meta ? JSON.parse(it.meta) : null } catch {}
+                          const levelColor = it.level === 'error' ? 'text-red-600' : it.level === 'warn' ? 'text-yellow-700' : 'text-gray-800'
+                          return (
+                            <tr key={it.id || idx} className={idx % 2 ? 'bg-white' : 'bg-gray-50/50'}>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-700">{it.created_at}</td>
+                              <td className={`px-3 py-2 whitespace-nowrap font-medium ${levelColor}`}>{it.level || 'info'}</td>
+                              <td className="px-3 py-2 whitespace-pre-wrap text-gray-800">{it.message}</td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {meta ? (
+                                  <pre className="text-xs bg-gray-50 rounded p-2 border border-gray-200 whitespace-pre-wrap break-words">{JSON.stringify(meta, null, 2)}</pre>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
             <div className="px-6 py-4 border-t border-white/40 flex justify-end gap-3 bg-white/40">
