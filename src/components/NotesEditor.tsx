@@ -210,6 +210,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     gutters: [],
     // 修复光标定位
     lineWiseCopyCut: true,
+    // 强制设置行高和字体
+    lineHeight: 1.6,
+    fontSize: 'var(--editor-font-size, 14px)',
     // 添加粘贴事件处理
     extraKeys: {
       'Ctrl-V': function(cm: any) {
@@ -232,6 +235,53 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
   useEffect(() => {
     if (mdeRef.current && mdeRef.current.simpleMde) {
       setEditorInstance(mdeRef.current.simpleMde)
+      
+      // 立即应用样式修复
+      const cm = mdeRef.current.simpleMde.codemirror
+      if (cm) {
+        // 等待DOM更新后应用样式
+        setTimeout(() => {
+          const wrapper = cm.getWrapperElement()
+          const cursor = wrapper.querySelector('.CodeMirror-cursor')
+          const lines = wrapper.querySelectorAll('.CodeMirror-line')
+          
+          // 强制设置光标样式
+          if (cursor) {
+            cursor.style.cssText = `
+              border-left: 2px solid #ef4444 !important;
+              border-right: none !important;
+              width: 0 !important;
+              height: 1.2em !important;
+              background: transparent !important;
+              position: relative !important;
+              vertical-align: baseline !important;
+              display: inline-block !important;
+              line-height: 1.6 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              top: 0 !important;
+              bottom: auto !important;
+            `
+          }
+          
+          // 强制设置文本行样式
+          lines.forEach((line: any) => {
+            line.style.cssText = `
+              line-height: 1.6 !important;
+              height: 1.6em !important;
+              display: block !important;
+              vertical-align: baseline !important;
+              position: relative !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              white-space: pre-wrap !important;
+            `
+          })
+          
+          // 强制刷新
+          cm.refresh()
+        }, 100)
+      }
     }
   }, [mdeRef.current])
 
@@ -330,51 +380,61 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       
       // 添加更强制性的光标修复
       const forceFixCursor = () => {
+        // 获取所有相关元素
         const cursorElement = cm.getWrapperElement().querySelector('.CodeMirror-cursor')
+        const lines = cm.getWrapperElement().querySelectorAll('.CodeMirror-line')
+        const textElements = cm.getWrapperElement().querySelectorAll('.CodeMirror-line span')
+        const codeMirrorElement = cm.getWrapperElement().querySelector('.CodeMirror')
+        
         if (cursorElement) {
-          // 强制重置所有样式
-          cursorElement.style.cssText = `
-            border-left: 2px solid #ef4444 !important;
-            border-right: none !important;
-            width: 0 !important;
-            height: 1.2em !important;
-            background: transparent !important;
-            position: relative !important;
-            vertical-align: baseline !important;
-            display: inline-block !important;
-            line-height: 1.6 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            top: 0 !important;
-            bottom: auto !important;
-          `
+          // 完全重置光标样式
+          cursorElement.style.cssText = ''
+          cursorElement.style.setProperty('border-left', '2px solid #ef4444', 'important')
+          cursorElement.style.setProperty('border-right', 'none', 'important')
+          cursorElement.style.setProperty('width', '0', 'important')
+          cursorElement.style.setProperty('height', '1.2em', 'important')
+          cursorElement.style.setProperty('background', 'transparent', 'important')
+          cursorElement.style.setProperty('position', 'relative', 'important')
+          cursorElement.style.setProperty('vertical-align', 'baseline', 'important')
+          cursorElement.style.setProperty('display', 'inline-block', 'important')
+          cursorElement.style.setProperty('line-height', '1.6', 'important')
+          cursorElement.style.setProperty('margin', '0', 'important')
+          cursorElement.style.setProperty('padding', '0', 'important')
+          cursorElement.style.setProperty('top', '0', 'important')
+          cursorElement.style.setProperty('bottom', 'auto', 'important')
+        }
+        
+        // 修复CodeMirror容器
+        if (codeMirrorElement) {
+          codeMirrorElement.style.setProperty('line-height', '1.6', 'important')
+          codeMirrorElement.style.setProperty('font-size', 'var(--editor-font-size, 14px)', 'important')
         }
         
         // 强制修复文本行对齐
-        const lines = cm.getWrapperElement().querySelectorAll('.CodeMirror-line')
         lines.forEach((line: any) => {
-          line.style.cssText = `
-            line-height: 1.6 !important;
-            height: 1.6em !important;
-            display: block !important;
-            vertical-align: baseline !important;
-            position: relative !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          `
+          line.style.cssText = ''
+          line.style.setProperty('line-height', '1.6', 'important')
+          line.style.setProperty('height', '1.6em', 'important')
+          line.style.setProperty('display', 'block', 'important')
+          line.style.setProperty('vertical-align', 'baseline', 'important')
+          line.style.setProperty('position', 'relative', 'important')
+          line.style.setProperty('margin', '0', 'important')
+          line.style.setProperty('padding', '0', 'important')
+          line.style.setProperty('white-space', 'pre-wrap', 'important')
         })
         
         // 强制修复文本内容对齐
-        const textElements = cm.getWrapperElement().querySelectorAll('.CodeMirror-line span')
         textElements.forEach((span: any) => {
-          span.style.cssText = `
-            vertical-align: baseline !important;
-            line-height: 1.6 !important;
-            display: inline !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          `
+          span.style.cssText = ''
+          span.style.setProperty('vertical-align', 'baseline', 'important')
+          span.style.setProperty('line-height', '1.6', 'important')
+          span.style.setProperty('display', 'inline', 'important')
+          span.style.setProperty('margin', '0', 'important')
+          span.style.setProperty('padding', '0', 'important')
         })
+        
+        // 强制刷新CodeMirror的渲染
+        cm.refresh()
       }
       
       // 立即强制修复
@@ -383,9 +443,28 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       // 定期强制修复光标位置
       const interval = setInterval(forceFixCursor, 500)
       
-      // 在组件卸载时清理定时器
+      // 使用MutationObserver监控DOM变化
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' || mutation.type === 'attributes') {
+            // 当DOM发生变化时，立即修复对齐
+            setTimeout(forceFixCursor, 0)
+          }
+        })
+      })
+      
+      // 开始观察CodeMirror容器
+      observer.observe(cm.getWrapperElement(), {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      })
+      
+      // 在组件卸载时清理定时器和观察器
       return () => {
         clearInterval(interval)
+        observer.disconnect()
         // 清理事件监听器
         cm.getWrapperElement().removeEventListener('paste', handlePasteEvent)
         cm.off('cursorActivity', handleCursorActivity)
@@ -987,7 +1066,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror, .notes-editor-container .editor-toolbar, .notes-editor-container .editor-statusbar { background: transparent !important; }
         .notes-editor-container .CodeMirror-gutters { background: transparent !important; border: none !important; }
         
-        /* 编辑器光标样式 - 简化版本 */
+        /* 编辑器光标样式 - 强制对齐版本 */
         .notes-editor-container .CodeMirror-cursor {
           border-left: 2px solid #ef4444 !important;
           border-right: none !important;
@@ -999,6 +1078,11 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           vertical-align: baseline !important;
           display: inline-block !important;
           line-height: 1.6 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          top: 0 !important;
+          bottom: auto !important;
+          transform: translateY(0) !important;
         }
         
         .notes-editor-container .CodeMirror.CodeMirror-focused .CodeMirror-cursor {
@@ -1063,6 +1147,37 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           bottom: auto !important;
           height: 1.2em !important;
           line-height: 1.6 !important;
+        }
+        
+        /* 强制所有光标元素对齐 */
+        .notes-editor-container .CodeMirror-cursor,
+        .notes-editor-container .CodeMirror .CodeMirror-cursor,
+        .notes-editor-container .CodeMirror .CodeMirror-line .CodeMirror-cursor {
+          vertical-align: baseline !important;
+          position: relative !important;
+          top: 0 !important;
+          bottom: auto !important;
+          height: 1.2em !important;
+          line-height: 1.6 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          transform: translateY(0) !important;
+        }
+        
+        /* 强制文本行对齐 */
+        .notes-editor-container .CodeMirror .CodeMirror-line {
+          vertical-align: baseline !important;
+          position: relative !important;
+          top: 0 !important;
+          bottom: auto !important;
+        }
+        
+        /* 强制文本内容对齐 */
+        .notes-editor-container .CodeMirror .CodeMirror-line span {
+          vertical-align: baseline !important;
+          position: relative !important;
+          top: 0 !important;
+          bottom: auto !important;
         }
       `}</style>
 
