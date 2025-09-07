@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { notesApi } from '@/lib/api'
 
 const LoginPage = () => {
   const [password, setPassword] = useState('')
@@ -101,32 +100,7 @@ const LoginPage = () => {
         // 登录成功后立即跳转，不等待数据加载
         navigate('/notes')
         
-        // 在后台异步加载数据，不阻塞页面跳转
-        setTimeout(async () => {
-          try {
-            const resp = await notesApi.getNotes()
-            const data = Array.isArray(resp.data)
-              ? resp.data
-              : (resp.data && typeof resp.data === 'object')
-                ? [{
-                    id: resp.data.id || '1',
-                    title: resp.data.title || '我的笔记',
-                    content: resp.data.content || '',
-                    tags: resp.data.tags || [],
-                    createdAt: resp.data.createdAt || new Date().toISOString(),
-                    updatedAt: resp.data.updatedAt || new Date().toISOString()
-                  }]
-                : []
-            try {
-              sessionStorage.setItem('notes-cache', JSON.stringify(data))
-              localStorage.setItem('notes-cache', JSON.stringify(data))
-              // 通知首页数据已更新
-              window.dispatchEvent(new CustomEvent('notes-loaded', { detail: data }))
-            } catch {}
-          } catch (error) {
-            console.error('后台加载笔记失败:', error)
-          }
-        }, 100) // 100ms后开始加载，确保页面已跳转
+        // 去列表页加载，避免重复请求
       } else {
         setError('密码错误')
       }
