@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Save, ArrowLeft, Settings, Home } from 'lucide-react'
+import BackToTop from '@/components/BackToTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 import { notesApi } from '@/lib/api'
@@ -442,6 +443,7 @@ const NoteEditPage: React.FC = () => {
           保存成功！
         </div>
       )}
+      <BackToTop />
     </div>
   )
 }
