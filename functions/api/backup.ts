@@ -1,3 +1,4 @@
+import { logToD1 } from '../_utils/log'
 // 上传备份
 export const onRequestPost: PagesFunction<{
   DB: D1Database;
@@ -22,6 +23,7 @@ export const onRequestPost: PagesFunction<{
     const { results } = await context.env.DB.prepare("SELECT content FROM notes").all();
     notesCount = results.length;
     if (notesCount === 0) {
+      await logToD1(context.env, 'warn', 'backup.upload.no_notes')
       return new Response(
         JSON.stringify({ success: false, error: "没有可导出的笔记" }),
         { status: 404, headers: corsHeaders }
@@ -31,6 +33,7 @@ export const onRequestPost: PagesFunction<{
     content = results.map((row: any) => row.content).join('\n\n---\n\n');
   } catch (e) {
     console.error("数据库读取失败:", e);
+    await logToD1(context.env, 'error', 'backup.upload.db_error', { message: (e as any)?.message })
     return new Response(
       JSON.stringify({ success: false, error: "数据库读取失败" }),
       { status: 500, headers: corsHeaders }
@@ -62,6 +65,7 @@ export const onRequestPost: PagesFunction<{
     });
 
     if (res.ok) {
+      await logToD1(context.env, 'info', 'backup.upload.success', { fileName: filename, totalNotes: notesCount })
       // 上传成功，返回成功信息和文件信息
       return new Response(
         JSON.stringify({ 
@@ -77,6 +81,7 @@ export const onRequestPost: PagesFunction<{
       // 上传失败，打印并返回错误信息
       const errorText = await res.text();
       console.error("上传失败:", errorText);
+      await logToD1(context.env, 'error', 'backup.upload.failed', { status: res.status })
       return new Response(
         JSON.stringify({ success: false, status: res.status, error: errorText }),
         { status: 500, headers: corsHeaders }
@@ -85,6 +90,7 @@ export const onRequestPost: PagesFunction<{
   } catch (e: any) {
     // 捕获网络或其他异常
     console.error("WebDAV 上传异常:", e);
+    await logToD1(context.env, 'error', 'backup.upload.exception', { message: e.message })
     return new Response(
       JSON.stringify({ success: false, error: e.message }),
       { status: 500, headers: corsHeaders }
@@ -167,6 +173,7 @@ export const onRequestGet: PagesFunction<{
         }
       }
 
+      await logToD1(context.env, 'info', 'backup.download.success', { fileName: filename, importedCount })
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -181,6 +188,7 @@ export const onRequestGet: PagesFunction<{
     } else {
       const errorText = await res.text();
       console.error("下载失败:", errorText);
+      await logToD1(context.env, 'error', 'backup.download.failed', { status: res.status })
       return new Response(
         JSON.stringify({ success: false, status: res.status, error: errorText }),
         { status: 500, headers: corsHeaders }
@@ -188,6 +196,7 @@ export const onRequestGet: PagesFunction<{
     }
   } catch (e: any) {
     console.error("WebDAV 下载异常:", e);
+    await logToD1(context.env, 'error', 'backup.download.exception', { message: e.message })
     return new Response(
       JSON.stringify({ success: false, error: e.message }),
       { status: 500, headers: corsHeaders }
