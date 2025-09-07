@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { notesApi } from '@/lib/api'
 import { Settings, Save, Edit3 } from 'lucide-react'
+import BackToTop from '@/components/BackToTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 
@@ -168,6 +169,7 @@ const NotesPage = () => {
           onClose={() => setIsSettingsOpen(false)}
         />
       </Suspense>
+      <BackToTop />
     </div>
   )
 }
