@@ -5,24 +5,60 @@
 /* Logo 预加载样式已移除，使用HTML标准预加载 */
 
 @layer base {
-  html, body, h1, h2, h3, h4, h5, h6, p,
-  button, input, select, textarea,
-  a, span, div, label, small, strong, em,
-  table, th, td, ul, ol, li {
+  /* 全局字体大小设置 - 应用到所有元素 */
+  * {
     font-family: var(--editor-font-family, 'Segoe UI', system-ui, sans-serif);
     font-size: var(--global-font-size, 14px);
     line-height: var(--global-line-height, 1.6);
-  }
-  
-  /* 确保按钮文字也使用全局字体大小 */
-  button, input[type="button"], input[type="submit"], input[type="reset"] {
-    font-size: var(--global-font-size, 14px) !important;
   }
   
   /* 确保所有文本元素都使用全局字体大小，但排除编辑器 */
   *:not(.CodeMirror):not(.CodeMirror *) {
     font-size: inherit;
   }
+  
+  /* 标题元素使用相对字体大小 */
+  h1 {
+    font-size: calc(var(--global-font-size, 14px) * 1.5) !important;
+    font-weight: bold;
+  }
+  
+  h2 {
+    font-size: calc(var(--global-font-size, 14px) * 1.25) !important;
+    font-weight: bold;
+  }
+  
+  h3 {
+    font-size: var(--global-font-size, 14px) !important;
+    font-weight: 600;
+  }
+  
+  h4, h5, h6 {
+    font-size: var(--global-font-size, 14px) !important;
+    font-weight: 500;
+  }
+  
+  /* 小文本使用相对较小的字体 */
+  .text-sm, small {
+    font-size: calc(var(--global-font-size, 14px) * 0.875) !important;
+  }
+  
+  /* 按钮和输入框强制使用全局字体大小 */
+  button, input, select, textarea, label {
+    font-size: var(--global-font-size, 14px) !important;
+  }
+  
+  /* 确保所有 Tailwind 字体大小类都被覆盖 */
+  .text-xs { font-size: calc(var(--global-font-size, 14px) * 0.75) !important; }
+  .text-sm { font-size: calc(var(--global-font-size, 14px) * 0.875) !important; }
+  .text-base { font-size: var(--global-font-size, 14px) !important; }
+  .text-lg { font-size: calc(var(--global-font-size, 14px) * 1.125) !important; }
+  .text-xl { font-size: calc(var(--global-font-size, 14px) * 1.25) !important; }
+  .text-2xl { font-size: calc(var(--global-font-size, 14px) * 1.5) !important; }
+  .text-3xl { font-size: calc(var(--global-font-size, 14px) * 1.875) !important; }
+  .text-4xl { font-size: calc(var(--global-font-size, 14px) * 2.25) !important; }
+  .text-5xl { font-size: calc(var(--global-font-size, 14px) * 3) !important; }
+  .text-6xl { font-size: calc(var(--global-font-size, 14px) * 3.75) !important; }
   
   /* 应用背景图设置 */
   body {
