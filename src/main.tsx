@@ -11,7 +11,7 @@ function applySavedAppearanceSettings() {
     const saved = localStorage.getItem('app-settings')
     if (!saved) return
     const parsed = JSON.parse(saved)
-    const fontSizeMap: Record<string, string> = { '小': '12px', '中': '14px', '大': '16px', '特大': '18px', '超大': '20px' }
+    const fontSizeMap: Record<string, string> = { '小': '14px', '中': '16px', '大': '18px', '特大': '20px', '超大': '22px' }
     const resolvedFontSize = fontSizeMap[parsed.fontSize as keyof typeof fontSizeMap] || '14px'
     const resolvedLineHeight = '1.6'
     
