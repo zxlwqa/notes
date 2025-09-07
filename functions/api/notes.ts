@@ -1,3 +1,4 @@
+import { logToD1 } from '../_utils/log'
 // 类型定义
 type PagesFunction = (context: { request: Request; env: any }) => Promise<Response>;
 
@@ -169,6 +170,7 @@ const handleGet: PagesFunction = async ({ request, env }) => {
         };
       });
 
+      await logToD1(env, 'info', 'notes.list', { count: notes.length })
       return Response.json(notes, {
         headers: {
           'Access-Control-Allow-Origin': '*',
@@ -177,6 +179,7 @@ const handleGet: PagesFunction = async ({ request, env }) => {
     }
   } catch (error) {
     console.error('Database error:', error);
+    await logToD1(env, 'error', 'notes.get.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: {
@@ -258,6 +261,7 @@ const handlePost: PagesFunction = async ({ request, env }) => {
       `INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
     ).bind(noteId, title, content, tagsJson).run();
 
+    await logToD1(env, 'info', 'notes.create', { id: noteId })
     return Response.json({
       success: true,
       id: noteId
@@ -268,6 +272,7 @@ const handlePost: PagesFunction = async ({ request, env }) => {
     });
   } catch (error) {
     console.error('Database error:', error);
+    await logToD1(env, 'error', 'notes.create.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: {
@@ -360,6 +365,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
       `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`
     ).bind(title, content, tagsJson, noteId).run();
 
+    await logToD1(env, 'info', 'notes.update', { id: noteId })
     return Response.json({ success: true }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -367,6 +373,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
     });
   } catch (error) {
     console.error('Database error:', error);
+    await logToD1(env, 'error', 'notes.update.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: {
