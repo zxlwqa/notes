@@ -471,7 +471,7 @@ const NoteViewPage: React.FC = () => {
                           }
                         }}
                       >
-                        {note.content}
+                        {note.content.replace(/\\\./g, "\\\\.")}
                       </ReactMarkdown>
                       </div>
                     </div>
