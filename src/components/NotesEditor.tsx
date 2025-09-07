@@ -607,8 +607,8 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         </button>
 
         <button
-          onClick={() => insertText('**', '**')}
-          title="粗体"
+          onClick={() => insertText('```\n', '\n```')}
+          title="代码块"
           style={{
             background: 'transparent',
             border: '1px solid transparent',
@@ -632,7 +632,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
             e.currentTarget.style.borderColor = 'transparent'
           }}
         >
-          B
+          &lt;/&gt; CB
         </button>
 
         <button
@@ -897,8 +897,8 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         </button>
 
         <button
-          onClick={() => insertText('```\n', '\n```')}
-          title="代码块"
+          onClick={() => insertText('**', '**')}
+          title="粗体"
           style={{
             background: 'transparent',
             border: '1px solid transparent',
@@ -922,7 +922,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
             e.currentTarget.style.borderColor = 'transparent'
           }}
         >
-          &lt;/&gt; CB
+          B
         </button>
 
         {/* Scroll开关 */}
