@@ -366,7 +366,7 @@ const NoteEditPage: React.FC = () => {
                 placeholder="输入笔记标题..."
                 className="title-input font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
                 style={{ 
-                  fontSize: 'var(--global-font-size, 16px)',
+                  fontSize: 'calc(var(--global-font-size, 16px) * 1.5)',
                   fontFamily: 'var(--editor-font-family, inherit)',
                   lineHeight: 'var(--global-line-height, 1.6)'
                 }}
