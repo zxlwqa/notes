@@ -19,8 +19,8 @@
     font-size: var(--global-font-size, 14px) !important;
   }
   
-  /* 确保所有文本元素都使用全局字体大小 */
-  * {
+  /* 确保所有文本元素都使用全局字体大小，但排除编辑器 */
+  *:not(.CodeMirror):not(.CodeMirror *) {
     font-size: inherit;
   }
   
@@ -127,11 +127,17 @@
   
   /* 确保光标可见 - 移除冲突样式 */
   .EasyMDEContainer .CodeMirror-cursor {
-    @apply border-l-2 border-gray-900;
+    border-left: 2px solid #3b82f6 !important;
+    border-right: none !important;
+    width: 0 !important;
     height: 1.2em !important;
+    background: transparent !important;
     vertical-align: baseline !important;
     position: relative !important;
     display: inline-block !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   /* 确保编辑器状态栏正常显示 */
