@@ -121,7 +121,7 @@ const LoginPage = () => {
                 fetchpriority="high"
               />
             </div>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">{displayTitle}</h2>
+            <h2 className="mt-4 font-bold text-gray-900" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>{displayTitle}</h2>
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -152,7 +152,7 @@ const LoginPage = () => {
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="text-red-600 text-center">{error}</div>
             )}
 
             <div>
