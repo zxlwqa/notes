@@ -108,8 +108,27 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     if (editor && editor.codemirror) {
       const cm = editor.codemirror
       const selection = cm.getSelection()
-      cm.replaceSelection(before + selection + after)
-      cm.focus()
+      const cursor = cm.getCursor()
+      
+      // 替换选中的文本或插入新文本
+      if (selection) {
+        cm.replaceSelection(before + selection + after)
+      } else {
+        cm.replaceRange(before + after, cursor)
+        // 将光标移动到插入的文本中间
+        const newCursor = {
+          line: cursor.line,
+          ch: cursor.ch + before.length
+        }
+        cm.setCursor(newCursor)
+      }
+      
+      // 确保编辑器保持焦点
+      setTimeout(() => {
+        cm.focus()
+        // 触发光标更新事件
+        cm.triggerOnKeyDown()
+      }, 0)
     } else {
       // 如果编辑器还没准备好，直接在当前光标位置插入文本
       const textarea = document.querySelector('.CodeMirror textarea') as HTMLTextAreaElement
@@ -208,7 +227,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       placeholder,
       spellChecker: false,
       status: false,
-      autofocus: false,
+      autofocus: true,
       lineWrapping: true,
       autoDownloadFontAwesome: false,
       renderingConfig: {
@@ -220,7 +239,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       },
       toolbar: false,
       showIcons: false,
-      cursorBlinkRate: 1000,
+      cursorBlinkRate: 530,
       cursorHeight: 1.2,
       theme: 'default',
       lineNumbers: false,
@@ -274,6 +293,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           
           // 立即修复
           fixCursorPosition()
+          
+          // 确保编辑器获得焦点并显示光标
+          cm.focus()
           
           // 监听关键事件，确保光标位置正确
           const handleCursorUpdate = () => {
@@ -346,6 +368,20 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       }
     }
   }, [editorInstance, getEditor])
+
+  // 确保编辑器在挂载后立即获得焦点
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const editor = getEditor()
+      if (editor && editor.codemirror) {
+        editor.codemirror.focus()
+        // 确保光标可见
+        editor.codemirror.refresh()
+      }
+    }, 200)
+    
+    return () => clearTimeout(timer)
+  }, [getEditor])
 
   // 将用户设置应用到编辑器根容器（通过 CSS 变量）
   useEffect(() => {
