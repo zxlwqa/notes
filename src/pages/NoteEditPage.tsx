@@ -364,7 +364,7 @@ const NoteEditPage: React.FC = () => {
                 value={note.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="输入笔记标题..."
-                className="font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
+                className="title-input font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
                 style={{ fontSize: 'var(--global-font-size, 16px)' }}
               />
 
