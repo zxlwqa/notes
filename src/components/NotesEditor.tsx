@@ -199,11 +199,17 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     // 完全禁用默认工具栏
     toolbar: false,
     showIcons: false,
-    // 光标配置
+    // 光标配置 - 修复光标位置问题
     cursorBlinkRate: 1000,
-    cursorHeight: 1.2,
+    cursorHeight: 1,
     // 确保光标可见
     theme: 'default',
+    // CodeMirror 特定配置
+    lineNumbers: false,
+    foldGutter: false,
+    gutters: [],
+    // 修复光标定位
+    lineWiseCopyCut: true,
     // 添加粘贴事件处理
     extraKeys: {
       'Ctrl-V': function(cm: any) {
@@ -211,6 +217,13 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       },
       'Cmd-V': function(cm: any) {
         handlePaste(cm)
+      },
+      'Enter': function(cm: any) {
+        // 确保回车后光标位置正确
+        cm.replaceSelection('\n')
+        const cursor = cm.getCursor()
+        cm.setCursor(cursor)
+        cm.focus()
       }
     }
   }), [placeholder, handlePaste])
@@ -222,11 +235,26 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [mdeRef.current])
 
-  // 添加粘贴事件监听器
+  // 添加粘贴事件监听器和光标修复
   useEffect(() => {
     const editor = getEditor()
     if (editor && editor.codemirror) {
       const cm = editor.codemirror
+      
+      // 修复光标位置和样式
+      const fixCursorPosition = () => {
+        // 强制设置光标样式
+        const cursorElement = cm.getWrapperElement().querySelector('.CodeMirror-cursor')
+        if (cursorElement) {
+          cursorElement.style.height = '1.2em'
+          cursorElement.style.verticalAlign = 'baseline'
+          cursorElement.style.position = 'relative'
+          cursorElement.style.display = 'inline-block'
+          cursorElement.style.lineHeight = '1.6'
+          cursorElement.style.margin = '0'
+          cursorElement.style.padding = '0'
+        }
+      }
       
       // 添加粘贴事件监听器
       const handlePasteEvent = async (event: ClipboardEvent) => {
@@ -262,12 +290,29 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         }
       }
       
-      // 绑定粘贴事件
+      // 添加光标位置修复事件
+      const handleCursorActivity = () => {
+        setTimeout(fixCursorPosition, 0)
+      }
+      
+      // 添加输入事件监听器
+      const handleInput = () => {
+        setTimeout(fixCursorPosition, 0)
+      }
+      
+      // 绑定事件
       cm.getWrapperElement().addEventListener('paste', handlePasteEvent)
+      cm.on('cursorActivity', handleCursorActivity)
+      cm.on('change', handleInput)
+      
+      // 立即修复光标位置
+      setTimeout(fixCursorPosition, 100)
       
       return () => {
         // 清理事件监听器
         cm.getWrapperElement().removeEventListener('paste', handlePasteEvent)
+        cm.off('cursorActivity', handleCursorActivity)
+        cm.off('change', handleInput)
       }
     }
   }, [editorInstance, getEditor])
@@ -873,12 +918,15 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           height: 1.2em !important;
           background: transparent !important;
           animation: cursor-blink 1s infinite !important;
-          position: absolute !important;
+          position: relative !important;
           top: 0 !important;
-          bottom: 0 !important;
+          bottom: auto !important;
           margin: 0 !important;
           padding: 0 !important;
           vertical-align: baseline !important;
+          display: inline-block !important;
+          line-height: 1.6 !important;
+          transform: translateY(0) !important;
         }
         
         .notes-editor-container .CodeMirror.CodeMirror-focused .CodeMirror-cursor {
@@ -947,6 +995,38 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           height: 1.2em !important;
           margin-top: 0 !important;
           margin-bottom: 0 !important;
+        }
+        
+        /* 强制修复所有光标位置问题 */
+        .notes-editor-container .CodeMirror-cursor,
+        .notes-editor-container .CodeMirror .CodeMirror-cursor,
+        .notes-editor-container .CodeMirror .CodeMirror-line .CodeMirror-cursor {
+          height: 1.2em !important;
+          vertical-align: baseline !important;
+          position: relative !important;
+          display: inline-block !important;
+          line-height: 1.6 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          top: 0 !important;
+          bottom: auto !important;
+          transform: translateY(0) !important;
+        }
+        
+        /* 确保文本行与光标对齐 */
+        .notes-editor-container .CodeMirror .CodeMirror-line {
+          line-height: 1.6 !important;
+          font-size: var(--editor-font-size, 14px) !important;
+          height: 1.6em !important;
+          display: flex !important;
+          align-items: baseline !important;
+        }
+        
+        /* 修复光标在文本中的位置 */
+        .notes-editor-container .CodeMirror .CodeMirror-line span {
+          line-height: 1.6 !important;
+          vertical-align: baseline !important;
+          display: inline !important;
         }
       `}</style>
 
