@@ -15,7 +15,7 @@ import type {
 
 // 创建axios实例
 export const api = axios.create({
-  baseURL: import.meta.env?.VITE_API_BASE || '',
+  baseURL: import.meta.env?.VITE_API_BASE || '', // 生产环境使用相对路径或环境变量
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -116,4 +116,5 @@ export const cloudApi = {
 export const logsApi = {
   // 获取后端 Functions/API 调用日志
   getLogs: (): Promise<AxiosResponse<any>> => api.get('/api/logs'),
+  clearLogs: (): Promise<AxiosResponse<any>> => api.delete('/api/logs'),
 }
