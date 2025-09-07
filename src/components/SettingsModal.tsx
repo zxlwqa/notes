@@ -135,7 +135,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     localStorage.setItem('app-settings', JSON.stringify(settings))
     // 同步到全局 CSS 变量，便于各处样式生效
     try {
-      const fontSizeMap: Record<string, string> = { '小': '12px', '中': '14px', '大': '16px', '特大': '18px', '超大': '20px' }
+      const fontSizeMap: Record<string, string> = { '小': '14px', '中': '16px', '大': '18px', '特大': '20px', '超大': '22px' }
       const resolvedFontSize = fontSizeMap[settings.fontSize as keyof typeof fontSizeMap] || '14px'
       const resolvedLineHeight = '1.6'
       
