@@ -972,8 +972,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror {
           color: #1f2937 !important;
           background: transparent !important;
-          line-height: 1.6 !important;
-          font-size: var(--editor-font-size, 14px) !important;
         }
         
         .notes-editor-container .CodeMirror-lines {
@@ -1012,11 +1010,28 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           line-height: 1.6 !important;
         }
         
+        /* 强制修复光标位置 */
+        .notes-editor-container .CodeMirror-cursor {
+          transform: translateY(0) !important;
+          margin-top: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        
+        /* 确保文本基线对齐 */
+        .notes-editor-container .CodeMirror-line {
+          transform: translateY(0) !important;
+        }
+        
         /* 粘贴文本格式优化 */
         .notes-editor-container .CodeMirror pre {
           white-space: pre-wrap !important;
           word-wrap: break-word !important;
           word-break: break-word !important;
+        }
+        
+        /* 确保粘贴后的文本保持正确的换行 */
+        .notes-editor-container .CodeMirror .CodeMirror-line {
+          white-space: pre-wrap !important;
         }
         
         /* 光标在粘贴后的位置优化 */
