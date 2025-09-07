@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit3, Settings, Trash2, Tag, Home } from 'lucide-react'
+import BackToTop from '@/components/BackToTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 import { AlertModal, ConfirmModal } from '@/components/Modal'
@@ -536,6 +537,7 @@ const NoteViewPage: React.FC = () => {
         onConfirm={modal.confirmState.onConfirm || (() => {})}
         onCancel={modal.confirmState.onCancel}
       />
+      <BackToTop />
     </div>
   )
 }
