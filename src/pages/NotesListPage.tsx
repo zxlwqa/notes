@@ -441,7 +441,7 @@ const NotesListPage: React.FC = () => {
       <header className="bg-white/30 backdrop-blur-md shadow-sm border-b border-white/30">
         <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* 标题 */}
-          <h1 className="text-xl font-semibold text-gray-900">{displayTitle || '科技刘笔记'}</h1>
+          <h1 className="font-semibold text-gray-900" style={{ fontSize: 'var(--global-font-size, 16px)' }}>{displayTitle || '科技刘笔记'}</h1>
           
           {/* 右侧操作区域 */}
           <div className="flex items-center gap-4">
@@ -481,7 +481,7 @@ const NotesListPage: React.FC = () => {
           {/* 左侧标签栏 */}
           <div className="w-80 flex-shrink-0 -ml-4 sm:-ml-6 lg:-ml-8">
             <div className="bg-white/40 backdrop-blur-lg rounded-lg shadow border border-white/30 p-4 ml-4 sm:ml-6 lg:ml-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center" style={{ fontSize: 'var(--global-font-size, 16px)' }}>
                 <Tag className="h-5 w-5 mr-2" />
                 标签
               </h3>
@@ -491,7 +491,7 @@ const NotesListPage: React.FC = () => {
                     <button
                       key={tag}
                       onClick={() => handleTagClick(tag)}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center"
+                      className="w-full text-left px-3 py-2 rounded-lg flex items-center"
                       style={{
                         backgroundColor: 'transparent',
                         color: '#FFFFFF',
@@ -530,7 +530,7 @@ const NotesListPage: React.FC = () => {
           <div className="flex-1 px-4 py-4 sm:px-6 lg:px-8">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-red-600">{error}</div>
             </div>
           )}
 
@@ -561,7 +561,7 @@ const NotesListPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="font-medium text-gray-900 mb-2" style={{ fontSize: 'var(--global-font-size, 16px)' }}>
                 {loading ? '正在加载笔记...' : (notes.length === 0 ? '还没有笔记' : '没有找到匹配的笔记')}
               </h3>
               <p className="text-gray-500 mb-4">
