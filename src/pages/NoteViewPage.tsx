@@ -271,7 +271,7 @@ const NoteViewPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60 flex items-center justify-center" style={{ backgroundImage: "var(--app-bg-image, url('/image/background.png'))", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">笔记不存在</h2>
+          <h2 className="font-bold text-gray-900 mb-4" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.25)' }}>笔记不存在</h2>
           <p className="text-gray-600 mb-6">您要查看的笔记可能已被删除或不存在。</p>
           <Button onClick={handleBack} variant="secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -307,7 +307,7 @@ const NoteViewPage: React.FC = () => {
                 首页
               </Button>
             <div className="flex-1 flex justify-center">
-              <h1 className="text-xl font-semibold text-gray-900 text-center max-w-md">
+              <h1 className="font-semibold text-gray-900 text-center max-w-md" style={{ fontSize: 'var(--global-font-size, 16px)' }}>
                 {note?.title || '无标题'}
               </h1>
             </div>
@@ -348,7 +348,7 @@ const NoteViewPage: React.FC = () => {
         <div className="px-4 py-6 sm:px-0">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-red-600">{error}</div>
               <div className="mt-2">
                 <Button onClick={handleBack} variant="secondary" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -363,11 +363,11 @@ const NoteViewPage: React.FC = () => {
               <div className="p-6">
                 {/* 笔记标题 */}
                 <div className="mb-6">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                  <h1 className="font-bold text-gray-900 mb-4" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>
                     {note.title || '无标题'}
                   </h1>
                 
-                  <div className="flex items-center space-x-6 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center space-x-6 text-gray-500 mb-4">
                   <div className="flex items-center">
                     <span className="font-medium">创建时间：</span>
                     <span>{formatDate(note.createdAt)}</span>
@@ -388,7 +388,7 @@ const NoteViewPage: React.FC = () => {
                       {note.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                          className="inline-flex items-center px-3 py-1 rounded-full font-medium bg-blue-100 text-blue-800"
                         >
                           <Tag className="h-4 w-4 mr-1" />
                           {tag}
@@ -481,7 +481,7 @@ const NoteViewPage: React.FC = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">暂无内容</h3>
+                      <h3 className="font-medium text-gray-900 mb-2" style={{ fontSize: 'var(--global-font-size, 16px)' }}>暂无内容</h3>
                       <p className="text-gray-500 mb-4">这个笔记还没有任何内容</p>
                       <Button onClick={handleEdit} variant="success">
                         <Edit3 className="h-4 w-4 mr-2" />
@@ -498,7 +498,7 @@ const NoteViewPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">加载中...</h3>
+              <h3 className="font-medium text-gray-900 mb-2" style={{ fontSize: 'var(--global-font-size, 16px)' }}>加载中...</h3>
               <p className="text-gray-500">正在获取笔记内容</p>
             </div>
           )}
