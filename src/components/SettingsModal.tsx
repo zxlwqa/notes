@@ -243,6 +243,62 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [logsData, setLogsData] = useState<any>(null)
   const [logsView, setLogsView] = useState<'table' | 'json'>('table')
 
+  // 日志中文映射
+  const translateLevel = (level?: string) => {
+    if (!level) return '信息'
+    const map: Record<string, string> = { info: '信息', warn: '警告', warning: '警告', error: '错误', debug: '调试' }
+    return map[level] || level
+  }
+  const translateMessage = (msg?: string) => {
+    if (!msg) return ''
+    const map: Record<string, string> = {
+      'login.success': '登录成功',
+      'login.invalid_password': '登录失败：密码不正确',
+      'login.missing_password': '登录失败：缺少密码',
+      'login.exception': '登录异常',
+      'notes.list': '获取笔记列表',
+      'notes.create': '创建笔记',
+      'notes.create.exception': '创建笔记异常',
+      'notes.update': '更新笔记',
+      'notes.update.exception': '更新笔记异常',
+      'backup.upload.no_notes': '备份上传：没有可导出的笔记',
+      'backup.upload.success': '备份上传成功',
+      'backup.upload.failed': '备份上传失败',
+      'backup.upload.exception': '备份上传异常',
+      'backup.download.success': '备份下载并导入成功',
+      'backup.download.failed': '备份下载失败',
+      'backup.download.exception': '备份下载异常',
+      'import.invalid_notes': '导入失败：数据无效',
+      'import.note_failed': '单条笔记导入失败',
+      'import.exception': '导入异常',
+      'import.done': '导入完成',
+      'password.change.missing_fields': '修改密码失败：缺少参数',
+      'password.change.invalid_current': '修改密码失败：当前密码错误',
+      'password.change.success': '修改密码成功',
+      'password.change.exception': '修改密码异常',
+    }
+    return map[msg] || msg
+  }
+  const formatMeta = (msg?: string, meta?: any) => {
+    if (!meta) return '-'
+    try {
+      const obj = typeof meta === 'string' ? JSON.parse(meta) : meta
+      // 特例：notes.list 显示“笔记数量：x”
+      if (msg === 'notes.list' && typeof obj.count === 'number') {
+        return `笔记数量：${obj.count}`
+      }
+      if (msg === 'backup.upload.success' && typeof obj.totalNotes === 'number') {
+        return `备份文件：${obj.fileName || '-'}，笔记数量：${obj.totalNotes}`
+      }
+      if (msg === 'import.done' && typeof obj.imported === 'number') {
+        return `导入成功：${obj.imported} / ${obj.total}`
+      }
+      return JSON.stringify(obj, null, 2)
+    } catch {
+      return typeof meta === 'string' ? meta : JSON.stringify(meta)
+    }
+  }
+
   // 打开上传弹窗
   const handleUploadNotes = () => {
     setIsUploadModalOpen(true)
@@ -754,7 +810,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       <div className="flex gap-2">
                         <button
                           onClick={handleViewLogs}
-                          className="px-3 py-1.5 text-xs font-medium text-white bg-gray-700 border border-transparent rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           查看日志
                         </button>
@@ -821,7 +877,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-t border-white/40 flex justify-end gap-3">
           <button
             onClick={handleLogout}
-            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             退出
           </button>
@@ -940,13 +996,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setLogsView(v => v === 'table' ? 'json' : 'table')}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {logsView === 'table' ? '切换JSON视图' : '切换表格视图'}
                 </button>
                 <button
                   onClick={handleViewLogs}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   刷新
                 </button>
@@ -982,8 +1038,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       <tr>
                         <th className="px-3 py-2 text-gray-600">时间</th>
                         <th className="px-3 py-2 text-gray-600">级别</th>
-                        <th className="px-3 py-2 text-gray-600">消息</th>
-                        <th className="px-3 py-2 text-gray-600">元信息</th>
+                        <th className="px-3 py-2 text-gray-600">事件</th>
+                        <th className="px-3 py-2 text-gray-600">详情</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -995,15 +1051,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         (logsData?.items || []).map((it: any, idx: number) => {
                           let meta: any = null
                           try { meta = it.meta ? JSON.parse(it.meta) : null } catch {}
-                          const levelColor = it.level === 'error' ? 'text-red-600' : it.level === 'warn' ? 'text-yellow-700' : 'text-gray-800'
+                          const levelColor = it.level === 'error' ? 'text-red-600' : (it.level === 'warn' || it.level === 'warning') ? 'text-yellow-700' : 'text-gray-800'
                           return (
                             <tr key={it.id || idx} className={idx % 2 ? 'bg-white' : 'bg-gray-50/50'}>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-700">{it.created_at}</td>
-                              <td className={`px-3 py-2 whitespace-nowrap font-medium ${levelColor}`}>{it.level || 'info'}</td>
-                              <td className="px-3 py-2 whitespace-pre-wrap text-gray-800">{it.message}</td>
+                              <td className={`px-3 py-2 whitespace-nowrap font-medium ${levelColor}`}>{translateLevel(it.level)}</td>
+                              <td className="px-3 py-2 whitespace-pre-wrap text-gray-800">{translateMessage(it.message)}</td>
                               <td className="px-3 py-2 text-gray-700">
                                 {meta ? (
-                                  <pre className="text-xs bg-gray-50 rounded p-2 border border-gray-200 whitespace-pre-wrap break-words">{JSON.stringify(meta, null, 2)}</pre>
+                                  <pre className="text-xs bg-gray-50 rounded p-2 border border-gray-200 whitespace-pre-wrap break-words">{formatMeta(it.message, meta) as any}</pre>
                                 ) : (
                                   <span className="text-gray-400">-</span>
                                 )}
@@ -1020,7 +1076,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <div className="px-6 py-4 border-t border-white/40 flex justify-end gap-3 bg-white/40">
               <button
                 onClick={() => setLogsOpen(false)}
-                className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 关闭
               </button>
