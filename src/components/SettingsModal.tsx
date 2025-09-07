@@ -249,6 +249,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const map: Record<string, string> = { info: '信息', warn: '警告', warning: '警告', error: '错误', debug: '调试' }
     return map[level] || level
   }
+  const translateCountry = (codeOrName?: string) => {
+    if (!codeOrName) return ''
+    const code = codeOrName.toUpperCase()
+    const map: Record<string, string> = {
+      CN: '中国', HK: '中国香港', MO: '中国澳门', TW: '中国台湾',
+      US: '美国', JP: '日本', KR: '韩国', SG: '新加坡', DE: '德国', FR: '法国',
+      GB: '英国', RU: '俄罗斯', AU: '澳大利亚', CA: '加拿大', IN: '印度'
+    }
+    return map[code] || codeOrName
+  }
+  const translateCity = (city?: string) => {
+    if (!city) return ''
+    const map: Record<string, string> = {
+      Beijing: '北京', Shanghai: '上海', Shenzhen: '深圳', Guangzhou: '广州',
+      Tokyo: '东京', Osaka: '大阪', Kyoto: '京都',
+      Singapore: '新加坡',
+      Seoul: '首尔', Busan: '釜山',
+      NewYork: '纽约', 'New York': '纽约', LosAngeles: '洛杉矶', 'Los Angeles': '洛杉矶',
+      London: '伦敦', Paris: '巴黎', Berlin: '柏林', Sydney: '悉尼', Toronto: '多伦多',
+    }
+    return map[city] || city
+  }
   const translateMessage = (msg?: string) => {
     if (!msg) return ''
     const map: Record<string, string> = {
@@ -293,9 +315,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       if (msg === 'import.done' && typeof obj.imported === 'number') {
         return `导入成功：${obj.imported} / ${obj.total}`
       }
-      // 登录成功：显示地理位置（国家/城市）与 IP
+      // 登录成功：显示地理位置（国家/城市，中文）与 IP
       if (msg === 'login.success' && (obj.country || obj.city || obj.ip)) {
-        const loc = [obj.country, obj.city].filter(Boolean).join(' / ')
+        const loc = [translateCountry(obj.country), translateCity(obj.city)].filter(Boolean).join(' / ')
         const ipPart = obj.ip ? ` · IP：${obj.ip}` : ''
         return loc ? `位置：${loc}${ipPart}` : (obj.ip ? `IP：${obj.ip}` : '-')
       }
