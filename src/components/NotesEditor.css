@@ -177,36 +177,8 @@ body .editor-toolbar *,
 
 /* ===== 编辑器输入光标样式优化 ===== */
 
-/* CodeMirror 光标样式 - 简化版本 */
-.CodeMirror-cursor {
-  border-left: 2px solid #3b82f6 !important;
-  border-right: none !important;
-  width: 0 !important;
-  height: 1.2em !important;
-  background: transparent !important;
-  animation: blink 1s infinite !important;
-  position: relative !important;
-  vertical-align: baseline !important;
-  display: inline-block !important;
-  line-height: 1.6 !important;
-}
-
-/* 光标闪烁动画 */
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-/* 确保光标在深色主题下也可见 */
-.CodeMirror.CodeMirror-dark .CodeMirror-cursor {
-  border-left-color: #60a5fa !important;
-}
-
-/* 光标悬停效果 */
-.CodeMirror-cursor:hover {
-  border-left-width: 4px !important;
-  border-left-color: #2563eb !important;
-}
+/* 注意：光标样式现在由 NotesEditor.tsx 和 index.css 统一管理 */
+/* 这里只保留必要的样式，避免冲突 */
 
 /* 编辑器文本区域样式 - 保持原有透明背景 */
 .CodeMirror {
@@ -233,26 +205,6 @@ body .editor-toolbar *,
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-
-/* 确保光标在编辑模式下可见 */
-.CodeMirror.CodeMirror-focused .CodeMirror-cursor {
-  border-left-width: 3px !important;
-  border-left-color: #3b82f6 !important;
-  animation: blink 1s infinite !important;
-}
-
-/* 非聚焦状态下的光标 */
-.CodeMirror:not(.CodeMirror-focused) .CodeMirror-cursor {
-  border-left-width: 2px !important;
-  border-left-color: #9ca3af !important;
-  animation: none !important;
-}
-
-/* 备用闪烁动画 */
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.3; }
 }
 
 /* ===== 标签输入框样式优化 ===== */
