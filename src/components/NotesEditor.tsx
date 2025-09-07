@@ -262,8 +262,17 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         lines.forEach((line: any) => {
           line.style.lineHeight = '1.6'
           line.style.height = '1.6em'
-          line.style.display = 'flex'
-          line.style.alignItems = 'baseline'
+          line.style.display = 'block'
+          line.style.verticalAlign = 'baseline'
+          line.style.position = 'relative'
+        })
+        
+        // 确保文本内容与光标对齐
+        const textElements = cm.getWrapperElement().querySelectorAll('.CodeMirror-line span')
+        textElements.forEach((span: any) => {
+          span.style.verticalAlign = 'baseline'
+          span.style.lineHeight = '1.6'
+          span.style.display = 'inline'
         })
       }
       
@@ -340,6 +349,32 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
             bottom: auto !important;
           `
         }
+        
+        // 强制修复文本行对齐
+        const lines = cm.getWrapperElement().querySelectorAll('.CodeMirror-line')
+        lines.forEach((line: any) => {
+          line.style.cssText = `
+            line-height: 1.6 !important;
+            height: 1.6em !important;
+            display: block !important;
+            vertical-align: baseline !important;
+            position: relative !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          `
+        })
+        
+        // 强制修复文本内容对齐
+        const textElements = cm.getWrapperElement().querySelectorAll('.CodeMirror-line span')
+        textElements.forEach((span: any) => {
+          span.style.cssText = `
+            vertical-align: baseline !important;
+            line-height: 1.6 !important;
+            display: inline !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          `
+        })
       }
       
       // 立即强制修复
@@ -1002,13 +1037,32 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         /* 确保文本行与光标对齐 */
         .notes-editor-container .CodeMirror .CodeMirror-line {
           line-height: 1.6 !important;
+          height: 1.6em !important;
           font-size: var(--editor-font-size, 14px) !important;
           font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
+          display: block !important;
+          vertical-align: baseline !important;
+          position: relative !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
         
         .notes-editor-container .CodeMirror .CodeMirror-line span {
-          line-height: inherit !important;
+          line-height: 1.6 !important;
           vertical-align: baseline !important;
+          display: inline !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        /* 确保光标与文本在同一行 */
+        .notes-editor-container .CodeMirror .CodeMirror-line .CodeMirror-cursor {
+          vertical-align: baseline !important;
+          position: relative !important;
+          top: 0 !important;
+          bottom: auto !important;
+          height: 1.2em !important;
+          line-height: 1.6 !important;
         }
       `}</style>
 
