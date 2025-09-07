@@ -865,17 +865,24 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror, .notes-editor-container .editor-toolbar, .notes-editor-container .editor-statusbar { background: transparent !important; }
         .notes-editor-container .CodeMirror-gutters { background: transparent !important; border: none !important; }
         
-        /* 编辑器光标样式增强 */
+        /* 编辑器光标样式增强 - 修复光标位置 */
         .notes-editor-container .CodeMirror-cursor {
-          border-left: 4px solid #ef4444 !important;
+          border-left: 2px solid #ef4444 !important;
           border-right: none !important;
           width: 0 !important;
+          height: 1.2em !important;
           background: transparent !important;
           animation: cursor-blink 1s infinite !important;
+          position: absolute !important;
+          top: 0 !important;
+          bottom: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          vertical-align: baseline !important;
         }
         
         .notes-editor-container .CodeMirror.CodeMirror-focused .CodeMirror-cursor {
-          border-left-width: 5px !important;
+          border-left-width: 3px !important;
           border-left-color: #dc2626 !important;
           animation: cursor-blink 0.8s infinite !important;
         }
@@ -911,6 +918,35 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror-cursor {
           position: relative !important;
           z-index: 10 !important;
+        }
+        
+        /* 修复光标与文本对齐问题 */
+        .notes-editor-container .CodeMirror .CodeMirror-line {
+          line-height: 1.6 !important;
+          font-size: var(--editor-font-size, 14px) !important;
+          font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
+        }
+        
+        .notes-editor-container .CodeMirror .CodeMirror-line span {
+          line-height: inherit !important;
+          vertical-align: baseline !important;
+        }
+        
+        /* 确保光标与文本基线对齐 */
+        .notes-editor-container .CodeMirror-cursor {
+          vertical-align: baseline !important;
+          display: inline-block !important;
+          line-height: 1.6 !important;
+        }
+        
+        /* 修复光标在行内的位置 */
+        .notes-editor-container .CodeMirror .CodeMirror-line .CodeMirror-cursor {
+          position: relative !important;
+          top: 0 !important;
+          bottom: auto !important;
+          height: 1.2em !important;
+          margin-top: 0 !important;
+          margin-bottom: 0 !important;
         }
       `}</style>
 
