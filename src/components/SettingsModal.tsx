@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, Palette, User, Shield, Database, Cloud } from 'lucide-react'
-import { authApi, notesApi, cloudApi } from '@/lib/api'
+import { authApi, notesApi, cloudApi, logsApi } from '@/lib/api'
 import { AlertModal, ConfirmModal, PromptModal, SelectModal } from './Modal'
 import { useModal } from '../hooks/useModal'
 import { loadAndApplyBackground } from '@/lib/background'
@@ -110,6 +110,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         options: [
           { label: '上传下载笔记', value: 'backupNotes', type: 'custom', default: null },
           { label: '云端笔记', value: 'cloudNotes', type: 'custom', default: null }
+        ]
+      }
+      ,{
+        title: '日志功能',
+        icon: <Cloud className="h-5 w-5" />,
+        options: [
+          { label: '查看后端调用日志', value: 'viewLogs', type: 'custom', default: null }
         ]
       }
   ]
@@ -229,10 +236,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   // 云端同步状态
   const [cloudSyncing, setCloudSyncing] = useState(false)
+  // 日志查看状态
+  const [logsOpen, setLogsOpen] = useState(false)
+  const [logsLoading, setLogsLoading] = useState(false)
+  const [logsText, setLogsText] = useState('')
 
   // 打开上传弹窗
   const handleUploadNotes = () => {
     setIsUploadModalOpen(true)
+  }
+
+  // 获取日志
+  const handleViewLogs = async () => {
+    setLogsOpen(true)
+    setLogsLoading(true)
+    setLogsText('')
+    try {
+      const resp = await logsApi.getLogs()
+      const data = resp.data
+      const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+      setLogsText(text)
+    } catch (error: any) {
+      setLogsText(`获取日志失败：${error?.response?.data?.error || error?.message || '未知错误'}`)
+    } finally {
+      setLogsLoading(false)
+    }
   }
 
   // 处理文件选择
@@ -717,6 +745,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                          </button>
                        </div>
                      )}
+
+                    {option.type === 'custom' && option.value === 'viewLogs' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleViewLogs}
+                          className="px-3 py-1.5 text-xs font-medium text-white bg-gray-700 border border-transparent rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          查看日志
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {category.title === '用户设置' && (
@@ -875,6 +914,40 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 日志查看弹窗 */}
+      {logsOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
+          <div className="bg-white/95 backdrop-blur-xl rounded-lg shadow-xl w-full max-w-3xl mx-4 border border-white/40">
+            <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-b border-white/40 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">后端调用日志</h3>
+              <button
+                onClick={() => setLogsOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+              {logsLoading ? (
+                <div className="text-gray-600">加载中...</div>
+              ) : (
+                <pre className="text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-md p-3 whitespace-pre-wrap break-words">
+                  {logsText || '暂无日志'}
+                </pre>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-white/40 flex justify-end gap-3 bg-white/40">
+              <button
+                onClick={() => setLogsOpen(false)}
+                className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                关闭
+              </button>
             </div>
           </div>
         </div>
