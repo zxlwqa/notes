@@ -1,3 +1,4 @@
+import { logToD1 } from '../_utils/log'
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
   // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
@@ -14,6 +15,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
   try {
     const { currentPassword, newPassword } = await request.json()
     if (!currentPassword || !newPassword) {
+      await logToD1(env, 'warn', 'password.change.missing_fields')
       return new Response(JSON.stringify({ error: 'Missing password fields' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -45,6 +47,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     const effectivePassword = useD1Password && storedPassword ? storedPassword : env.PASSWORD
 
     if (currentPassword !== effectivePassword) {
+      await logToD1(env, 'warn', 'password.change.invalid_current')
       return new Response(JSON.stringify({ error: 'Invalid current password' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -55,17 +58,17 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password', ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`).bind(newPassword).run()
     await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password_set', 'true', datetime('now')) ON CONFLICT(key) DO UPDATE SET value = 'true', updated_at = datetime('now')`).run()
 
+    await logToD1(env, 'info', 'password.change.success')
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
   } catch (error) {
     console.error('Change password error:', error)
+    await logToD1(env, 'error', 'password.change.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     })
   }
 }
-
-
