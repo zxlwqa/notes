@@ -177,13 +177,20 @@ body .editor-toolbar *,
 
 /* ===== 编辑器输入光标样式优化 ===== */
 
-/* CodeMirror 光标样式 - 让光标更粗更明显 */
+/* CodeMirror 光标样式 - 修复光标位置与文本对齐 */
 .CodeMirror-cursor {
-  border-left: 3px solid #3b82f6 !important;
+  border-left: 2px solid #3b82f6 !important;
   border-right: none !important;
   width: 0 !important;
+  height: 1.2em !important;
   background: transparent !important;
   animation: blink 1s infinite !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  display: inline-block !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* 光标闪烁动画 */
@@ -216,6 +223,9 @@ body .editor-toolbar *,
   border-left-width: 3px !important;
   border-left-color: #3b82f6 !important;
   animation: blink 1s infinite !important;
+  height: 1.2em !important;
+  vertical-align: baseline !important;
+  position: relative !important;
 }
 
 /* 非聚焦状态下的光标 */
@@ -223,16 +233,24 @@ body .editor-toolbar *,
   border-left-width: 2px !important;
   border-left-color: #9ca3af !important;
   animation: none !important;
+  height: 1.2em !important;
+  vertical-align: baseline !important;
+  position: relative !important;
 }
 
 /* 增强光标可见性 - 备用方案 */
 .editor-toolbar + .CodeMirror .CodeMirror-cursor,
 .EasyMDEContainer .CodeMirror .CodeMirror-cursor {
-  border-left: 4px solid #ef4444 !important;
+  border-left: 3px solid #ef4444 !important;
   border-right: none !important;
   width: 0 !important;
+  height: 1.2em !important;
   background: transparent !important;
   animation: blink 0.8s infinite !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  display: inline-block !important;
+  line-height: 1.6 !important;
 }
 
 /* 备用闪烁动画 */
