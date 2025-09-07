@@ -5,8 +5,8 @@ import { Settings, Save, Edit3 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 
-// 懒加载组件
-const NotesEditor = lazy(() => import('@/components/NotesEditor'))
+// 懒加载组件 - NotesEditor 改为同步加载以确保编辑器初始化稳定
+import NotesEditor from '@/components/NotesEditor'
 const SettingsModal = lazy(() => import('@/components/SettingsModal'))
 const ReactMarkdown = lazy(() => import('react-markdown'))
 
@@ -18,7 +18,7 @@ const NotesPage = () => {
   const [error, setError] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [displayTitle, setDisplayTitle] = useState('')
-  const { logout } = useAuth()
+  const { } = useAuth()
 
   useEffect(() => {
     loadNotes()
@@ -135,17 +135,11 @@ const NotesPage = () => {
 
           {isEditing ? (
             <div className="bg-white rounded-lg shadow">
-              <Suspense fallback={
-                <div className="p-8 text-center">
-                  <Loading size="md" text="加载编辑器中..." />
-                </div>
-              }>
-                <NotesEditor
-                  value={content}
-                  onChange={handleContentChange}
-                  placeholder="开始编写您的笔记..."
-                />
-              </Suspense>
+              <NotesEditor
+                value={content}
+                onChange={handleContentChange}
+                placeholder="开始编写您的笔记..."
+              />
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-6" style={{ fontSize: 'var(--editor-font-size, 14px)', lineHeight: 'var(--editor-line-height, 1.6)', fontFamily: 'var(--editor-font-family)' }}>
