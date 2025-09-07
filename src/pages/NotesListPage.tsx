@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 import NoteCard from '@/components/NoteCard'
 import AdvancedSearch from '@/components/Advanced'
+import BackToTop from '@/components/BackToTop'
 import { AlertModal, ConfirmModal } from '@/components/Modal'
 import { useModal } from '@/hooks/useModal'
 import { notesApi } from '@/lib/api'
@@ -610,6 +611,7 @@ const NotesListPage: React.FC = () => {
         onConfirm={modal.confirmState.onConfirm || (() => {})}
         onCancel={modal.confirmState.onCancel}
       />
+      <BackToTop />
     </div>
   )
 }
