@@ -48,6 +48,27 @@
     font-size: var(--global-font-size, 14px) !important;
   }
   
+  /* 确保标题输入框使用全局字体大小 */
+  .title-input {
+    font-size: var(--global-font-size, 16px) !important;
+    font-family: var(--editor-font-family, inherit) !important;
+    line-height: var(--global-line-height, 1.6) !important;
+  }
+  
+  /* 确保所有输入框都使用全局字体大小，除非有特定样式 */
+  input[type="text"] {
+    font-size: var(--global-font-size, 14px) !important;
+    font-family: var(--editor-font-family, inherit) !important;
+    line-height: var(--global-line-height, 1.6) !important;
+  }
+  
+  /* 标题输入框特殊处理 */
+  input.title-input {
+    font-size: var(--global-font-size, 16px) !important;
+    font-family: var(--editor-font-family, inherit) !important;
+    line-height: var(--global-line-height, 1.6) !important;
+  }
+  
   /* 确保所有 Tailwind 字体大小类都被覆盖 */
   .text-xs { font-size: calc(var(--global-font-size, 14px) * 0.75) !important; }
   .text-sm { font-size: calc(var(--global-font-size, 14px) * 0.875) !important; }
