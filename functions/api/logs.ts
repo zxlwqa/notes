@@ -43,6 +43,37 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
   }
 }
 
+export const onRequestDelete: PagesFunction = async ({ env }) => {
+  try {
+    const db = (env as any)?.DB as D1Database | undefined
+    if (!db) {
+      return new Response(JSON.stringify({ success: false, error: 'Database not bound' }), {
+        status: 500,
+        headers: { 'content-type': 'application/json; charset=utf-8' }
+      })
+    }
+    await db.prepare(
+      `CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY,
+        level TEXT,
+        message TEXT NOT NULL,
+        meta TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`
+    ).run()
+    const res = await db.prepare('DELETE FROM logs').run()
+    return new Response(
+      JSON.stringify({ success: true, deleted: (res as any)?.meta?.changes ?? null }),
+      { headers: { 'content-type': 'application/json; charset=utf-8' } }
+    )
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({ success: false, error: error?.message || '清空日志失败' }),
+      { status: 500, headers: { 'content-type': 'application/json; charset=utf-8' } }
+    )
+  }
+}
+
 export const onRequestOptions: PagesFunction = async () => {
   return new Response(null, {
     status: 204,
@@ -53,4 +84,3 @@ export const onRequestOptions: PagesFunction = async () => {
     },
   })
 }
-
