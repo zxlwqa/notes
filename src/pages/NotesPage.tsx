@@ -151,7 +151,7 @@ const NotesPage = () => {
                       <Loading size="md" text="加载Markdown渲染器中..." />
                     </div>
                   }>
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    <ReactMarkdown>{content.replace(/\\\./g, "\\\\.")}</ReactMarkdown>
                   </Suspense>
                 ) : (
                   <p className="text-gray-500">暂无内容</p>
