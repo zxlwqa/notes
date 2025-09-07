@@ -44,6 +44,7 @@ const NoteEditPage: React.FC = () => {
   const [isNewNote, setIsNewNote] = useState(false)
   const [tagInput, setTagInput] = useState('')
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [editorReady, setEditorReady] = useState(false)
 
   useEffect(() => {
     // 检查是否是从列表页传递的新笔记
@@ -74,8 +75,14 @@ const NoteEditPage: React.FC = () => {
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
     
+    // 延迟设置编辑器就绪状态，确保DOM完全渲染
+    const timer = setTimeout(() => {
+      setEditorReady(true)
+    }, 100)
+    
     return () => {
       window.removeEventListener('settings-changed' as any, settingsHandler)
+      clearTimeout(timer)
     }
   }, [id, location.state])
 
@@ -120,10 +127,8 @@ const NoteEditPage: React.FC = () => {
   }
 
   const handleContentChange = useCallback((value: string) => {
-    if (note) {
-      setNote(prev => prev ? { ...prev, content: value } : null)
-    }
-  }, [note])
+    setNote(prev => prev ? { ...prev, content: value } : null)
+  }, [])
 
   const handleTitleChange = (value: string) => {
     if (note) {
@@ -398,17 +403,23 @@ const NoteEditPage: React.FC = () => {
 
           {/* 编辑器 */}
           <div className="bg-white/30 backdrop-blur-md rounded-lg shadow border border-white/30">
-            <NotesEditor
-              value={note.content}
-              onChange={handleContentChange}
-              placeholder="开始编写您的笔记..."
-              tags={note.tags}
-              tagInput={tagInput}
-              onTagInputChange={(value) => setTagInput(value)}
-              onAddTag={handleAddTag}
-              onRemoveTag={handleRemoveTag}
-              onTagInputKeyPress={handleTagInputKeyPress}
-            />
+            {editorReady ? (
+              <NotesEditor
+                value={note.content}
+                onChange={handleContentChange}
+                placeholder="开始编写您的笔记..."
+                tags={note.tags}
+                tagInput={tagInput}
+                onTagInputChange={(value) => setTagInput(value)}
+                onAddTag={handleAddTag}
+                onRemoveTag={handleRemoveTag}
+                onTagInputKeyPress={handleTagInputKeyPress}
+              />
+            ) : (
+              <div className="p-8 text-center">
+                <Loading size="md" text="初始化编辑器中..." />
+              </div>
+            )}
           </div>
         </div>
       </main>
