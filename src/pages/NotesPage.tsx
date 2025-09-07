@@ -92,7 +92,7 @@ const NotesPage = () => {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-gray-900">{displayTitle || '科技刘笔记'}</h1>
+            <h1 className="font-semibold text-gray-900" style={{ fontSize: 'var(--global-font-size, 16px)' }}>{displayTitle || '科技刘笔记'}</h1>
             <div className="flex items-center space-x-4">
               {isEditing ? (
                 <Button
@@ -129,7 +129,7 @@ const NotesPage = () => {
         <div className="px-4 py-6 sm:px-0">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-red-600">{error}</div>
             </div>
           )}
 
