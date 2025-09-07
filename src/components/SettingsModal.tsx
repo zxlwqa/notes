@@ -293,6 +293,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       if (msg === 'import.done' && typeof obj.imported === 'number') {
         return `导入成功：${obj.imported} / ${obj.total}`
       }
+      // 登录成功：显示地理位置（国家/城市）与 IP
+      if (msg === 'login.success' && (obj.country || obj.city || obj.ip)) {
+        const loc = [obj.country, obj.city].filter(Boolean).join(' / ')
+        const ipPart = obj.ip ? ` · IP：${obj.ip}` : ''
+        return loc ? `位置：${loc}${ipPart}` : (obj.ip ? `IP：${obj.ip}` : '-')
+      }
       return JSON.stringify(obj, null, 2)
     } catch {
       return typeof meta === 'string' ? meta : JSON.stringify(meta)
@@ -1008,7 +1014,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 </button>
                 <button
                   onClick={async () => {
-                    const ok = confirm('确定要清空所有日志吗？该操作不可恢复。')
+                    const ok = await modal.showConfirm('确定要清空所有日志吗？该操作不可恢复。', {
+                      title: '清空日志确认',
+                      type: 'warning',
+                      confirmText: '清空',
+                      cancelText: '取消'
+                    } as any)
                     if (!ok) return
                     try {
                       setLogsLoading(true)
