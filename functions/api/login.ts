@@ -47,7 +47,14 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     const envPassword = env.PASSWORD as string | undefined;
     const effectivePassword = useD1Password && storedPassword ? storedPassword : envPassword;
     if (password === effectivePassword) {
-      await logToD1(env, 'info', 'login.success', { ua: request.headers.get('user-agent') })
+      const ip = request.headers.get('CF-Connecting-IP')
+        || (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')
+        || undefined
+      const cf: any = (request as any)?.cf || {}
+      const country = cf.country || undefined
+      const city = cf.city || undefined
+      await logToD1(env, 'info', 'login.success', { ua: request.headers.get('user-agent'), ip, country, city })
       return Response.json(
         { success: true },
         { 
