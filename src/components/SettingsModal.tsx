@@ -194,6 +194,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }
 
 
+  // 退出到登录页
+  const handleLogout = () => {
+    try {
+      // 清理本地登录相关数据
+      localStorage.removeItem('password')
+      sessionStorage.clear()
+    } catch {}
+    // 跳转到登录页
+    window.location.href = '/login'
+  }
+
+
   // 上传笔记状态
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
@@ -749,6 +761,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
         {/* 弹窗底部 */}
         <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-t border-white/40 flex justify-end gap-3">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            退出
+          </button>
           <button
             onClick={handleSave}
             className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
