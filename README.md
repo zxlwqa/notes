@@ -46,6 +46,15 @@ CREATE TABLE IF NOT EXISTS notes (
 
 CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at);
 
+CREATE TABLE IF NOT EXISTS logs (
+  id INTEGER PRIMARY KEY,
+  level TEXT,
+  message TEXT NOT NULL,
+  meta TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS logs_created_at_idx ON logs(created_at);
+
 INSERT OR IGNORE INTO settings (key, value, updated_at)
 VALUES ('password_set', 'false', datetime('now'));
 ```
