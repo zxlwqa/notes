@@ -588,7 +588,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-white/40">
         {/* 弹窗头部 */}
         <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-b border-white/40 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">设置</h2>
+          <h2 className="font-semibold text-gray-900">设置</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -606,14 +606,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 <div className="text-blue-600">
                   {category.icon}
                 </div>
-                <h3 className="text-lg font-medium text-gray-900">{category.title}</h3>
+                <h3 className="font-medium text-gray-900">{category.title}</h3>
               </div>
 
               {/* 分类选项 */}
               <div className="space-y-4">
                 {category.options.map((option, optionIndex) => (
                   <div key={optionIndex} className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="font-medium text-gray-700">
                       {option.label}
                     </label>
                     
@@ -636,7 +636,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                        <select 
                          value={settings[option.value as keyof typeof settings] as string}
                          onChange={(e) => handleSettingChange(option.value, e.target.value)}
-                         className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         className="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        >
                          {option.options?.map((opt, optIndex) => (
                            <option key={optIndex} value={opt}>
@@ -651,7 +651,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                          type="text"
                          value={settings[option.value as keyof typeof settings] as string}
                          onChange={(e) => handleSettingChange(option.value, e.target.value)}
-                         className="border border-gray-300 rounded-md px-3 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         className="border border-gray-300 rounded-md px-3 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        />
                      )}
 
@@ -698,7 +698,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     <div className="bg-green-50 border border-green-200 rounded-md p-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Shield className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-800">当前密码：</span>
+                        <span className="font-medium text-green-800">当前密码：</span>
                       </div>
                       <div className="text-xs text-green-700 ml-6">
                         {passwordSource === 'env' && (
@@ -715,7 +715,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     
                     {/* 修改密码 */}
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700">修改密码</label>
+                      <label className="font-medium text-gray-700">修改密码</label>
                       <input
                         type="password"
                         value={newPassword}
@@ -725,7 +725,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             handleChangePassword()
                           }
                         }}
-                        className="border border-gray-300 rounded-md px-3 py-1 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded-md px-3 py-1 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="输入新密码"
                       />
                     </div>
@@ -735,7 +735,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       <button
                         onClick={handleChangePassword}
                         disabled={changing || !newPassword}
-                        className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        className="px-3 py-1.5 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                       >
                         {changing ? '修改中...' : '确定'}
                       </button>
@@ -751,7 +751,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-t border-white/40 flex justify-end gap-3">
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             保存
           </button>
@@ -764,7 +764,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <div className="bg-white/90 backdrop-blur-xl rounded-lg shadow-xl w-full max-w-md mx-4 border border-white/40">
             {/* 弹窗头部 */}
             <div className="bg-white/40 backdrop-blur-lg px-6 py-4 border-b border-white/40 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">上传笔记</h3>
+              <h3 className="font-semibold text-gray-900">上传笔记</h3>
               <button
                 onClick={handleCloseUploadModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -790,7 +790,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     className="cursor-pointer flex flex-col items-center"
                   >
                     <Database className="h-8 w-8 text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-gray-600">
                       {uploadFile ? '重新选择文件' : '点击选择文件'}
                     </span>
                     <span className="text-xs text-gray-500 mt-1">
@@ -804,9 +804,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Database className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">已选择文件</span>
+                      <span className="font-medium text-blue-800">已选择文件</span>
                     </div>
-                    <div className="text-sm text-blue-700">
+                    <div className="text-blue-700">
                       <div>文件名：{uploadFile.name}</div>
                       <div>大小：{(uploadFile.size / 1024).toFixed(1)} KB</div>
                       <div>类型：{uploadFile.name.split('.').pop()?.toUpperCase()}</div>
@@ -817,7 +817,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 {/* 文件预览 */}
                 {uploadPreview && (
                   <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
-                    <div className="text-sm font-medium text-gray-800 mb-2">文件预览：</div>
+                    <div className="font-medium text-gray-800 mb-2">文件预览：</div>
                     <div className="text-xs text-gray-600 bg-white p-2 rounded border max-h-32 overflow-y-auto">
                       <pre className="whitespace-pre-wrap">{uploadPreview}</pre>
                     </div>
@@ -829,14 +829,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   <button
                     onClick={handleCloseUploadModal}
                     disabled={uploading}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     取消
                   </button>
                   <button
                     onClick={handleConfirmUpload}
                     disabled={!uploadFile || uploading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     {uploading ? '导入中...' : '确认导入'}
                   </button>
