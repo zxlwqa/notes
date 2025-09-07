@@ -125,9 +125,13 @@
     @apply min-h-[400px] border-0;
   }
   
-  /* 确保光标可见 */
+  /* 确保光标可见 - 移除冲突样式 */
   .EasyMDEContainer .CodeMirror-cursor {
     @apply border-l-2 border-gray-900;
+    height: 1.2em !important;
+    vertical-align: baseline !important;
+    position: relative !important;
+    display: inline-block !important;
   }
   
   /* 确保编辑器状态栏正常显示 */
