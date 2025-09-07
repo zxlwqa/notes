@@ -43,8 +43,8 @@
     font-size: calc(var(--global-font-size, 14px) * 0.875) !important;
   }
   
-  /* 按钮和输入框强制使用全局字体大小 */
-  button, input, select, textarea, label {
+  /* 按钮和输入框强制使用全局字体大小，但排除标题输入框 */
+  button, input:not(.title-input):not([style*="fontSize"]), select, textarea, label {
     font-size: var(--global-font-size, 14px) !important;
   }
   
