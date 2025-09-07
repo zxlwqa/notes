@@ -1,3 +1,4 @@
+import { logToD1 } from '../_utils/log'
 export const onRequestPost: PagesFunction<{
   DB: D1Database;
 }> = async ({ request, env }) => {
@@ -56,6 +57,7 @@ export const onRequestPost: PagesFunction<{
     const { notes, format } = await request.json();
     
     if (!notes || !Array.isArray(notes)) {
+      await logToD1(env, 'warn', 'import.invalid_notes')
       return new Response(JSON.stringify({ error: "Invalid notes data" }), {
         status: 400,
         headers: {
@@ -84,9 +86,11 @@ export const onRequestPost: PagesFunction<{
       } catch (error) {
         console.error('Import note error:', error);
         errors.push(`笔记 "${note.title || '无标题'}" 导入失败: ${error.message}`);
+        await logToD1(env, 'error', 'import.note_failed', { title: note.title || '无标题', message: (error as any)?.message })
       }
     }
 
+    await logToD1(env, 'info', 'import.done', { imported: importedCount, total: notes.length })
     return Response.json({
       success: true,
       imported: importedCount,
@@ -100,6 +104,7 @@ export const onRequestPost: PagesFunction<{
 
   } catch (error) {
     console.error('Import API error:', error);
+    await logToD1(env, 'error', 'import.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ 
       error: "Internal server error",
       details: error.message 
