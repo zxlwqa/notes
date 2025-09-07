@@ -102,7 +102,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className={`${getHeaderColor()} px-6 py-4 border-b border-white/40 flex justify-between items-center`}>
           <div className="flex items-center gap-3">
             {getIcon()}
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="font-semibold text-gray-900">{title}</h3>
           </div>
           {showCloseButton && (
             <button
@@ -171,7 +171,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           <button
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            className={`px-4 py-2 font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               type === 'error' 
                 ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                 : type === 'warning'
@@ -244,14 +244,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             onClick={handleCancel}
             onKeyDown={handleKeyPress}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-150 ease-in-out ${
+            className={`px-4 py-2 font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-150 ease-in-out ${
               type === 'error' 
                 ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                 : type === 'warning'
@@ -322,7 +322,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
           >
             {cancelText}
           </button>
@@ -415,11 +415,11 @@ export const SelectModal: React.FC<SelectModalProps> = ({
                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
               />
               <div className="ml-3 flex-1">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="font-medium text-gray-900">
                   {option.label}
                 </div>
                 {option.description && (
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-gray-500 mt-1">
                     {option.description}
                   </div>
                 )}
@@ -433,7 +433,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
           <button
             onClick={handleCancel}
             onKeyDown={handleKeyPress}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
+            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
           >
             {cancelText}
           </button>
@@ -441,7 +441,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
             disabled={!selectedValue}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 ease-in-out"
+            className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 ease-in-out"
           >
             {confirmText}
           </button>
