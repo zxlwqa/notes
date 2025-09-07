@@ -170,6 +170,7 @@ const handleGet: PagesFunction = async ({ request, env }) => {
         };
       });
 
+      await logToD1(env, 'info', 'notes.list', { count: notes.length })
       return Response.json(notes, {
         headers: {
           'Access-Control-Allow-Origin': '*',
