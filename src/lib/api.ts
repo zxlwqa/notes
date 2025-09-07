@@ -15,7 +15,7 @@ import type {
 
 // 创建axios实例
 export const api = axios.create({
-  baseURL: import.meta.env?.VITE_API_BASE || '', // 生产环境使用相对路径或环境变量
+  baseURL: import.meta.env?.VITE_API_BASE || '',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -110,4 +110,10 @@ export const cloudApi = {
   // 从云端下载笔记（使用现有的backup.ts API）
   downloadFromCloud: (): Promise<AxiosResponse<CloudBackup>> => 
     api.get('/api/backup'),
+}
+
+// 日志相关 API
+export const logsApi = {
+  // 获取后端 Functions/API 调用日志
+  getLogs: (): Promise<AxiosResponse<any>> => api.get('/api/logs'),
 }
