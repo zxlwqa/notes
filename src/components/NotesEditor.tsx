@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react'
 import SimpleMDE from 'react-simplemde-editor'
 import 'easymde/dist/easymde.min.css'
-import { usePerfMonitor } from '@/hooks/usePerfMonitor'
+// import { usePerfMonitor } from '@/hooks/usePerfMonitor'
 
 interface NotesEditorProps {
   value: string
@@ -33,8 +33,16 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
   const [showScroll, setShowScroll] = useState(true)
   const [editorInstance, setEditorInstance] = useState<any>(null)
   
-  // 性能监控
-  const { startRender, endRender } = usePerfMonitor('NotesEditor')
+  // 性能监控 - 暂时禁用
+  // const { startRender, endRender } = usePerfMonitor('NotesEditor')
+
+  // 获取编辑器实例
+  const getEditor = useCallback(() => {
+    if (mdeRef.current && mdeRef.current.simpleMde) {
+      return mdeRef.current.simpleMde
+    }
+    return null
+  }, [])
 
   // 使用 useCallback 优化 onChange 函数
   const handleChange = useCallback((newValue: string) => {
@@ -53,20 +61,12 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [onChange, getEditor])
 
-  // 获取编辑器实例
-  const getEditor = useCallback(() => {
-    if (mdeRef.current && mdeRef.current.simpleMde) {
-      return mdeRef.current.simpleMde
-    }
-    return null
-  }, [])
-
-  // 在编辑器挂载后记录渲染完成
-  useEffect(() => {
-    if (editorInstance) {
-      endRender()
-    }
-  }, [editorInstance, endRender])
+  // 在编辑器挂载后记录渲染完成 - 暂时禁用
+  // useEffect(() => {
+  //   if (editorInstance) {
+  //     endRender()
+  //   }
+  // }, [editorInstance, endRender])
 
   // 处理粘贴事件的函数
   const handlePaste = useCallback(async (cm: any) => {
@@ -193,54 +193,48 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [getEditor])
 
-  // 编辑器配置选项 - 使用 useMemo 稳定对象引用，关闭自动聚焦避免抢占输入焦点
-  const options = useMemo(() => ({
-    placeholder,
-    spellChecker: false,
-    status: false,
-    autofocus: false,
-    lineWrapping: true,
-    autoDownloadFontAwesome: false,
-    renderingConfig: {
-      singleLineBreaks: true,  // 改为true，允许单行换行
-      codeSyntaxHighlighting: true,
-    },
-    autosave: {
-      enabled: false,
-    },
-    // 完全禁用默认工具栏
-    toolbar: false,
-    showIcons: false,
-    // 光标配置
-    cursorBlinkRate: 1000,
-    cursorHeight: 1.2,
-    // 确保光标可见
-    theme: 'default',
-    lineNumbers: false,
-    // 添加自定义样式来修复光标
-    extraKeys: {
+  // 编辑器配置选项 - 简化版本避免初始化错误
+  const options = useMemo(() => {
+    const extraKeys = {
       'Ctrl-V': function(cm: any) {
         handlePaste(cm)
       },
       'Cmd-V': function(cm: any) {
         handlePaste(cm)
       }
-    },
-    // 强制设置光标样式
-    cursorScrollMargin: 0,
-    // 修复光标位置的关键配置
-    inputStyle: 'contenteditable',  // 使用contenteditable模式
-    direction: 'ltr',  // 明确设置文本方向
-    rtlMoveVisually: false,  // 禁用RTL视觉移动
-    // 确保光标正确显示
-    showCursorWhenSelecting: true,
-    // 修复换行处理
-    lineWrapping: true,
-    // 确保文本输入正确
-    electricChars: false,  // 禁用自动缩进
-    smartIndent: false,  // 禁用智能缩进
-    indentUnit: 0,  // 设置缩进单位为0
-  }), [placeholder, handlePaste])
+    }
+    
+    return {
+      placeholder,
+      spellChecker: false,
+      status: false,
+      autofocus: false,
+      lineWrapping: true,
+      autoDownloadFontAwesome: false,
+      renderingConfig: {
+        singleLineBreaks: true,
+        codeSyntaxHighlighting: true,
+      },
+      autosave: {
+        enabled: false,
+      },
+      toolbar: false,
+      showIcons: false,
+      cursorBlinkRate: 1000,
+      cursorHeight: 1.2,
+      theme: 'default',
+      lineNumbers: false,
+      extraKeys,
+      cursorScrollMargin: 0,
+      inputStyle: 'contenteditable',
+      direction: 'ltr',
+      rtlMoveVisually: false,
+      showCursorWhenSelecting: true,
+      electricChars: false,
+      smartIndent: false,
+      indentUnit: 0,
+    }
+  }, [placeholder, handlePaste])
 
   // 监听编辑器实例变化
   useEffect(() => {
