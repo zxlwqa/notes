@@ -27,6 +27,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const defaultSettings: AppSettings = {
     fontSize: '中',
     backgroundImageUrl: '',
+    logoUrl: '',
     fontFamily: '默认',
     theme: 'light',
     autoSave: true,
@@ -99,7 +100,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       title: '用户设置',
       icon: <User className="h-5 w-5" />,
       options: [
-        { label: '用户名', value: 'username', type: 'input', default: '科技刘' }
+        { label: '用户名', value: 'username', type: 'input', default: '科技刘' },
+        { label: 'logo图URL', value: 'logoUrl', type: 'input', default: '' }
       ]
     },
           {
@@ -154,6 +156,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         () => console.log('背景图已设置:', settings.backgroundImageUrl),
         () => console.log('背景图加载失败，使用默认背景')
       )
+      // 设置 favicon（浏览器标签logo）
+      if (typeof settings.logoUrl === 'string') {
+        const href = settings.logoUrl.trim()
+        let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null
+        if (!link) {
+          link = document.createElement('link')
+          link.rel = 'icon'
+          document.head.appendChild(link)
+        }
+        if (href) {
+          link.href = href
+        }
+      }
       const family = settings.fontFamily
       const familyMap: Record<string, string> = {
         '默认': "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
