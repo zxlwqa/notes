@@ -25,12 +25,27 @@ const LoginPage = () => {
           if (parsed.username && typeof parsed.username === 'string') {
             setDisplayTitle(parsed.username)
           }
+          // 应用自定义logo到登录卡片和favicon
+          if (parsed.logoUrl && typeof parsed.logoUrl === 'string') {
+            const url = parsed.logoUrl.trim()
+            if (url) {
+              const img = document.getElementById('login-logo') as HTMLImageElement | null
+              if (img) img.src = url
+              let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null
+              if (!link) {
+                link = document.createElement('link')
+                link.rel = 'icon'
+                document.head.appendChild(link)
+              }
+              link.href = url
+            }
+          }
         }
       } catch {}
     }
     loadSettingsTitle()
     
-    // 监听设置变更事件，实时更新背景图和标题
+    // 监听设置变更事件，实时更新背景图、标题和logo
     const settingsHandler = (event: any) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -44,6 +59,21 @@ const LoginPage = () => {
       // 更新标题
       if (settings && settings.username && typeof settings.username === 'string') {
         setDisplayTitle(settings.username)
+      }
+      // 更新logo
+      if (settings && typeof settings.logoUrl === 'string') {
+        const url = settings.logoUrl.trim()
+        const img = document.getElementById('login-logo') as HTMLImageElement | null
+        if (img && url) img.src = url
+        if (url) {
+          let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null
+          if (!link) {
+            link = document.createElement('link')
+            link.rel = 'icon'
+            document.head.appendChild(link)
+          }
+          link.href = url
+        }
       }
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
@@ -114,6 +144,7 @@ const LoginPage = () => {
           <div className="text-center">
             <div className="flex justify-center">
               <img 
+                id="login-logo"
                 src="/image/logo.png" 
                 alt="Logo" 
                 className="mx-auto h-20 w-20 object-cover rounded-full"
