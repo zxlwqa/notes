@@ -549,6 +549,64 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         </button>
 
         <button
+          onClick={() => insertText('## ', '')}
+          title="二级标题"
+          style={{
+            background: 'transparent',
+            border: '1px solid transparent',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            margin: '2px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            transition: 'all 0.2s',
+            minWidth: '32px',
+            textAlign: 'center'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#4b5563'
+            e.currentTarget.style.borderColor = '#6b7280'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.borderColor = 'transparent'
+          }}
+        >
+          H2
+        </button>
+
+        <button
+          onClick={() => insertText('### ', '')}
+          title="三级标题"
+          style={{
+            background: 'transparent',
+            border: '1px solid transparent',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            margin: '2px',
+            color: '#ffffff',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            transition: 'all 0.2s',
+            minWidth: '32px',
+            textAlign: 'center'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#4b5563'
+            e.currentTarget.style.borderColor = '#6b7280'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.borderColor = 'transparent'
+          }}
+        >
+          H3
+        </button>
+
+        <button
           onClick={() => insertText('**', '**')}
           title="粗体"
           style={{
