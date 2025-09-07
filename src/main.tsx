@@ -47,12 +47,32 @@ function applySavedAppearanceSettings() {
   } catch {}
 }
 
-applySavedAppearanceSettings()
+// 确保样式在DOM完全加载后应用
+function ensureStylesApplied() {
+  // 等待DOM完全加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applySavedAppearanceSettings)
+  } else {
+    applySavedAppearanceSettings()
+  }
+}
+
+// 确保样式在DOM完全加载后应用
+ensureStylesApplied()
+
+// 在生产环境中禁用 StrictMode 以避免编辑器双重渲染问题
+const isDevelopment = import.meta.env.DEV
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  isDevelopment ? (
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  ) : (
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>,
+  ),
 )
