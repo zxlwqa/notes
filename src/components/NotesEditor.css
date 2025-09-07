@@ -1,3 +1,5 @@
+/* EasyMDE 编辑器工具栏图标可见性修复 - 最高优先级版本 */
+
 /* 使用最高优先级选择器强制覆盖样式 */
 html body div.editor-toolbar,
 html body .editor-toolbar,
@@ -212,6 +214,25 @@ body .editor-toolbar *,
   font-size: var(--editor-font-size, 14px) !important;
   line-height: var(--editor-line-height, 1.6) !important;
   background: transparent !important;
+}
+
+/* 确保文本行正确对齐 */
+.CodeMirror .CodeMirror-line {
+  line-height: 1.6 !important;
+  height: 1.6em !important;
+  display: block !important;
+  vertical-align: baseline !important;
+  position: relative !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.CodeMirror .CodeMirror-line span {
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* 确保光标在编辑模式下可见 */
