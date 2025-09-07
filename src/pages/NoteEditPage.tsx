@@ -323,7 +323,7 @@ const NoteEditPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">笔记不存在</h2>
+          <h2 className="font-bold text-gray-900 mb-4" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.25)' }}>笔记不存在</h2>
           <p className="text-gray-600 mb-6">您要查看的笔记可能已被删除或不存在。</p>
           <Button onClick={handleBack} variant="secondary">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -364,7 +364,8 @@ const NoteEditPage: React.FC = () => {
                 value={note.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="输入笔记标题..."
-                className="text-xl font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
+                className="font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
+                style={{ fontSize: 'var(--global-font-size, 16px)' }}
               />
 
             </div>
@@ -394,7 +395,7 @@ const NoteEditPage: React.FC = () => {
         <div className="px-4 py-6 sm:px-0">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-red-600">{error}</div>
             </div>
           )}
 
