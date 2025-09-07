@@ -1,3 +1,5 @@
+import { logToD1 } from '../_utils/log'
+
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
   // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
@@ -15,6 +17,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     const { password } = await request.json();
     
     if (!password || typeof password !== 'string') {
+      await logToD1(env, 'warn', 'login.missing_password')
       return new Response(JSON.stringify({ error: "Password is required" }), { 
         status: 400,
         headers: {
@@ -44,6 +47,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     const envPassword = env.PASSWORD as string | undefined;
     const effectivePassword = useD1Password && storedPassword ? storedPassword : envPassword;
     if (password === effectivePassword) {
+      await logToD1(env, 'info', 'login.success', { ua: request.headers.get('user-agent') })
       return Response.json(
         { success: true },
         { 
@@ -54,6 +58,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
       );
     }
     
+    await logToD1(env, 'warn', 'login.invalid_password')
     return new Response(JSON.stringify({ error: "Invalid password" }), { 
       status: 401,
       headers: {
@@ -63,6 +68,7 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+    await logToD1(env, 'error', 'login.exception', { message: (error as any)?.message })
     return new Response(JSON.stringify({ error: "Internal server error" }), { 
       status: 500,
       headers: {
