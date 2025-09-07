@@ -104,9 +104,29 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
 
   // 插入文本的辅助函数
   const insertText = useCallback((before: string, after: string) => {
+    // 尝试多种方式获取编辑器实例
+    let cm = null
+    
+    // 方法1：通过getEditor获取
     const editor = getEditor()
     if (editor && editor.codemirror) {
-      const cm = editor.codemirror
+      cm = editor.codemirror
+    }
+    
+    // 方法2：直接从ref获取
+    if (!cm && mdeRef.current && mdeRef.current.simpleMde && mdeRef.current.simpleMde.codemirror) {
+      cm = mdeRef.current.simpleMde.codemirror
+    }
+    
+    // 方法3：从DOM获取
+    if (!cm) {
+      const cmElement = document.querySelector('.CodeMirror')
+      if (cmElement && (cmElement as any).CodeMirror) {
+        cm = (cmElement as any).CodeMirror
+      }
+    }
+    
+    if (cm) {
       const selection = cm.getSelection()
       const cursor = cm.getCursor()
       
@@ -126,11 +146,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       // 确保编辑器保持焦点
       setTimeout(() => {
         cm.focus()
-        // 触发光标更新事件
         cm.triggerOnKeyDown()
       }, 0)
     } else {
-      // 如果编辑器还没准备好，直接在当前光标位置插入文本
+      // 备用方案：直接更新value
       const textarea = document.querySelector('.CodeMirror textarea') as HTMLTextAreaElement
       if (textarea) {
         const start = textarea.selectionStart
@@ -145,6 +164,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
             textarea.setSelectionRange(start + before.length, start + before.length)
           }
         }, 0)
+      } else {
+        // 最后的备用方案：直接更新value
+        const newValue = value + before + after
+        onChange(newValue)
       }
     }
   }, [value, onChange, getEditor])
@@ -257,67 +280,79 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
 
   // 监听编辑器实例变化
   useEffect(() => {
-    if (mdeRef.current && mdeRef.current.simpleMde) {
-      setEditorInstance(mdeRef.current.simpleMde)
-      
-      // 修复光标对齐问题 - 简化版本
-      const cm = mdeRef.current.simpleMde.codemirror
-      if (cm) {
-        // 等待DOM更新后修复光标位置
-        setTimeout(() => {
-          // 简化的光标修复函数
-          const fixCursorPosition = () => {
-            // 确保编辑器正确初始化
-            cm.refresh()
-            
-            // 设置光标样式
-            const cursorElement = cm.getWrapperElement().querySelector('.CodeMirror-cursor')
-            if (cursorElement) {
-              cursorElement.style.cssText = `
-                border-left: 2px solid #3b82f6 !important;
-                border-right: none !important;
-                width: 0 !important;
-                height: 1.2em !important;
-                background: transparent !important;
-                position: relative !important;
-                vertical-align: baseline !important;
-                display: inline-block !important;
-                line-height: 1.6 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                top: 0 !important;
-                bottom: auto !important;
-              `
+    const checkEditor = () => {
+      if (mdeRef.current && mdeRef.current.simpleMde) {
+        setEditorInstance(mdeRef.current.simpleMde)
+        
+        // 修复光标对齐问题 - 简化版本
+        const cm = mdeRef.current.simpleMde.codemirror
+        if (cm) {
+          // 等待DOM更新后修复光标位置
+          setTimeout(() => {
+            // 简化的光标修复函数
+            const fixCursorPosition = () => {
+              // 确保编辑器正确初始化
+              cm.refresh()
+              
+              // 设置光标样式
+              const cursorElement = cm.getWrapperElement().querySelector('.CodeMirror-cursor')
+              if (cursorElement) {
+                cursorElement.style.cssText = `
+                  border-left: 2px solid #3b82f6 !important;
+                  border-right: none !important;
+                  width: 0 !important;
+                  height: 1.2em !important;
+                  background: transparent !important;
+                  position: relative !important;
+                  vertical-align: baseline !important;
+                  display: inline-block !important;
+                  line-height: 1.6 !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  top: 0 !important;
+                  bottom: auto !important;
+                `
+              }
             }
-          }
-          
-          // 立即修复
-          fixCursorPosition()
-          
-          // 确保编辑器获得焦点并显示光标
-          cm.focus()
-          
-          // 监听关键事件，确保光标位置正确
-          const handleCursorUpdate = () => {
-            setTimeout(fixCursorPosition, 0)
-          }
-          
-          cm.on('cursorActivity', handleCursorUpdate)
-          cm.on('change', handleCursorUpdate)
-          cm.on('focus', handleCursorUpdate)
-          cm.on('blur', handleCursorUpdate)
-          
-          // 清理函数
-          return () => {
-            cm.off('cursorActivity', handleCursorUpdate)
-            cm.off('change', handleCursorUpdate)
-            cm.off('focus', handleCursorUpdate)
-            cm.off('blur', handleCursorUpdate)
-          }
-        }, 100)
+            
+            // 立即修复
+            fixCursorPosition()
+            
+            // 确保编辑器获得焦点并显示光标
+            cm.focus()
+            
+            // 监听关键事件，确保光标位置正确
+            const handleCursorUpdate = () => {
+              setTimeout(fixCursorPosition, 0)
+            }
+            
+            cm.on('cursorActivity', handleCursorUpdate)
+            cm.on('change', handleCursorUpdate)
+            cm.on('focus', handleCursorUpdate)
+            cm.on('blur', handleCursorUpdate)
+            
+            // 清理函数
+            return () => {
+              cm.off('cursorActivity', handleCursorUpdate)
+              cm.off('change', handleCursorUpdate)
+              cm.off('focus', handleCursorUpdate)
+              cm.off('blur', handleCursorUpdate)
+            }
+          }, 100)
+        }
       }
     }
-  }, [mdeRef.current])
+    
+    // 立即检查
+    checkEditor()
+    
+    // 设置定时器定期检查
+    const timer = setInterval(checkEditor, 100)
+    
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
 
   // 添加粘贴事件监听器
   useEffect(() => {
