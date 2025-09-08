@@ -73,7 +73,10 @@ export const onRequestPost: PagesFunction<{
           url: webdavUrl,
           fileName: filename,
           totalNotes: notesCount,
-          uploadTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
+          uploadTime: new Date(Date.now() + 8 * 60 * 60 * 1000)
+            .toISOString()
+            .replace('Z', '')
+            .replace(/\.\d{3}$/, '')
         }),
         { status: 200, headers: corsHeaders }
       );
@@ -238,8 +241,14 @@ function parseMarkdownToNotes(content: string): Array<{
         title: title || `导入笔记 ${index + 1}`,
         content: trimmedContent,
         tags: [],
-        createdAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00'),
-        updatedAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00')
+        createdAt: new Date(Date.now() + 8 * 60 * 60 * 1000)
+          .toISOString()
+          .replace('Z', '')
+          .replace(/\.\d{3}$/, ''),
+        updatedAt: new Date(Date.now() + 8 * 60 * 60 * 1000)
+          .toISOString()
+          .replace('Z', '')
+          .replace(/\.\d{3}$/, '')
       });
     }
   });
