@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit3, Settings, Trash2, Tag, Home } from 'lucide-react'
+import { ArrowLeft, Edit3, Settings, Trash2, Tag, Home, Share2 } from 'lucide-react'
 import BackToTop from '@/components/BackToTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
@@ -239,6 +239,27 @@ const NoteViewPage: React.FC = () => {
     setIsSettingsOpen(true)
   }
 
+  const handleShare = () => {
+    if (!note) return
+    
+    // 创建阅读页面链接
+    const shareUrl = window.location.origin + `/notes/${note.id}`
+    
+    // 复制链接到剪贴板
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      // 显示成功提示
+      const successMessage = document.createElement('div')
+      successMessage.textContent = '阅读链接已复制到剪贴板！'
+      successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
+      document.body.appendChild(successMessage)
+      setTimeout(() => {
+        document.body.removeChild(successMessage)
+      }, 2000)
+    }).catch((error) => {
+      console.error('复制失败:', error)
+    })
+  }
+
   // 当 note 变更时，持久化到 sessionStorage，便于手动刷新立即回填
   useEffect(() => {
     if (note?.id) {
@@ -364,9 +385,18 @@ const NoteViewPage: React.FC = () => {
               <div className="p-6">
                 {/* 笔记标题 */}
                 <div className="mb-6">
-                  <h1 className="font-bold text-gray-900 mb-4" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>
-                    {note.title || '无标题'}
-                  </h1>
+                  <div className="flex items-start justify-between mb-4">
+                    <h1 className="font-bold text-gray-900 flex-1" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>
+                      {note.title || '无标题'}
+                    </h1>
+                    <button
+                      onClick={handleShare}
+                      className="ml-4 p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                      title="分享笔记"
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 
                   <div className="flex items-center space-x-6 text-gray-500 mb-4">
                   <div className="flex items-center">
