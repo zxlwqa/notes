@@ -38,7 +38,7 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
           }
         }
         if (metaText == null || metaText === '') metaText = '-'
-        return { ...row, meta: metaText }
+        return { ...row, meta: metaText, detail: metaText }
       })
       return new Response(
         JSON.stringify({
