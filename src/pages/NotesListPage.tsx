@@ -12,7 +12,6 @@ import { useModal } from '@/hooks/useModal'
 import { notesApi } from '@/lib/api'
 import type { Note, SettingsChangedEvent, NotesImportedEvent } from '@/types'
 
-// 懒加载组件
 const SettingsModal = lazy(() => import('@/components/SettingsModal'))
 
 const NotesListPage: React.FC = () => {
@@ -43,7 +42,6 @@ const NotesListPage: React.FC = () => {
     }
   })
   const [loading, setLoading] = useState(() => {
-    // 如果有缓存数据，初始就不显示 loading
     try {
       const cache = sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache')
       return !Boolean(cache)
@@ -57,30 +55,24 @@ const NotesListPage: React.FC = () => {
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [draggedTag, setDraggedTag] = useState<string | null>(null)
   const [tagOrder, setTagOrder] = useState<string[]>([])
-  // 记录页面首次加载时是否已有缓存，用于避免刷新后骨架闪烁
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
     hasInitialCacheRef.current = !!(sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache'))
   } catch {}
   
-  // 弹窗管理
   const modal = useModal()
 
 
   useEffect(() => {
-    // 检查是否有缓存数据
     const state = location.state as { notes?: Note[] } | null
     const hasCache = (state?.notes && state.notes.length > 0) || notes.length > 0
     if (hasCache) {
-      // 有缓存时后台静默刷新，不改变 loading 状态
       setTimeout(() => {
         loadNotesSilently()
       }, 100)
     } else {
-      // 无缓存时正常加载
       loadNotes()
     }
-    // 加载设置中的用户名作为标题
     const loadSettingsTitle = () => {
       try {
         const saved = localStorage.getItem('app-settings')
@@ -94,7 +86,6 @@ const NotesListPage: React.FC = () => {
     }
     loadSettingsTitle()
     
-    // 加载标签排序
     const loadTagOrder = () => {
       try {
         const saved = localStorage.getItem('tag-order')
@@ -108,10 +99,9 @@ const NotesListPage: React.FC = () => {
     }
     loadTagOrder()
     
-    // 监听设置变更事件
     const settingsHandler = (event: SettingsChangedEvent) => {
       loadSettingsTitle()
-      // 实时更新背景图
+
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
         const bg = settings.backgroundImageUrl.trim()
@@ -124,21 +114,19 @@ const NotesListPage: React.FC = () => {
     }
     window.addEventListener('settings-changed', settingsHandler as EventListener)
     
-    // 监听笔记导入事件，自动刷新笔记列表
     const notesImportedHandler = (event: NotesImportedEvent) => {
       console.log('检测到笔记导入，正在刷新笔记列表...', event.detail)
       loadNotes()
     }
     window.addEventListener('notes-imported', notesImportedHandler as EventListener)
     
-    // 监听后台数据加载完成事件
     const notesLoadedHandler = (event: any) => {
       console.log('检测到后台数据加载完成，更新笔记列表...', event.detail)
       const newNotes = event.detail
       if (Array.isArray(newNotes)) {
         setNotes(newNotes)
         setFilteredNotes(newNotes)
-        setLoading(false) // 确保loading状态被清除
+        setLoading(false)
       }
     }
     window.addEventListener('notes-loaded', notesLoadedHandler as EventListener)
@@ -150,7 +138,6 @@ const NotesListPage: React.FC = () => {
     }
   }, [])
 
-  // 读取、应用与保存笔记自定义排序
   const loadNoteOrder = (): string[] => {
     try {
       const raw = localStorage.getItem('note-order')
@@ -166,7 +153,6 @@ const NotesListPage: React.FC = () => {
     if (!Array.isArray(list) || list.length === 0 || order.length === 0) return list
     const idToNote = new Map(list.map((n) => [n.id, n]))
     const ordered: Note[] = []
-    // 先放入自定义顺序中存在的笔记
     for (const id of order) {
       const note = idToNote.get(id)
       if (note) {
@@ -174,7 +160,7 @@ const NotesListPage: React.FC = () => {
         idToNote.delete(id)
       }
     }
-    // 追加新增的笔记（自定义顺序中不存在）
+
     for (const note of list) {
       if (idToNote.has(note.id)) {
         ordered.push(note)
@@ -190,7 +176,6 @@ const NotesListPage: React.FC = () => {
     } catch {}
   }
 
-  // 首次渲染时对缓存或路由状态中的笔记应用已保存的排序
   useEffect(() => {
     if (notes && notes.length > 0) {
       const ordered = applyOrder(notes)
@@ -199,8 +184,7 @@ const NotesListPage: React.FC = () => {
         setFilteredNotes(ordered)
       }
     }
-    // 仅在首次装载时尝试一次
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [])
 
   const loadNotes = async () => {
@@ -209,9 +193,8 @@ const NotesListPage: React.FC = () => {
       setError('')
       
       const response = await notesApi.getNotes()
-      console.log('Notes API Response:', response.data) // 调试日志
+      console.log('Notes API Response:', response.data)
       
-      // 确保返回的是数组格式
       if (Array.isArray(response.data)) {
         const ordered = applyOrder(response.data)
         setNotes(ordered)
@@ -222,7 +205,7 @@ const NotesListPage: React.FC = () => {
         } catch {}
         saveNoteOrder(ordered)
       } else if (response.data && typeof response.data === 'object') {
-        // 如果返回的是单个笔记对象，转换为数组
+
         const singleNote = response.data
         const noteArray = [{
           id: singleNote.id || '1',
@@ -257,19 +240,17 @@ const NotesListPage: React.FC = () => {
     }
   }
 
-  // 静默加载，不显示 loading 状态，只在数据有变化时更新
   const loadNotesSilently = async () => {
     try {
       const response = await notesApi.getNotes()
-      console.log('Notes API Response (silent):', response.data) // 调试日志
+      console.log('Notes API Response (silent):', response.data)
       
       let newNotes: Note[] = []
       
-      // 确保返回的是数组格式
       if (Array.isArray(response.data)) {
         newNotes = response.data
       } else if (response.data && typeof response.data === 'object') {
-        // 如果返回的是单个笔记对象，转换为数组
+
         const singleNote = response.data
         newNotes = [{
           id: singleNote.id || '1',
@@ -281,9 +262,8 @@ const NotesListPage: React.FC = () => {
         }]
       }
       
-      // 应用自定义排序
       const ordered = applyOrder(newNotes)
-      // 只在数据有变化时更新状态，避免不必要的重新渲染
+
       if (JSON.stringify(ordered) !== JSON.stringify(notes)) {
         setNotes(ordered)
         setFilteredNotes(ordered)
@@ -295,7 +275,7 @@ const NotesListPage: React.FC = () => {
       }
     } catch (err: unknown) {
       console.error('Load notes error (silent):', err)
-      // 静默加载失败时不显示错误，保持缓存内容
+
     }
   }
 
@@ -340,13 +320,12 @@ const NotesListPage: React.FC = () => {
       setNotes((prev: Note[]) => prev.filter((note: Note) => note.id !== noteId))
       setFilteredNotes((prev: Note[]) => prev.filter((note: Note) => note.id !== noteId))
       console.log('笔记列表已更新')
-      // 同步更新自定义排序
+
       try {
         const current = loadNoteOrder()
         const updated = current.filter((id) => id !== noteId)
         localStorage.setItem('note-order', JSON.stringify(updated))
       } catch {}
-      // 同步更新缓存，避免刷新后短暂出现已删除卡片
       try {
         const cacheRaw = sessionStorage.getItem('notes-cache')
         if (cacheRaw) {
@@ -368,7 +347,6 @@ const NotesListPage: React.FC = () => {
         localStorage.removeItem('note-cache:' + `/notes/${noteId}`)
       } catch {}
       
-      // 显示删除成功提示
       modal.showAlert('笔记删除成功！', { 
         type: 'success',
         title: '删除成功',
@@ -389,22 +367,20 @@ const NotesListPage: React.FC = () => {
     setIsSettingsOpen(true)
   }
 
-  // 搜索处理函数
   const handleSearch = (results: Note[]) => {
     setFilteredNotes(results)
   }
 
   const handleTagClick = (tag: string) => {
-    // 找到该标签对应的第一个笔记
+
     const notesWithTag = notes.filter((note: Note) => note.tags && note.tags.includes(tag))
     if (notesWithTag.length > 0) {
-      // 进入第一个笔记的查看页面
+
       const first = notesWithTag[0]
       navigate(`/notes/${first.id}`, { state: { note: first } })
     }
   }
 
-  // 获取所有标签
   const getAllTags = () => {
     const allTags = new Set<string>()
     notes.forEach((note: Note) => {
@@ -414,9 +390,8 @@ const NotesListPage: React.FC = () => {
     })
     const tagsArray = Array.from(allTags)
     
-    // 如果有自定义排序，使用自定义排序；否则使用字母排序
     if (tagOrder.length > 0) {
-      // 合并自定义排序和新增标签
+
       const orderedTags = [...tagOrder]
       const newTags = tagsArray.filter(tag => !tagOrder.includes(tag))
       return [...orderedTags, ...newTags.sort()]
@@ -425,7 +400,6 @@ const NotesListPage: React.FC = () => {
     return tagsArray.sort()
   }
 
-  // 笔记拖拽排序处理
   const handleNoteDragStart = (e: React.DragEvent, noteId: string) => {
     setDraggedNoteId(noteId)
     e.currentTarget.style.opacity = '0.5'
@@ -457,16 +431,14 @@ const NotesListPage: React.FC = () => {
     setFilteredNotes(newNotes)
     setNotes(newNotes)
     
-    // 更新缓存
     try {
       sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
       localStorage.setItem('notes-cache', JSON.stringify(newNotes))
     } catch {}
-    // 保存自定义顺序
+
     saveNoteOrder(newNotes)
   }
 
-  // 标签拖拽排序处理
   const handleTagDragStart = (e: React.DragEvent, tag: string) => {
     setDraggedTag(tag)
     e.dataTransfer.setData('text/plain', tag)
@@ -500,13 +472,11 @@ const NotesListPage: React.FC = () => {
 
     setTagOrder(newTagOrder)
     
-    // 保存标签排序到localStorage
     try {
       localStorage.setItem('tag-order', JSON.stringify(newTagOrder))
     } catch {}
   }
 
-  // 不再整体早返回 Loading，改为页面内局部骨架占位，以保证即时渲染
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60" style={{ backgroundImage: "var(--app-bg-image, url('/image/background.png'))", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
