@@ -18,7 +18,6 @@ const LoginPage = () => {
   useEffect(() => {
     document.title = '笔记系统 - 登录'
     
-    // 加载设置中的用户名作为标题
     const loadSettingsTitle = () => {
       try {
         const saved = localStorage.getItem('app-settings')
@@ -26,14 +25,12 @@ const LoginPage = () => {
           const parsed = JSON.parse(saved)
           if (parsed.username && typeof parsed.username === 'string') {
             setDisplayTitle(parsed.username)
-            // 动态更新页面标题和meta标签
             document.title = parsed.username
             const descMeta = document.querySelector('meta[name="description"]') as HTMLMetaElement
             const appMeta = document.querySelector('meta[name="application-name"]') as HTMLMetaElement
             if (descMeta) descMeta.content = `${parsed.username} - 个人笔记管理系统`
             if (appMeta) appMeta.content = parsed.username
           }
-          // 应用自定义logo到登录卡片和favicon
           if (parsed.logoUrl && typeof parsed.logoUrl === 'string') {
             const url = parsed.logoUrl.trim()
             if (url) {
@@ -53,7 +50,6 @@ const LoginPage = () => {
     }
     loadSettingsTitle()
     
-    // 监听设置变更事件，实时更新背景图、标题和logo
     const settingsHandler = (event: any) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -64,17 +60,17 @@ const LoginPage = () => {
           document.documentElement.style.removeProperty('--app-bg-image')
         }
       }
-      // 更新标题
+
       if (settings && settings.username && typeof settings.username === 'string') {
         setDisplayTitle(settings.username)
-        // 动态更新页面标题和meta标签
+
         document.title = settings.username
         const descMeta = document.querySelector('meta[name="description"]') as HTMLMetaElement
         const appMeta = document.querySelector('meta[name="application-name"]') as HTMLMetaElement
         if (descMeta) descMeta.content = `${settings.username} - 个人笔记管理系统`
         if (appMeta) appMeta.content = settings.username
       }
-      // 更新logo
+
       if (settings && typeof settings.logoUrl === 'string') {
         const url = settings.logoUrl.trim()
         const img = document.getElementById('login-logo') as HTMLImageElement | null
@@ -92,7 +88,6 @@ const LoginPage = () => {
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
     
-    // logo图片已通过HTML预加载，无需额外处理
     
     return () => {
       window.removeEventListener('settings-changed' as any, settingsHandler)
@@ -113,9 +108,9 @@ const LoginPage = () => {
     try {
       const success = await login(password)
       if (success) {
-        // 登录成功后尽量带着数据跳转，确保首页秒渲染
+
         try {
-          // 优先使用本地缓存，加速首屏
+
           let cached: any[] | null = null
           try {
             const raw = localStorage.getItem('notes-cache') || sessionStorage.getItem('notes-cache')
@@ -125,7 +120,7 @@ const LoginPage = () => {
           if (cached && Array.isArray(cached) && cached.length > 0) {
             navigate('/notes', { state: { notes: cached } })
           } else {
-            // 无缓存则快速拉取一次数据再跳转
+
             const resp = await notesApi.getNotes()
             const list = Array.isArray(resp.data) ? resp.data : (resp.data ? [resp.data] : [])
             navigate('/notes', { state: { notes: list } })
@@ -135,7 +130,7 @@ const LoginPage = () => {
             } catch {}
           }
         } catch {
-          // 兜底直接跳转
+
           navigate('/notes')
         }
       } else {
