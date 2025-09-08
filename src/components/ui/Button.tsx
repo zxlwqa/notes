@@ -19,7 +19,6 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
   
-  // 应用全局字体大小
   const globalFontSize = 'var(--global-font-size, 14px)'
   
   const variantClasses = {
@@ -42,22 +41,21 @@ const Button: React.FC<ButtonProps> = ({
     const button = e.currentTarget
     const originalStyle = button.style
     
-    // 根据variant设置悬停效果
     switch (variant) {
       case 'primary':
-        button.style.backgroundColor = '#1d4ed8' // primary-700
+        button.style.backgroundColor = '#1d4ed8'
         break
       case 'secondary':
-        button.style.backgroundColor = '#f3f4f6' // gray-100
+        button.style.backgroundColor = '#f3f4f6'
         break
       case 'danger':
-        button.style.backgroundColor = '#dc2626' // red-700
+        button.style.backgroundColor = '#dc2626'
         break
       case 'success':
-        button.style.backgroundColor = '#16a34a' // green-700
+        button.style.backgroundColor = '#16a34a'
         break
       case 'ghost':
-        button.style.backgroundColor = '#f3f4f6' // gray-100
+        button.style.backgroundColor = '#f3f4f6'
         break
     }
   }
@@ -67,19 +65,18 @@ const Button: React.FC<ButtonProps> = ({
     
     const button = e.currentTarget
     
-    // 恢复原始背景色
     switch (variant) {
       case 'primary':
-        button.style.backgroundColor = '#2563eb' // primary-600
+        button.style.backgroundColor = '#2563eb'
         break
       case 'secondary':
         button.style.backgroundColor = 'transparent'
         break
       case 'danger':
-        button.style.backgroundColor = '#dc2626' // red-600
+        button.style.backgroundColor = '#dc2626'
         break
       case 'success':
-        button.style.backgroundColor = '#16a34a' // green-600
+        button.style.backgroundColor = '#16a34a'
         break
       case 'ghost':
         button.style.backgroundColor = 'transparent'
