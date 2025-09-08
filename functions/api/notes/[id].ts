@@ -199,7 +199,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
 
     const tagsJson = JSON.stringify(tagsArray);
     const result = await env.DB.prepare(
-      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`
+      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00' WHERE id = ?`
     ).bind(title, content, tagsJson, noteId).run();
 
     console.log('Update result:', result);
@@ -283,5 +283,3 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     });
   }
 }
-
-
