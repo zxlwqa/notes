@@ -25,10 +25,9 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [password, setPassword] = useState<string | null>(localStorage.getItem('password'))
-  // 认证只依赖 localStorage，同步可得，避免首屏额外 loading
+
   const [loading, setLoading] = useState(false)
 
-  // 不再为简单本地校验引入异步 loading 状态
   useEffect(() => {}, [password])
 
   const login = async (passwordInput: string): Promise<boolean> => {
@@ -61,3 +60,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
