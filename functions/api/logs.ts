@@ -19,12 +19,33 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
       const result = await db
         .prepare("SELECT id, level, message, meta, datetime(created_at, '+8 hours') AS created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200")
         .all()
+      const rawItems = (result as any)?.results || []
+      const items = rawItems.map((row: any) => {
+        let metaText: string | null = row.meta ?? null
+        if (typeof metaText === 'string') {
+          const trimmed = metaText.trim()
+          if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+            try {
+              const parsed = JSON.parse(trimmed)
+              if (parsed && typeof parsed === 'object' && typeof parsed.title === 'string') {
+                metaText = parsed.title
+              } else {
+                // 保持原字符串
+              }
+            } catch {
+              // JSON 解析失败则保持原字符串
+            }
+          }
+        }
+        if (metaText == null || metaText === '') metaText = '-'
+        return { ...row, meta: metaText }
+      })
       return new Response(
         JSON.stringify({
           success: true,
           source: 'd1',
-          count: result.results?.length || 0,
-          items: result.results || [],
+          count: items.length,
+          items,
         }),
         { headers: { 'content-type': 'application/json; charset=utf-8' } }
       )
