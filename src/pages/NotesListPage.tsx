@@ -514,7 +514,7 @@ const NotesListPage: React.FC = () => {
       <header className="bg-white/30 backdrop-blur-md shadow-sm border-b border-white/30">
         <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* 标题 */}
-          <h1 className="font-semibold text-gray-900" style={{ fontSize: 'var(--global-font-size, 16px)' }}>{displayTitle || '科技刘笔记'}</h1>
+          <h1 className="font-semibold text-gray-900" style={{ fontSize: 'var(--global-font-size, 16px)' }}>{displayTitle || '笔记系统'}</h1>
           
           {/* 右侧操作区域 */}
           <div className="flex items-center gap-4">
