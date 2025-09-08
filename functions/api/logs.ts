@@ -10,7 +10,7 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
           level TEXT,
           message TEXT NOT NULL,
           meta TEXT,
-          created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00')
+          created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours'))
         )`
       ).run()
       await db.prepare(
@@ -86,7 +86,7 @@ export const onRequestDelete: PagesFunction = async ({ env }) => {
         level TEXT,
         message TEXT NOT NULL,
         meta TEXT,
-        created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00')
+        created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours'))
       )`
     ).run()
     const res = await db.prepare('DELETE FROM logs').run()
