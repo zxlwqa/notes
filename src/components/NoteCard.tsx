@@ -121,7 +121,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
       {/* 卡片内容预览 */}
       <div className="flex items-start mb-3">
         <FileText className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-gray-600 leading-relaxed">
+        <p className="flex-1 min-w-0 text-sm text-gray-600 leading-relaxed break-words overflow-hidden">
           {getPreview(note.content)}
         </p>
       </div>
