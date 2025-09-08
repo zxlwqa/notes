@@ -249,7 +249,7 @@ const NoteViewPage: React.FC = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
       // 显示成功提示
       const successMessage = document.createElement('div')
-      successMessage.textContent = '分享链接已复制到剪贴板！'
+      successMessage.textContent = '分享链接已复制'
       successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
       document.body.appendChild(successMessage)
       setTimeout(() => {
