@@ -69,7 +69,6 @@ export const useModal = () => {
     })
   }, [])
 
-  // 显示确认弹窗
   const showConfirm = useCallback((message: string, options: Omit<ModalState, 'isOpen' | 'message'>): Promise<boolean> => {
     return new Promise((resolve) => {
       setConfirmState({
@@ -89,7 +88,6 @@ export const useModal = () => {
     })
   }, [])
 
-  // 显示输入弹窗
   const showPrompt = useCallback((options: Omit<PromptState, 'isOpen'>) => {
     setPromptState({
       isOpen: true,
@@ -104,7 +102,6 @@ export const useModal = () => {
     })
   }, [])
 
-  // 显示选择弹窗
   const showSelect = useCallback((message: string, options: Omit<SelectState, 'isOpen' | 'message'>): Promise<string | null> => {
     return new Promise((resolve) => {
       setSelectState({
@@ -125,34 +122,28 @@ export const useModal = () => {
     })
   }, [])
 
-  // 关闭警告弹窗
   const closeAlert = useCallback(() => {
     setAlertState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
-  // 关闭确认弹窗
   const closeConfirm = useCallback(() => {
     setConfirmState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
-  // 关闭输入弹窗
   const closePrompt = useCallback(() => {
     setPromptState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
-  // 关闭选择弹窗
   const closeSelect = useCallback(() => {
     setSelectState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
   return {
-    // 状态
     alertState,
     confirmState,
     promptState,
     selectState,
     
-    // 方法
     showAlert,
     showConfirm,
     showPrompt,
@@ -164,7 +155,6 @@ export const useModal = () => {
   }
 }
 
-// 全局弹窗管理器
 class ModalManager {
   private static instance: ModalManager
   private modalHook: ReturnType<typeof useModal> | null = null
@@ -187,7 +177,6 @@ class ModalManager {
         ...options
       })
     } else {
-      // 降级到原生 alert
       window.alert(message)
     }
   }
@@ -201,7 +190,6 @@ class ModalManager {
           ...options
         })
       } else {
-        // 降级到原生 confirm
         resolve(window.confirm(message))
       }
     })
@@ -218,7 +206,6 @@ class ModalManager {
           ...options
         })
       } else {
-        // 降级到原生 prompt
         const result = window.prompt(message, defaultValue)
         resolve(result)
       }
