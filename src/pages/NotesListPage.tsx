@@ -150,6 +150,59 @@ const NotesListPage: React.FC = () => {
     }
   }, [])
 
+  // 读取、应用与保存笔记自定义排序
+  const loadNoteOrder = (): string[] => {
+    try {
+      const raw = localStorage.getItem('note-order')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
+  const applyOrder = (list: Note[]): Note[] => {
+    const order = loadNoteOrder()
+    if (!Array.isArray(list) || list.length === 0 || order.length === 0) return list
+    const idToNote = new Map(list.map((n) => [n.id, n]))
+    const ordered: Note[] = []
+    // 先放入自定义顺序中存在的笔记
+    for (const id of order) {
+      const note = idToNote.get(id)
+      if (note) {
+        ordered.push(note)
+        idToNote.delete(id)
+      }
+    }
+    // 追加新增的笔记（自定义顺序中不存在）
+    for (const note of list) {
+      if (idToNote.has(note.id)) {
+        ordered.push(note)
+      }
+    }
+    return ordered
+  }
+
+  const saveNoteOrder = (list: Note[]) => {
+    try {
+      const ids = Array.isArray(list) ? list.map((n) => n.id) : []
+      localStorage.setItem('note-order', JSON.stringify(ids))
+    } catch {}
+  }
+
+  // 首次渲染时对缓存或路由状态中的笔记应用已保存的排序
+  useEffect(() => {
+    if (notes && notes.length > 0) {
+      const ordered = applyOrder(notes)
+      if (JSON.stringify(ordered.map((n) => n.id)) !== JSON.stringify(notes.map((n) => n.id))) {
+        setNotes(ordered)
+        setFilteredNotes(ordered)
+      }
+    }
+    // 仅在首次装载时尝试一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const loadNotes = async () => {
     try {
       setLoading(true)
@@ -160,11 +213,13 @@ const NotesListPage: React.FC = () => {
       
       // 确保返回的是数组格式
       if (Array.isArray(response.data)) {
-        setNotes(response.data)
-        setFilteredNotes(response.data)
+        const ordered = applyOrder(response.data)
+        setNotes(ordered)
+        setFilteredNotes(ordered)
         try {
-          sessionStorage.setItem('notes-cache', JSON.stringify(response.data))
+          sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
+        saveNoteOrder(ordered)
       } else if (response.data && typeof response.data === 'object') {
         // 如果返回的是单个笔记对象，转换为数组
         const singleNote = response.data
@@ -176,11 +231,13 @@ const NotesListPage: React.FC = () => {
           createdAt: singleNote.createdAt || new Date().toISOString(),
           updatedAt: singleNote.updatedAt || new Date().toISOString()
         }]
-        setNotes(noteArray)
-        setFilteredNotes(noteArray)
+        const ordered = applyOrder(noteArray)
+        setNotes(ordered)
+        setFilteredNotes(ordered)
         try {
-          sessionStorage.setItem('notes-cache', JSON.stringify(noteArray))
+          sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
+        saveNoteOrder(ordered)
       } else {
         setNotes([])
         setFilteredNotes([])
@@ -222,13 +279,16 @@ const NotesListPage: React.FC = () => {
         }]
       }
       
+      // 应用自定义排序
+      const ordered = applyOrder(newNotes)
       // 只在数据有变化时更新状态，避免不必要的重新渲染
-      if (JSON.stringify(newNotes) !== JSON.stringify(notes)) {
-        setNotes(newNotes)
-        setFilteredNotes(newNotes)
+      if (JSON.stringify(ordered) !== JSON.stringify(notes)) {
+        setNotes(ordered)
+        setFilteredNotes(ordered)
         try {
-          sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
+          sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
+        saveNoteOrder(ordered)
       }
     } catch (err: unknown) {
       console.error('Load notes error (silent):', err)
@@ -277,6 +337,12 @@ const NotesListPage: React.FC = () => {
       setNotes((prev: Note[]) => prev.filter((note: Note) => note.id !== noteId))
       setFilteredNotes((prev: Note[]) => prev.filter((note: Note) => note.id !== noteId))
       console.log('笔记列表已更新')
+      // 同步更新自定义排序
+      try {
+        const current = loadNoteOrder()
+        const updated = current.filter((id) => id !== noteId)
+        localStorage.setItem('note-order', JSON.stringify(updated))
+      } catch {}
       // 同步更新缓存，避免刷新后短暂出现已删除卡片
       try {
         const cacheRaw = sessionStorage.getItem('notes-cache')
@@ -392,6 +458,8 @@ const NotesListPage: React.FC = () => {
     try {
       sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
     } catch {}
+    // 保存自定义顺序
+    saveNoteOrder(newNotes)
   }
 
   // 标签拖拽排序处理
