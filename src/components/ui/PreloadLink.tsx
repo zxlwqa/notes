@@ -13,7 +13,7 @@ const PreloadLink: React.FC<PreloadLinkProps> = ({
 }) => {
   const handleMouseEnter = useCallback(() => {
     if (preloadComponent) {
-      // 预加载组件
+
       preloadComponent()
     }
   }, [preloadComponent])
