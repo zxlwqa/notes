@@ -1,3 +1,4 @@
+import { logToD1 } from '../../_utils/log'
 // 类型定义
 type PagesFunction = (context: { request: Request; env: any }) => Promise<Response>;
 
@@ -248,6 +249,7 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     console.log('Existing note check result:', existingNote);
     
     if (!existingNote) {
+      await logToD1(context.env as any, 'warn', 'notes.delete.not_found', { id: noteId })
       console.log('Note not found for deletion:', noteId);
       return new Response(JSON.stringify({ error: "Note not found" }), { 
         status: 404,
@@ -261,6 +263,7 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     console.log('Note exists, attempting to delete:', noteId);
     const deleteResult = await env.DB.prepare(`DELETE FROM notes WHERE id = ?`).bind(noteId).run();
     console.log('Delete result:', deleteResult);
+    await logToD1(env, 'info', 'notes.delete', { id: noteId })
 
     return Response.json({ success: true }, { 
       headers: {
@@ -274,6 +277,7 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
       stack: error.stack,
       name: error.name
     });
+    try { await logToD1(env, 'error', 'notes.delete.exception', { message: (error as any)?.message }) } catch {}
     return new Response(JSON.stringify({ error: "Internal server error", details: error.message }), { 
       status: 500,
       headers: {
