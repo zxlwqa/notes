@@ -23,7 +23,7 @@ interface NoteCardProps {
 }
 
 const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart, onDragEnd, onDragOver, onDrop, className }) => {
-  // 格式化日期
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-CN', {
@@ -35,17 +35,15 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
     })
   }
 
-  // 获取内容预览（去除 Markdown 标记）
   const getPreview = (content: string | undefined) => {
     if (!content) return '暂无内容'
     
-    // 简单的 Markdown 清理
     const cleanContent = content
-      .replace(/#{1,6}\s+/g, '') // 移除标题标记
-      .replace(/\*\*(.*?)\*\*/g, '$1') // 移除粗体标记
-      .replace(/\*(.*?)\*/g, '$1') // 移除斜体标记
-      .replace(/`(.*?)`/g, '$1') // 移除代码标记
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 移除链接，保留文本
+      .replace(/#{1,6}\s+/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
       .trim()
     
     return cleanContent.length > 100 
@@ -58,19 +56,16 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
   }
 
   const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // 阻止事件冒泡
+    e.stopPropagation()
     onDelete(note.id)
   }
 
   const handleShareClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // 阻止事件冒泡
+    e.stopPropagation()
     
-    // 创建阅读页面链接
     const shareUrl = window.location.origin + `/notes/${note.id}`
     
-    // 复制链接到剪贴板
     navigator.clipboard.writeText(shareUrl).then(() => {
-      // 显示成功提示
       const successMessage = document.createElement('div')
       successMessage.textContent = '分享链接已复制'
       successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
