@@ -2,22 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Logo 预加载样式已移除，使用HTML标准预加载 */
 
 @layer base {
-  /* 全局字体大小设置 - 应用到所有元素 */
   * {
     font-family: var(--editor-font-family, 'Segoe UI', system-ui, sans-serif);
     font-size: var(--global-font-size, 14px);
     line-height: var(--global-line-height, 1.6);
   }
   
-  /* 确保所有文本元素都使用全局字体大小，但排除编辑器 */
   *:not(.CodeMirror):not(.CodeMirror *) {
     font-size: inherit;
   }
   
-  /* 标题元素使用相对字体大小 */
   h1 {
     font-size: calc(var(--global-font-size, 14px) * 1.5) !important;
     font-weight: bold;
@@ -38,38 +34,32 @@
     font-weight: 500;
   }
   
-  /* 小文本使用相对较小的字体 */
   .text-sm, small {
     font-size: calc(var(--global-font-size, 14px) * 0.875) !important;
   }
   
-  /* 按钮和输入框强制使用全局字体大小，但排除标题输入框 */
   button, input:not(.title-input):not([style*="fontSize"]), select, textarea, label {
     font-size: var(--global-font-size, 14px) !important;
   }
   
-  /* 确保标题输入框使用全局字体大小 */
   .title-input {
     font-size: calc(var(--global-font-size, 16px) * 1.5) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
   
-  /* 确保所有输入框都使用全局字体大小，除非有特定样式 */
   input[type="text"] {
     font-size: var(--global-font-size, 14px) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
   
-  /* 标题输入框特殊处理 */
   input.title-input {
     font-size: calc(var(--global-font-size, 16px) * 1.5) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
   
-  /* 确保所有 Tailwind 字体大小类都被覆盖 */
   .text-xs { font-size: calc(var(--global-font-size, 14px) * 0.75) !important; }
   .text-sm { font-size: calc(var(--global-font-size, 14px) * 0.875) !important; }
   .text-base { font-size: var(--global-font-size, 14px) !important; }
@@ -81,19 +71,17 @@
   .text-5xl { font-size: calc(var(--global-font-size, 14px) * 3) !important; }
   .text-6xl { font-size: calc(var(--global-font-size, 14px) * 3.75) !important; }
   
-  /* 应用背景图设置 */
   body {
-    /* 默认背景图，立即显示 */
+
     background-image: url('/image/background.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    /* 用户自定义背景图覆盖默认背景 */
+
     background-image: var(--app-bg-image, url('/image/background.png'));
   }
   
-  /* 移除CSS预加载，使用HTML标准预加载 */
 }
 
 @layer components {
@@ -170,19 +158,16 @@
   }
 }
 
-/* EasyMDE 编辑器基础样式 */
 @layer utilities {
-  /* 确保编辑器容器有正确的尺寸 */
+  
   .EasyMDEContainer {
     @apply w-full;
   }
   
-  /* 修复编辑器文本区域的光标问题 */
   .EasyMDEContainer .CodeMirror {
     @apply min-h-[400px] border-0;
   }
   
-  /* 确保光标可见 - 移除冲突样式 */
   .EasyMDEContainer .CodeMirror-cursor {
     border-left: 2px solid #3b82f6 !important;
     border-right: none !important;
@@ -197,18 +182,15 @@
     padding: 0 !important;
   }
   
-  /* 确保编辑器状态栏正常显示 */
   .EasyMDEContainer .editor-statusbar {
     @apply border-gray-300 bg-gray-50 text-gray-600;
   }
   
-  /* 修复编辑器在暗色主题下的显示问题 */
   .EasyMDEContainer .CodeMirror.CodeMirror-fullscreen {
     @apply z-50;
   }
 }
 
-/* 全局强制修复 EasyMDE 工具栏图标问题 */
 html body .editor-toolbar {
   background: #ffffff !important;
   border: 1px solid #d1d5db !important;
@@ -268,7 +250,6 @@ html body .editor-toolbar * {
   filter: none !important;
 }
 
-/* 强制覆盖所有可能的样式 - 使用最高优先级 */
 .editor-toolbar,
 .editor-toolbar *,
 .editor-toolbar button,
@@ -282,19 +263,16 @@ html body .editor-toolbar * {
   text-shadow: none !important;
 }
 
-/* 工具栏容器强制样式 */
 .editor-toolbar {
   background: #ffffff !important;
   border: 1px solid #d1d5db !important;
 }
 
-/* 工具栏按钮强制样式 */
 .editor-toolbar button {
   color: #000000 !important;
   background: transparent !important;
 }
 
-/* 工具栏图标强制样式 */
 .editor-toolbar button i,
 .editor-toolbar button span,
 .editor-toolbar a i,
@@ -303,7 +281,6 @@ html body .editor-toolbar * {
   opacity: 1 !important;
 }
 
-/* 使用!important覆盖所有可能的样式 */
 .editor-toolbar,
 .editor-toolbar * {
   color: #000000 !important;
@@ -332,7 +309,6 @@ html body .editor-toolbar * {
   opacity: 1 !important;
 }
 
-/* 强制覆盖 EasyMDE 默认样式 */
 .editor-toolbar {
   background: #ffffff !important;
   border: 1px solid #d1d5db !important;
@@ -392,3 +368,4 @@ html body .editor-toolbar * {
   filter: none !important;
   text-shadow: none !important;
 }
+
