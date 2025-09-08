@@ -220,32 +220,28 @@ const NotesListPage: React.FC = () => {
         }]
       }
       
-      // 1) 基于关键字段稳定对比，避免无意义的整体替换导致闪动
-      const toComparable = (list: Note[]) =>
-        [...list]
-          .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0))
-          .map(n => ({ id: n.id, updatedAt: n.updatedAt }))
+      // 标准化比较：仅比较 id 与 updatedAt，且按 id 排序，避免不必要的刷新
+      const sortById = (list: Note[]) => [...list].sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0))
+      const a = sortById(notes)
+      const b = sortById(newNotes)
+      const isSameByIdAndUpdatedAt = a.length === b.length && a.every((item, idx) => item.id === b[idx].id && item.updatedAt === b[idx].updatedAt)
 
-      const prevComparable = toComparable(notes)
-      const nextComparable = toComparable(newNotes)
+      if (!isSameByIdAndUpdatedAt) {
+        // 复用未变化项的引用，减少子节点重渲染
+        const oldMap = new Map<string, Note>(notes.map(n => [n.id, n]))
+        const merged = newNotes.map(n => {
+          const old = oldMap.get(n.id)
+          return old && old.updatedAt === n.updatedAt ? old : n
+        })
 
-      const isSame = prevComparable.length === nextComparable.length &&
-        prevComparable.every((item, idx) => item.id === nextComparable[idx].id && item.updatedAt === nextComparable[idx].updatedAt)
-
-      if (isSame) {
-        // 数据无变化，跳过更新
-        return
+        startTransition(() => {
+          setNotes(merged)
+          setFilteredNotes(merged)
+        })
+        try {
+          sessionStorage.setItem('notes-cache', JSON.stringify(merged))
+        } catch {}
       }
-
-      // 2) 使用低优先级更新，减少可见抖动
-      startTransition(() => {
-        setNotes(newNotes)
-        setFilteredNotes(newNotes)
-      })
-
-      try {
-        sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
-      } catch {}
     } catch (err: unknown) {
       console.error('Load notes error (silent):', err)
       // 静默加载失败时不显示错误，保持缓存内容
