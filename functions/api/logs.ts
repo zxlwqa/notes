@@ -1,9 +1,7 @@
 export const onRequestGet: PagesFunction = async ({ env }) => {
   try {
-    // 从 D1 获取
     const db = (env as any)?.DB as D1Database | undefined
     if (db) {
-      // 确保表和索引存在（分两条语句执行，避免多语句解析问题）
       await db.prepare(
         `CREATE TABLE IF NOT EXISTS logs (
           id INTEGER PRIMARY KEY,
@@ -27,7 +25,6 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
           parsed = row.meta ? JSON.parse(row.meta) : null
         } catch {}
 
-        // 规则：优先展示 title；其次展示 count/id；若 meta 是字符串则直接展示
         if (parsed && typeof parsed === 'object') {
           if (typeof parsed.title === 'string' && parsed.title) {
             detail = parsed.title
@@ -37,10 +34,8 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
             detail = parsed.id
           }
         } else if (typeof parsed === 'string' && parsed) {
-          // 旧日志可能把纯文本以 JSON 字符串形式存储（例如 "新笔记"）
           detail = parsed
         } else if (typeof row.meta === 'string' && row.meta && row.meta[0] !== '{') {
-          // 非 JSON 的纯文本
           detail = row.meta
         }
 
@@ -58,7 +53,6 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
       )
     }
 
-    // 如果没有日志后端，返回空结果
     return new Response(
       JSON.stringify({ success: true, source: 'none', count: 0, items: [] }),
       { headers: { 'content-type': 'application/json; charset=utf-8' } }
