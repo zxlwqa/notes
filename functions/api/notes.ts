@@ -219,7 +219,7 @@ const handlePost: PagesFunction = async ({ request, env }) => {
 
     if (body.content && !body.title) {
       await env.DB.prepare(
-        `INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (1, '我的笔记', ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now')) ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')`
+        `INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (1, '我的笔记', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00', strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00') ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00'`
       ).bind(body.content).run();
 
       return Response.json({ success: true }, {
@@ -258,7 +258,7 @@ const handlePost: PagesFunction = async ({ request, env }) => {
     const noteId = Date.now().toString();
     const tagsJson = JSON.stringify(tagsArray);
     await env.DB.prepare(
-      `INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
+      `INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00', strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00')`
     ).bind(noteId, title, content, tagsJson).run();
 
     await logToD1(env, 'info', 'notes.create', { id: noteId, title })
@@ -362,7 +362,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
 
     const tagsJson = JSON.stringify(tagsArray);
     await env.DB.prepare(
-      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?`
+      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00' WHERE id = ?`
     ).bind(title, content, tagsJson, noteId).run();
 
     await logToD1(env, 'info', 'notes.update', { id: noteId })
