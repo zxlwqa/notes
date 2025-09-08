@@ -70,6 +70,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     checkPasswordSource()
   }, [])
 
+  // 每次打开弹窗时清空密码输入框
+  useEffect(() => {
+    if (isOpen) {
+      setNewPassword('')
+      setCurrentPassword('')
+      setConfirmPassword('')
+    }
+  }, [isOpen])
+
   // 检查当前密码来源
   const checkPasswordSource = async () => {
     try {
