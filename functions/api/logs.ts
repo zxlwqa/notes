@@ -38,6 +38,7 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
           }
         }
         if (metaText == null || metaText === '') metaText = '-'
+        // 为前端表格提供 detail 字段以直接显示“详情”列
         return { ...row, meta: metaText, detail: metaText }
       })
       return new Response(
