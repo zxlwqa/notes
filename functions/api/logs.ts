@@ -17,36 +17,14 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
         `CREATE INDEX IF NOT EXISTS logs_created_at_idx ON logs(created_at)`
       ).run()
       const result = await db
-        .prepare("SELECT id, level, message, meta, datetime(created_at, '+8 hours') AS created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200")
+        .prepare('SELECT id, level, message, meta, created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200')
         .all()
-      const rawItems = (result as any)?.results || []
-      const items = rawItems.map((row: any) => {
-        let metaText: string | null = row.meta ?? null
-        if (typeof metaText === 'string') {
-          const trimmed = metaText.trim()
-          if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-            try {
-              const parsed = JSON.parse(trimmed)
-              if (parsed && typeof parsed === 'object' && typeof parsed.title === 'string') {
-                metaText = parsed.title
-              } else {
-                // 保持原字符串
-              }
-            } catch {
-              // JSON 解析失败则保持原字符串
-            }
-          }
-        }
-        if (metaText == null || metaText === '') metaText = '-'
-        // 为前端表格提供 detail 字段以直接显示“详情”列
-        return { ...row, meta: metaText, detail: metaText }
-      })
       return new Response(
         JSON.stringify({
           success: true,
           source: 'd1',
-          count: items.length,
-          items,
+          count: result.results?.length || 0,
+          items: result.results || [],
         }),
         { headers: { 'content-type': 'application/json; charset=utf-8' } }
       )
