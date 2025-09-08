@@ -2,7 +2,6 @@ import { logToD1 } from '../_utils/log'
 export const onRequestPost: PagesFunction<{
   DB: D1Database;
 }> = async ({ request, env }) => {
-  // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -15,7 +14,6 @@ export const onRequestPost: PagesFunction<{
   }
 
   try {
-    // 验证认证
     const password = request.headers.get("Authorization")?.replace("Bearer ", "");
     if (!password) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -27,7 +25,6 @@ export const onRequestPost: PagesFunction<{
       });
     }
 
-    // 验证密码
     let effectivePassword = env.PASSWORD as string | undefined;
     let useD1Password = false;
     try {
@@ -50,10 +47,8 @@ export const onRequestPost: PagesFunction<{
       });
     }
 
-    // 确保notes表存在
     await env.DB.exec(`CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, title TEXT, content TEXT, tags TEXT, created_at TEXT, updated_at TEXT)`);
 
-    // 解析请求体
     const { notes, format } = await request.json();
     
     if (!notes || !Array.isArray(notes)) {
@@ -70,7 +65,6 @@ export const onRequestPost: PagesFunction<{
     let importedCount = 0;
     let errors: string[] = [];
 
-    // 批量导入笔记
     for (const note of notes) {
       try {
         const noteId = note.id || Date.now().toString();
@@ -82,7 +76,6 @@ export const onRequestPost: PagesFunction<{
           .replace('Z', '')
           .replace(/\.\d{3}$/, '')
 
-        // 插入或更新笔记
         await env.DB.prepare(`INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title = excluded.title, content = excluded.content, tags = excluded.tags, updated_at = excluded.updated_at`).bind(noteId, title, content, tags, now, now).run();
 
         importedCount++;
