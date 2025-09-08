@@ -8,7 +8,6 @@ import { AlertModal, ConfirmModal } from '@/components/Modal'
 import { useModal } from '@/hooks/useModal'
 import { notesApi } from '@/lib/api'
 
-// 设置弹窗仍可懒加载；Markdown 渲染器改为同步加载
 const SettingsModal = lazy(() => import('@/components/SettingsModal'))
 import ReactMarkdown from 'react-markdown'
 
@@ -36,7 +35,6 @@ const NoteViewPage: React.FC = () => {
     return null
   })
   
-  // 高亮位置信息
   const [highlightPosition, setHighlightPosition] = useState<{
     startIndex: number
     endIndex: number
@@ -53,33 +51,26 @@ const NoteViewPage: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   
-  // 弹窗管理
   const modal = useModal()
   
-  // 高亮文本并滚动到指定位置
   const highlightAndScrollToText = useCallback(() => {
     if (!highlightPosition || !note?.content) return
     
-    // 等待内容渲染完成
     setTimeout(() => {
       const contentElement = document.querySelector('.prose')
       if (!contentElement) return
       
-      // 创建高亮标记
       const beforeText = note.content.substring(0, highlightPosition.startIndex)
       const highlightText = note.content.substring(highlightPosition.startIndex, highlightPosition.endIndex)
       const afterText = note.content.substring(highlightPosition.endIndex)
       
-      // 创建高亮HTML
       const highlightedContent = `${beforeText}<mark class="highlight-search-result" style="background-color: #fef3c7; padding: 2px 4px; border-radius: 4px; font-weight: 600;">${highlightText}</mark>${afterText}`
       
-      // 更新内容
       const markdownElement = contentElement.querySelector('div[data-highlight-content]')
       if (markdownElement) {
         markdownElement.innerHTML = highlightedContent
       }
       
-      // 滚动到高亮位置
       const highlightElement = contentElement.querySelector('.highlight-search-result')
       if (highlightElement) {
         highlightElement.scrollIntoView({ 
@@ -87,7 +78,6 @@ const NoteViewPage: React.FC = () => {
           block: 'center' 
         })
         
-        // 3秒后清除高亮
         setTimeout(() => {
           if (highlightElement) {
             highlightElement.classList.remove('highlight-search-result')
@@ -101,7 +91,6 @@ const NoteViewPage: React.FC = () => {
     }, 100)
   }, [highlightPosition, note?.content])
   
-  // 当有高亮位置时执行高亮
   useEffect(() => {
     if (highlightPosition && note?.content) {
       highlightAndScrollToText()
@@ -109,14 +98,13 @@ const NoteViewPage: React.FC = () => {
   }, [highlightPosition, note?.content, highlightAndScrollToText])
 
   useEffect(() => {
-    console.log('NoteViewPage mounted with id:', id) // 调试日志
+    console.log('NoteViewPage mounted with id:', id)
     if (id && !note) {
       loadNote()
     } else {
       setLoading(false)
     }
     
-    // 监听设置变更事件，实时更新背景图
     const settingsHandler = (event: any) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -142,7 +130,7 @@ const NoteViewPage: React.FC = () => {
       setLoading(true)
       setError('')
       const response = await notesApi.getNote(id)
-      console.log('API Response:', response.data) // 调试日志
+      console.log('API Response:', response.data)
       setNote(response.data)
       try {
         sessionStorage.setItem('note-cache:' + window.location.pathname, JSON.stringify(response.data))
@@ -195,14 +183,12 @@ const NoteViewPage: React.FC = () => {
       const response = await notesApi.deleteNote(note.id)
       console.log('删除API响应:', response)
       
-      // 显示删除成功提示
       modal.showAlert('笔记删除成功！', { 
         type: 'success',
         title: '删除成功',
         confirmText: '确定'
       })
       
-      // 延迟跳转，让用户看到成功提示
       setTimeout(() => {
         try {
           const cacheRaw = sessionStorage.getItem('notes-cache')
@@ -242,12 +228,9 @@ const NoteViewPage: React.FC = () => {
   const handleShare = () => {
     if (!note) return
     
-    // 创建阅读页面链接
     const shareUrl = window.location.origin + `/notes/${note.id}`
     
-    // 复制链接到剪贴板
     navigator.clipboard.writeText(shareUrl).then(() => {
-      // 显示成功提示
       const successMessage = document.createElement('div')
       successMessage.textContent = '分享链接已复制'
       successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
@@ -260,7 +243,6 @@ const NoteViewPage: React.FC = () => {
     })
   }
 
-  // 当 note 变更时，持久化到 sessionStorage，便于手动刷新立即回填
   useEffect(() => {
     if (note?.id) {
       try {
@@ -269,7 +251,6 @@ const NoteViewPage: React.FC = () => {
     }
   }, [note])
 
-  // 格式化日期
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleString('zh-CN', {
