@@ -279,6 +279,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       'login.missing_password': '登录失败：缺少密码',
       'login.exception': '登录异常',
       'notes.list': '获取笔记列表',
+      'notes.delete': '删除笔记',
+      'notes.delete.not_found': '删除笔记失败：未找到',
+      'notes.delete.exception': '删除笔记异常',
       'notes.create': '创建笔记',
       'notes.create.exception': '创建笔记异常',
       'notes.update': '更新笔记',
@@ -334,6 +337,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       // 特例：notes.list 显示“笔记数量：x”
       if (msg === 'notes.list' && typeof obj.count === 'number') {
         return `笔记数量：${obj.count}`
+      }
+      // 特例：notes.delete 系列优先显示标题；若无标题再用ID
+      if (msg === 'notes.delete' || msg === 'notes.delete.not_found') {
+        if (typeof obj.title === 'string' && obj.title.trim()) return obj.title
+        if (typeof obj.id === 'string') return `ID：${obj.id}`
       }
       if (msg === 'backup.upload.success' && typeof obj.totalNotes === 'number') {
         return `备份文件：${obj.fileName || '-'}，笔记数量：${obj.totalNotes}`
