@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { notesApi } from '@/lib/api'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -97,10 +98,31 @@ const LoginPage = () => {
     try {
       const success = await login(password)
       if (success) {
-        // 登录成功后立即跳转，不等待数据加载
-        navigate('/notes')
-        
-        // 去列表页加载，避免重复请求
+        // 登录成功后尽量带着数据跳转，确保首页秒渲染
+        try {
+          // 优先使用本地缓存，加速首屏
+          let cached: any[] | null = null
+          try {
+            const raw = localStorage.getItem('notes-cache') || sessionStorage.getItem('notes-cache')
+            if (raw) cached = JSON.parse(raw)
+          } catch {}
+
+          if (cached && Array.isArray(cached) && cached.length > 0) {
+            navigate('/notes', { state: { notes: cached } })
+          } else {
+            // 无缓存则快速拉取一次数据再跳转
+            const resp = await notesApi.getNotes()
+            const list = Array.isArray(resp.data) ? resp.data : (resp.data ? [resp.data] : [])
+            navigate('/notes', { state: { notes: list } })
+            try {
+              sessionStorage.setItem('notes-cache', JSON.stringify(list))
+              localStorage.setItem('notes-cache', JSON.stringify(list))
+            } catch {}
+          }
+        } catch {
+          // 兜底直接跳转
+          navigate('/notes')
+        }
       } else {
         setError('密码错误')
       }
