@@ -14,13 +14,10 @@ export const usePerfMonitor = (componentName: string) => {
     const endTime = performance.now()
     const componentLoadTime = endTime - startTime.current
     
-    // 记录组件加载时间
     if (process.env.NODE_ENV === 'development') {
       console.log(`🚀 ${componentName} 加载完成，耗时: ${componentLoadTime.toFixed(2)}ms`)
     }
 
-    // 可以在这里发送性能数据到分析服务
-    // analytics.track('component_load', { componentName, loadTime: componentLoadTime })
   }, [componentName])
 
   const startRender = () => {
