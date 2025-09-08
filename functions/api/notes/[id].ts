@@ -187,7 +187,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
       }
     }
 
-    const existingNote = await env.DB.prepare(`SELECT id, title FROM notes WHERE id = ?`).bind(noteId).first();
+    const existingNote = await env.DB.prepare(`SELECT id, title, content FROM notes WHERE id = ?`).bind(noteId).first();
     if (!existingNote) {
       return new Response(JSON.stringify({ error: "Note not found" }), { 
         status: 404,
@@ -263,7 +263,16 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     console.log('Note exists, attempting to delete:', noteId);
     const deleteResult = await env.DB.prepare(`DELETE FROM notes WHERE id = ?`).bind(noteId).run();
     console.log('Delete result:', deleteResult);
-    await logToD1(env, 'info', 'notes.delete', { id: noteId, title: (existingNote as any)?.title || '无标题' })
+    // 计算展示标题：优先使用 title；为空则取内容首行（截断50字符）
+    let displayTitle = String((existingNote as any)?.title || '').trim()
+    if (!displayTitle) {
+      const raw = String((existingNote as any)?.content || '').trim()
+      if (raw) {
+        const firstLine = raw.split('\n')[0].trim()
+        displayTitle = firstLine.length > 50 ? (firstLine.slice(0, 50) + '...') : firstLine
+      }
+    }
+    await logToD1(env, 'info', 'notes.delete', { id: noteId, title: displayTitle || '无标题' })
 
     return Response.json({ success: true }, { 
       headers: {
