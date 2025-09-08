@@ -6,10 +6,8 @@ import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 import { notesApi } from '@/lib/api'
 
-// 使用动态导入进行代码分割
 const SettingsModal = lazy(() => import('@/components/SettingsModal'))
 
-// NotesEditor 改为同步加载，避免进入编辑页等待编辑器分片
 import NotesEditor from '@/components/NotesEditor'
 
 interface Note {
@@ -48,7 +46,7 @@ const NoteEditPage: React.FC = () => {
   const [editorReady, setEditorReady] = useState(false)
 
   useEffect(() => {
-    // 检查是否是从列表页传递的新笔记
+
     const state = location.state as { note?: Note; isNew?: boolean }
     if (state?.note && state?.isNew) {
       setNote(state.note)
@@ -62,7 +60,6 @@ const NoteEditPage: React.FC = () => {
       }
     }
     
-    // 监听设置变更事件，实时更新背景图
     const settingsHandler = (event: any) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -76,7 +73,6 @@ const NoteEditPage: React.FC = () => {
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
     
-    // 延迟设置编辑器就绪状态，确保DOM完全渲染
     const timer = setTimeout(() => {
       setEditorReady(true)
     }, 100)
@@ -96,7 +92,6 @@ const NoteEditPage: React.FC = () => {
       const response = await notesApi.getNote(id)
       console.log('Loaded note data:', response.data)
       
-      // 确保数据格式正确
       if (response.data && response.data.id) {
         setNote({
           id: response.data.id,
@@ -161,13 +156,12 @@ const NoteEditPage: React.FC = () => {
   }
 
   const handleSave = async () => {
-    console.log('Save button clicked!') // 调试信息
+    console.log('Save button clicked!')
     if (!note) {
       setError('笔记数据不存在')
       return
     }
 
-    // 验证必要的数据
     if (!note.id && !isNewNote) {
       setError('笔记ID不存在，无法保存')
       return
@@ -191,21 +185,16 @@ const NoteEditPage: React.FC = () => {
       })
       
       if (isNewNote) {
-        // 创建新笔记
         console.log('Creating new note...')
         const response = await notesApi.createNote(noteData)
         console.log('Create response:', response.data)
-        // 使用后端返回的id；若无则回退到当前note.id
         const newNoteId = (response.data && response.data.id) ? response.data.id : note.id
         setIsNewNote(false)
         
-        // 显示保存成功提示
         setShowSuccessMessage(true)
         
-        // 延迟跳转，确保提示能够显示
         setTimeout(() => {
           setShowSuccessMessage(false)
-          // 跳转到新笔记的查看页面（携带内容，立即渲染）
           navigate(`/notes/${newNoteId}`, { state: { note: {
             id: newNoteId,
             title: noteData.title,
@@ -231,25 +220,20 @@ const NoteEditPage: React.FC = () => {
         
         return
       } else {
-        // 更新现有笔记
         console.log('Updating existing note with ID:', note.id)
         const response = await notesApi.updateNote(note.id, noteData)
         console.log('Update response:', response.data)
       }
       
-      // 更新本地状态
       setNote(prev => prev ? { 
         ...prev, 
         updatedAt: new Date().toISOString() 
       } : null)
       
-      // 显示保存成功提示
       setShowSuccessMessage(true)
       
-      // 延迟跳转，确保提示能够显示
       setTimeout(() => {
         setShowSuccessMessage(false)
-        // 跳转到笔记的查看页面（携带更新后的内容，立即渲染）
         navigate(`/notes/${note.id}`, { state: { note: {
           id: note.id,
           title: note.title,
