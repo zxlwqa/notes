@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useRef, startTransition } from 'react'
+import React, { useState, useEffect, Suspense, lazy, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Settings, Tag } from 'lucide-react'
@@ -72,8 +72,22 @@ const NotesListPage: React.FC = () => {
     const state = location.state as { notes?: Note[] } | null
     const hasCache = (state?.notes && state.notes.length > 0) || notes.length > 0
     if (hasCache) {
-      // 有缓存时后台静默刷新，不改变 loading 状态
-      loadNotesSilently()
+      // 有缓存时后台静默刷新，不改变 loading 状态，改为空闲时刷新以减少抖动
+      const scheduleIdle = (fn: () => void) => {
+        try {
+          const w = window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number }
+          if (w.requestIdleCallback) {
+            w.requestIdleCallback(fn, { timeout: 1000 })
+          } else {
+            setTimeout(fn, 0)
+          }
+        } catch {
+          setTimeout(fn, 0)
+        }
+      }
+      scheduleIdle(() => {
+        loadNotesSilently()
+      })
     } else {
       // 无缓存时正常加载
       loadNotes()
@@ -220,26 +234,12 @@ const NotesListPage: React.FC = () => {
         }]
       }
       
-      // 标准化比较：仅比较 id 与 updatedAt，且按 id 排序，避免不必要的刷新
-      const sortById = (list: Note[]) => [...list].sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0))
-      const a = sortById(notes)
-      const b = sortById(newNotes)
-      const isSameByIdAndUpdatedAt = a.length === b.length && a.every((item, idx) => item.id === b[idx].id && item.updatedAt === b[idx].updatedAt)
-
-      if (!isSameByIdAndUpdatedAt) {
-        // 复用未变化项的引用，减少子节点重渲染
-        const oldMap = new Map<string, Note>(notes.map(n => [n.id, n]))
-        const merged = newNotes.map(n => {
-          const old = oldMap.get(n.id)
-          return old && old.updatedAt === n.updatedAt ? old : n
-        })
-
-        startTransition(() => {
-          setNotes(merged)
-          setFilteredNotes(merged)
-        })
+      // 只在数据有变化时更新状态，避免不必要的重新渲染
+      if (JSON.stringify(newNotes) !== JSON.stringify(notes)) {
+        setNotes(newNotes)
+        setFilteredNotes(newNotes)
         try {
-          sessionStorage.setItem('notes-cache', JSON.stringify(merged))
+          sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
         } catch {}
       }
     } catch (err: unknown) {
