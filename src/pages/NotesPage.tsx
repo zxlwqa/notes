@@ -6,7 +6,6 @@ import BackToTop from '@/components/BackToTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
 
-// 懒加载组件 - NotesEditor 改为同步加载以确保编辑器初始化稳定
 import NotesEditor from '@/components/NotesEditor'
 const SettingsModal = lazy(() => import('@/components/SettingsModal'))
 const ReactMarkdown = lazy(() => import('react-markdown'))
@@ -23,7 +22,7 @@ const NotesPage = () => {
 
   useEffect(() => {
     loadNotes()
-    // 加载设置中的用户名作为首页标题
+
     const loadSettingsTitle = () => {
       try {
         const saved = localStorage.getItem('app-settings')
@@ -56,7 +55,6 @@ const NotesPage = () => {
     }
   }
 
-  // 使用 useCallback 优化 onChange 函数，避免不必要的重新渲染
   const handleContentChange = useCallback((value: string) => {
     setContent(value)
   }, [])
