@@ -1,4 +1,4 @@
-# 科技刘笔记 - 项目结构总览
+# 个人笔记系统
 
 一个基于React + TypeScript + Cloudflare的现代化风格笔记应用，支持Markdown编辑、云同步
 
