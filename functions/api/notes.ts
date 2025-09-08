@@ -261,7 +261,8 @@ const handlePost: PagesFunction = async ({ request, env }) => {
       `INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))`
     ).bind(noteId, title, content, tagsJson).run();
 
-    await logToD1(env, 'info', '创建笔记', { title })
+    // 按你的展示规则：事件=创建笔记，详情只显示标题纯文本
+    await logToD1(env, 'info', '创建笔记', title)
     return Response.json({
       success: true,
       id: noteId
