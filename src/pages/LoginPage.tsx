@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [displayTitle, setDisplayTitle] = useState('科技刘笔记')
+  const [displayTitle, setDisplayTitle] = useState('笔记系统')
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -24,6 +24,12 @@ const LoginPage = () => {
           const parsed = JSON.parse(saved)
           if (parsed.username && typeof parsed.username === 'string') {
             setDisplayTitle(parsed.username)
+            // 动态更新页面标题和meta标签
+            document.title = parsed.username
+            const descMeta = document.querySelector('meta[name="description"]') as HTMLMetaElement
+            const appMeta = document.querySelector('meta[name="application-name"]') as HTMLMetaElement
+            if (descMeta) descMeta.content = `${parsed.username} - 个人笔记管理系统`
+            if (appMeta) appMeta.content = parsed.username
           }
           // 应用自定义logo到登录卡片和favicon
           if (parsed.logoUrl && typeof parsed.logoUrl === 'string') {
@@ -59,6 +65,12 @@ const LoginPage = () => {
       // 更新标题
       if (settings && settings.username && typeof settings.username === 'string') {
         setDisplayTitle(settings.username)
+        // 动态更新页面标题和meta标签
+        document.title = settings.username
+        const descMeta = document.querySelector('meta[name="description"]') as HTMLMetaElement
+        const appMeta = document.querySelector('meta[name="application-name"]') as HTMLMetaElement
+        if (descMeta) descMeta.content = `${settings.username} - 个人笔记管理系统`
+        if (appMeta) appMeta.content = settings.username
       }
       // 更新logo
       if (settings && typeof settings.logoUrl === 'string') {
@@ -151,7 +163,16 @@ const LoginPage = () => {
             <h2 className="mt-4 font-bold text-gray-900" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>{displayTitle}</h2>
           </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit} data-form="login">
+            {/* 隐藏的用户名字段，帮助密码管理器识别登录表单 */}
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              style={{ display: 'none' }}
+              tabIndex={-1}
+              aria-hidden="true"
+            />
             <div>
               <label htmlFor="password" className="sr-only">
                 密码
@@ -159,6 +180,7 @@ const LoginPage = () => {
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="请输入密码"
                   value={password}
