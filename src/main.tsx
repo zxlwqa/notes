@@ -5,7 +5,6 @@ import App from './App'
 import './index.css'
 import { loadAndApplyBackground } from './lib/background'
 
-// 在应用启动时应用已保存的外观设置
 function applySavedAppearanceSettings() {
   try {
     const saved = localStorage.getItem('app-settings')
@@ -15,11 +14,9 @@ function applySavedAppearanceSettings() {
     const resolvedFontSize = fontSizeMap[parsed.fontSize as keyof typeof fontSizeMap] || '14px'
     const resolvedLineHeight = '1.6'
     
-    // 设置全局字体大小
     document.documentElement.style.setProperty('--global-font-size', resolvedFontSize)
     document.documentElement.style.setProperty('--global-line-height', resolvedLineHeight)
     
-    // 保持编辑器字体大小设置（向后兼容）
     document.documentElement.style.setProperty('--editor-font-size', resolvedFontSize)
     document.documentElement.style.setProperty('--editor-line-height', resolvedLineHeight)
 
@@ -38,7 +35,6 @@ function applySavedAppearanceSettings() {
     const resolvedFamily = familyMap[parsed.fontFamily as keyof typeof familyMap] || familyMap['默认']
     document.documentElement.style.setProperty('--editor-font-family', resolvedFamily)
 
-    // 使用统一的背景图管理工具
     loadAndApplyBackground(parsed.backgroundImageUrl)
 
     if (parsed.username && typeof parsed.username === 'string') {
@@ -47,9 +43,8 @@ function applySavedAppearanceSettings() {
   } catch {}
 }
 
-// 确保样式在DOM完全加载后应用
 function ensureStylesApplied() {
-  // 等待DOM完全加载
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applySavedAppearanceSettings)
   } else {
@@ -57,10 +52,10 @@ function ensureStylesApplied() {
   }
 }
 
-// 确保样式在DOM完全加载后应用
+
 ensureStylesApplied()
 
-// 在生产环境中禁用 StrictMode 以避免编辑器双重渲染问题
+
 const isDevelopment = import.meta.env.DEV
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -76,3 +71,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   ),
 )
+
