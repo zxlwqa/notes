@@ -226,7 +226,7 @@ const NotesListPage: React.FC = () => {
         const singleNote = response.data
         const noteArray = [{
           id: singleNote.id || '1',
-          title: singleNote.title || '我的笔记',
+          title: singleNote.title || '默认笔记',
           content: singleNote.content || '',
           tags: singleNote.tags || [],
           createdAt: singleNote.createdAt || new Date().toISOString(),
@@ -273,7 +273,7 @@ const NotesListPage: React.FC = () => {
         const singleNote = response.data
         newNotes = [{
           id: singleNote.id || '1',
-          title: singleNote.title || '我的笔记',
+          title: singleNote.title || '默认笔记',
           content: singleNote.content || '',
           tags: singleNote.tags || [],
           createdAt: singleNote.createdAt || new Date().toISOString(),
