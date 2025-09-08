@@ -1,6 +1,3 @@
-/* EasyMDE 编辑器工具栏图标可见性修复 - 最高优先级版本 */
-
-/* 使用最高优先级选择器强制覆盖样式 */
 html body div.editor-toolbar,
 html body .editor-toolbar,
 body .editor-toolbar,
@@ -12,7 +9,6 @@ body .editor-toolbar,
   color: #000000 !important;
 }
 
-/* 工具栏按钮 - 最高优先级 */
 html body div.editor-toolbar button,
 html body div.editor-toolbar a,
 html body .editor-toolbar button,
@@ -32,7 +28,6 @@ body .editor-toolbar a,
   text-shadow: none !important;
 }
 
-/* 工具栏按钮悬停效果 */
 html body div.editor-toolbar button:hover,
 html body div.editor-toolbar a:hover,
 html body .editor-toolbar button:hover,
@@ -46,7 +41,6 @@ body .editor-toolbar a:hover,
   color: #000000 !important;
 }
 
-/* 工具栏按钮激活状态 */
 html body div.editor-toolbar button.active,
 html body div.editor-toolbar a.active,
 html body .editor-toolbar button.active,
@@ -60,7 +54,6 @@ body .editor-toolbar a.active,
   color: white !important;
 }
 
-/* 工具栏分隔符 */
 html body div.editor-toolbar button.separator,
 html body div.editor-toolbar a.separator,
 html body .editor-toolbar button.separator,
@@ -77,7 +70,6 @@ body .editor-toolbar a.separator,
   padding: 0 !important;
 }
 
-/* 工具栏按钮图标和文本 - 最高优先级 */
 html body div.editor-toolbar button i,
 html body div.editor-toolbar button span,
 html body div.editor-toolbar a i,
@@ -100,7 +92,6 @@ body .editor-toolbar a span,
   text-shadow: none !important;
 }
 
-/* 确保所有工具栏元素可见 - 最高优先级 */
 html body div.editor-toolbar *,
 html body .editor-toolbar *,
 body .editor-toolbar *,
@@ -111,7 +102,6 @@ body .editor-toolbar *,
   text-shadow: none !important;
 }
 
-/* 强制覆盖所有可能的样式 */
 .editor-toolbar,
 .editor-toolbar *,
 .editor-toolbar button,
@@ -125,19 +115,16 @@ body .editor-toolbar *,
   text-shadow: none !important;
 }
 
-/* 工具栏容器强制样式 */
 .editor-toolbar {
   background: #ffffff !important;
   border: 1px solid #d1d5db !important;
 }
 
-/* 工具栏按钮强制样式 */
 .editor-toolbar button {
   color: #000000 !important;
   background: transparent !important;
 }
 
-/* 工具栏图标强制样式 */
 .editor-toolbar button i,
 .editor-toolbar button span,
 .editor-toolbar a i,
@@ -146,7 +133,6 @@ body .editor-toolbar *,
   opacity: 1 !important;
 }
 
-/* 使用!important覆盖所有可能的样式 */
 .editor-toolbar,
 .editor-toolbar * {
   color: #000000 !important;
@@ -175,12 +161,6 @@ body .editor-toolbar *,
   opacity: 1 !important;
 }
 
-/* ===== 编辑器输入光标样式优化 ===== */
-
-/* 注意：光标样式现在由 NotesEditor.tsx 和 index.css 统一管理 */
-/* 这里只保留必要的样式，避免冲突 */
-
-/* 编辑器文本区域样式 - 保持原有透明背景 */
 .CodeMirror {
   font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
   font-size: var(--editor-font-size, 14px) !important;
@@ -188,7 +168,6 @@ body .editor-toolbar *,
   background: transparent !important;
 }
 
-/* 确保文本行正确对齐 */
 .CodeMirror .CodeMirror-line {
   line-height: 1.6 !important;
   height: 1.6em !important;
@@ -207,9 +186,6 @@ body .editor-toolbar *,
   padding: 0 !important;
 }
 
-/* ===== 标签输入框样式优化 ===== */
-
-/* 标签输入框边框增强 */
 .notes-editor-container input[type="text"][placeholder*="标签"],
 .notes-editor-container input[type="text"][placeholder*="tag"] {
   border: 2px solid rgba(255, 255, 255, 0.5) !important;
@@ -218,7 +194,6 @@ body .editor-toolbar *,
   transition: all 0.2s ease !important;
 }
 
-/* 标签输入框聚焦状态 */
 .notes-editor-container input[type="text"][placeholder*="标签"]:focus,
 .notes-editor-container input[type="text"][placeholder*="tag"]:focus {
   border-color: rgba(59, 130, 246, 0.8) !important;
@@ -226,7 +201,6 @@ body .editor-toolbar *,
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* 标签添加按钮样式增强 */
 .notes-editor-container button:has(+ input[type="text"][placeholder*="标签"]),
 .notes-editor-container button:has(+ input[type="text"][placeholder*="tag"]) {
   border: 2px solid rgba(59, 130, 246, 0.6) !important;
@@ -234,7 +208,6 @@ body .editor-toolbar *,
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1) !important;
 }
 
-/* 标签输入区域容器样式 */
 .notes-editor-container div:has(input[type="text"][placeholder*="标签"]),
 .notes-editor-container div:has(input[type="text"][placeholder*="tag"]) {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
