@@ -73,9 +73,7 @@ const NotesListPage: React.FC = () => {
     const hasCache = (state?.notes && state.notes.length > 0) || notes.length > 0
     if (hasCache) {
       // 有缓存时后台静默刷新，不改变 loading 状态
-      setTimeout(() => {
-        loadNotesSilently()
-      }, 100)
+      loadNotesSilently()
     } else {
       // 无缓存时正常加载
       loadNotes()
