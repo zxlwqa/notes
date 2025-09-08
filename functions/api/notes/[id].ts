@@ -187,7 +187,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
       }
     }
 
-    const existingNote = await env.DB.prepare(`SELECT id FROM notes WHERE id = ?`).bind(noteId).first();
+    const existingNote = await env.DB.prepare(`SELECT id, title FROM notes WHERE id = ?`).bind(noteId).first();
     if (!existingNote) {
       return new Response(JSON.stringify({ error: "Note not found" }), { 
         status: 404,
@@ -200,7 +200,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
 
     const tagsJson = JSON.stringify(tagsArray);
     const result = await env.DB.prepare(
-      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00' WHERE id = ?`
+      `UPDATE notes SET title = ?, content = ?, tags = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') WHERE id = ?`
     ).bind(title, content, tagsJson, noteId).run();
 
     console.log('Update result:', result);
@@ -263,7 +263,7 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     console.log('Note exists, attempting to delete:', noteId);
     const deleteResult = await env.DB.prepare(`DELETE FROM notes WHERE id = ?`).bind(noteId).run();
     console.log('Delete result:', deleteResult);
-    await logToD1(env, 'info', 'notes.delete', { id: noteId })
+    await logToD1(env, 'info', 'notes.delete', { id: noteId, title: (existingNote as any)?.title || '无标题' })
 
     return Response.json({ success: true }, { 
       headers: {
