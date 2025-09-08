@@ -1,8 +1,6 @@
 import { logToD1 } from '../../_utils/log'
-// 类型定义
 type PagesFunction = (context: { request: Request; env: any }) => Promise<Response>;
 
-// 统一的API处理函数（动态路由 /api/notes/:id）
 export const onRequest: PagesFunction = async ({ request, env }) => {
   const method = request.method;
 
@@ -38,7 +36,6 @@ export const onRequest: PagesFunction = async ({ request, env }) => {
 const extractNoteId = (request: Request): string | null => {
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
-  // 期望形如 ['api', 'notes', ':id']
   return parts.length >= 3 ? parts[2] : null;
 }
 
@@ -77,7 +74,6 @@ const toIso = (s: string | null | undefined) => {
   return s
 }
 
-// GET /api/notes/:id
 const handleGet: PagesFunction = async ({ request, env }) => {
   const auth = await ensureAuth(request, env);
   if (auth) return auth;
@@ -108,7 +104,6 @@ const handleGet: PagesFunction = async ({ request, env }) => {
       });
     }
 
-    // 解析tags字段
     let tags = [];
     try {
       tags = data.tags ? JSON.parse(data.tags) : [];
@@ -141,7 +136,6 @@ const handleGet: PagesFunction = async ({ request, env }) => {
   }
 }
 
-// PUT /api/notes/:id
 const handlePut: PagesFunction = async ({ request, env }) => {
   const auth = await ensureAuth(request, env);
   if (auth) return auth;
@@ -170,7 +164,6 @@ const handlePut: PagesFunction = async ({ request, env }) => {
       });
     }
 
-    // 验证tags字段
     let tagsArray = [];
     if (tags) {
       if (Array.isArray(tags)) {
@@ -222,7 +215,6 @@ const handlePut: PagesFunction = async ({ request, env }) => {
   }
 }
 
-// DELETE /api/notes/:id
 const handleDelete: PagesFunction = async ({ request, env }) => {
   console.log('Delete request received in [id].ts');
   
@@ -243,7 +235,6 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
       });
     }
 
-    // 先检查笔记是否存在
     console.log('Checking if note exists before deletion...');
     const existingNote = await env.DB.prepare(`SELECT id, title FROM notes WHERE id = ?`).bind(noteId).first();
     console.log('Existing note check result:', existingNote);
