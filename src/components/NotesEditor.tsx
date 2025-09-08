@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react'
 import SimpleMDE from 'react-simplemde-editor'
 import 'easymde/dist/easymde.min.css'
-// import { usePerfMonitor } from '@/hooks/usePerfMonitor'
 
 interface NotesEditorProps {
   value: string
@@ -33,10 +32,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
   const [showScroll, setShowScroll] = useState(true)
   const [editorInstance, setEditorInstance] = useState<any>(null)
   
-  // 性能监控 - 暂时禁用
-  // const { startRender, endRender } = usePerfMonitor('NotesEditor')
-
-  // 获取编辑器实例
   const getEditor = useCallback(() => {
     if (mdeRef.current && mdeRef.current.simpleMde) {
       return mdeRef.current.simpleMde
@@ -44,15 +39,12 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     return null
   }, [])
 
-  // 使用 useCallback 优化 onChange 函数
   const handleChange = useCallback((newValue: string) => {
     onChange(newValue)
     
-    // 确保光标位置正确
     const editor = getEditor()
     if (editor && editor.codemirror) {
       const cm = editor.codemirror
-      // 延迟执行，确保DOM更新完成
       setTimeout(() => {
         const cursor = cm.getCursor()
         cm.setCursor(cursor)
@@ -61,64 +53,45 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [onChange, getEditor])
 
-  // 在编辑器挂载后记录渲染完成 - 暂时禁用
-  // useEffect(() => {
-  //   if (editorInstance) {
-  //     endRender()
-  //   }
-  // }, [editorInstance, endRender])
-
-  // 处理粘贴事件的函数
   const handlePaste = useCallback(async (cm: any) => {
     try {
-      // 获取剪贴板内容
       const clipboardData = await navigator.clipboard.readText()
       
-      // 处理粘贴的文本，确保换行符正确处理
       const processedText = clipboardData
-        .replace(/\r\n/g, '\n')  // 统一换行符
-        .replace(/\r/g, '\n')    // 处理Mac风格的换行符
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
       
-      // 获取当前光标位置
       const cursor = cm.getCursor()
       const selection = cm.getSelection()
       
-      // 如果有选中文本，替换选中内容；否则在光标位置插入
       if (selection) {
         cm.replaceSelection(processedText)
       } else {
         cm.replaceRange(processedText, cursor)
       }
       
-      // 确保光标位置正确，避免换行问题
       const newCursor = cm.getCursor()
       cm.setCursor(newCursor)
       cm.focus()
       
     } catch (error) {
       console.warn('粘贴处理失败，使用默认行为:', error)
-      // 如果处理失败，让编辑器使用默认的粘贴行为
       return false
     }
   }, [])
 
-  // 插入文本的辅助函数
   const insertText = useCallback((before: string, after: string) => {
-    // 尝试多种方式获取编辑器实例
     let cm = null
     
-    // 方法1：通过getEditor获取
     const editor = getEditor()
     if (editor && editor.codemirror) {
       cm = editor.codemirror
     }
     
-    // 方法2：直接从ref获取
     if (!cm && mdeRef.current && mdeRef.current.simpleMde && mdeRef.current.simpleMde.codemirror) {
       cm = mdeRef.current.simpleMde.codemirror
     }
     
-    // 方法3：从DOM获取
     if (!cm) {
       const cmElement = document.querySelector('.CodeMirror')
       if (cmElement && (cmElement as any).CodeMirror) {
@@ -130,12 +103,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       const selection = cm.getSelection()
       const cursor = cm.getCursor()
       
-      // 替换选中的文本或插入新文本
       if (selection) {
         cm.replaceSelection(before + selection + after)
       } else {
         cm.replaceRange(before + after, cursor)
-        // 将光标移动到插入的文本中间
         const newCursor = {
           line: cursor.line,
           ch: cursor.ch + before.length
@@ -143,13 +114,11 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         cm.setCursor(newCursor)
       }
       
-      // 确保编辑器保持焦点
       setTimeout(() => {
         cm.focus()
         cm.triggerOnKeyDown()
       }, 0)
     } else {
-      // 备用方案：直接更新value
       const textarea = document.querySelector('.CodeMirror textarea') as HTMLTextAreaElement
       if (textarea) {
         const start = textarea.selectionStart
@@ -157,7 +126,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         const newValue = value.substring(0, start) + before + value.substring(start, end) + after + value.substring(end)
         onChange(newValue)
         
-        // 设置新的光标位置
         setTimeout(() => {
           if (textarea) {
             textarea.focus()
@@ -165,19 +133,16 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           }
         }, 0)
       } else {
-        // 最后的备用方案：直接更新value
         const newValue = value + before + after
         onChange(newValue)
       }
     }
   }, [value, onChange, getEditor])
 
-  // 切换预览模式
   const togglePreview = useCallback(() => {
     const editor = getEditor()
     if (editor) {
       try {
-        // 尝试使用 EasyMDE 的预览功能
         if (editor.isPreviewActive()) {
           editor.togglePreview()
           setIsPreview(false)
@@ -186,18 +151,15 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           setIsPreview(true)
         }
       } catch (error) {
-        // 如果 EasyMDE 预览功能不可用，手动切换状态
         setIsPreview(!isPreview)
         console.log('Preview mode:', !isPreview ? 'enabled' : 'disabled')
       }
     } else {
-      // 如果编辑器还没准备好，手动切换状态
       setIsPreview(!isPreview)
       console.log('Editor not ready, preview mode:', !isPreview ? 'enabled' : 'disabled')
     }
   }, [isPreview, getEditor])
 
-  // 切换到编辑模式
   const switchToEdit = useCallback(() => {
     const editor = getEditor()
     if (editor) {
@@ -216,7 +178,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [getEditor])
 
-  // 切换到预览模式
   const switchToPreview = useCallback(() => {
     const editor = getEditor()
     if (editor) {
@@ -235,7 +196,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [getEditor])
 
-  // 编辑器配置选项 - 简化版本避免初始化错误
   const options = useMemo(() => {
     const extraKeys = {
       'Ctrl-V': function(cm: any) {
@@ -278,23 +238,17 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [placeholder, handlePaste])
 
-  // 监听编辑器实例变化
   useEffect(() => {
     const checkEditor = () => {
       if (mdeRef.current && mdeRef.current.simpleMde) {
         setEditorInstance(mdeRef.current.simpleMde)
         
-        // 修复光标对齐问题 - 简化版本
         const cm = mdeRef.current.simpleMde.codemirror
         if (cm) {
-          // 等待DOM更新后修复光标位置
           setTimeout(() => {
-            // 简化的光标修复函数
             const fixCursorPosition = () => {
-              // 确保编辑器正确初始化
               cm.refresh()
               
-              // 设置光标样式
               const cursorElement = cm.getWrapperElement().querySelector('.CodeMirror-cursor')
               if (cursorElement) {
                 cursorElement.style.cssText = `
@@ -315,13 +269,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
               }
             }
             
-            // 立即修复
             fixCursorPosition()
             
-            // 确保编辑器获得焦点并显示光标
             cm.focus()
             
-            // 监听关键事件，确保光标位置正确
             const handleCursorUpdate = () => {
               setTimeout(fixCursorPosition, 0)
             }
@@ -331,7 +282,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
             cm.on('focus', handleCursorUpdate)
             cm.on('blur', handleCursorUpdate)
             
-            // 清理函数
             return () => {
               cm.off('cursorActivity', handleCursorUpdate)
               cm.off('change', handleCursorUpdate)
@@ -343,10 +293,8 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       }
     }
     
-    // 立即检查
     checkEditor()
     
-    // 设置定时器定期检查
     const timer = setInterval(checkEditor, 100)
     
     return () => {
@@ -354,63 +302,52 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   }, [])
 
-  // 添加粘贴事件监听器
   useEffect(() => {
     const editor = getEditor()
     if (editor && editor.codemirror) {
       const cm = editor.codemirror
       
-      // 添加粘贴事件监听器
       const handlePasteEvent = async (event: ClipboardEvent) => {
         event.preventDefault()
         
         try {
           const clipboardData = event.clipboardData?.getData('text/plain') || ''
           
-          // 处理粘贴的文本，确保换行符正确处理
           const processedText = clipboardData
-            .replace(/\r\n/g, '\n')  // 统一换行符
-            .replace(/\r/g, '\n')    // 处理Mac风格的换行符
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
           
-          // 获取当前光标位置
           const cursor = cm.getCursor()
           const selection = cm.getSelection()
           
-          // 如果有选中文本，替换选中内容；否则在光标位置插入
           if (selection) {
             cm.replaceSelection(processedText)
           } else {
             cm.replaceRange(processedText, cursor)
           }
           
-          // 确保光标位置正确，避免换行问题
           const newCursor = cm.getCursor()
           cm.setCursor(newCursor)
           cm.focus()
           
         } catch (error) {
           console.warn('粘贴处理失败:', error)
-          // 如果处理失败，让浏览器使用默认的粘贴行为
         }
       }
       
-      // 绑定粘贴事件
       cm.getWrapperElement().addEventListener('paste', handlePasteEvent)
       
       return () => {
-        // 清理事件监听器
         cm.getWrapperElement().removeEventListener('paste', handlePasteEvent)
       }
     }
   }, [editorInstance, getEditor])
 
-  // 确保编辑器在挂载后立即获得焦点
   useEffect(() => {
     const timer = setTimeout(() => {
       const editor = getEditor()
       if (editor && editor.codemirror) {
         editor.codemirror.focus()
-        // 确保光标可见
         editor.codemirror.refresh()
       }
     }, 200)
@@ -418,7 +355,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
     return () => clearTimeout(timer)
   }, [getEditor])
 
-  // 将用户设置应用到编辑器根容器（通过 CSS 变量）
   useEffect(() => {
     const applySettingsFromStorage = () => {
       try {
@@ -429,11 +365,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           const resolvedFontSize = fontSizeMap[parsed.fontSize as keyof typeof fontSizeMap] || '14px'
           const resolvedLineHeight = '1.6'
           
-          // 设置全局字体大小
           document.documentElement.style.setProperty('--global-font-size', resolvedFontSize)
           document.documentElement.style.setProperty('--global-line-height', resolvedLineHeight)
           
-          // 保持编辑器字体大小设置（向后兼容）
           document.documentElement.style.setProperty('--editor-font-size', resolvedFontSize)
           document.documentElement.style.setProperty('--editor-line-height', resolvedLineHeight)
           const bg = parsed.backgroundImageUrl?.trim()
