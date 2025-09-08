@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 interface ImportMetaEnv {
   readonly VITE_API_BASE: string
   readonly VITE_APP_TITLE: string
@@ -10,10 +8,10 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-// 扩展全局 Window 接口
+
 declare global {
   interface Window {
-    // 自定义事件类型
+
     addEventListener(
       type: 'settings-changed',
       listener: (event: CustomEvent<Partial<import('./types').AppSettings>>) => void,
