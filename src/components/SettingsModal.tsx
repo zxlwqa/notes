@@ -23,7 +23,6 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null
 
-  // 默认设置
   const defaultSettings: AppSettings = {
     fontSize: '中',
     backgroundImageUrl: '',
@@ -42,7 +41,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     passwordStrength: '中'
   }
 
-  // 设置状态管理
   const [settings, setSettings] = useState(defaultSettings)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -51,11 +49,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [passwordSource, setPasswordSource] = useState<'d1' | 'env' | 'unknown'>('unknown')
   const [showPassword, setShowPassword] = useState(false)
 
-  // 弹窗管理
   const modal = useModal()
 
 
-  // 从 localStorage 加载设置
   useEffect(() => {
     const savedSettings = localStorage.getItem('app-settings')
     if (savedSettings) {
@@ -67,11 +63,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       }
     }
     
-    // 检查密码来源状态
     checkPasswordSource()
   }, [])
 
-  // 每次打开弹窗时清空密码输入框
   useEffect(() => {
     if (isOpen) {
       setNewPassword('')
@@ -80,10 +74,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen])
 
-  // 检查当前密码来源
   const checkPasswordSource = async () => {
     try {
-      // 调用API获取密码状态
       const response = await authApi.getPasswordStatus()
       if (response.data?.usingD1) {
         setPasswordSource('d1')
@@ -131,7 +123,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       }
   ]
 
-  // 处理设置变更
   const handleSettingChange = (key: keyof AppSettings, value: AppSettings[keyof AppSettings]) => {
     setSettings(prev => ({
       ...prev,
@@ -139,7 +130,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }))
   }
 
-  // 切换开关状态
   const toggleSetting = (key: string) => {
     setSettings(prev => ({
       ...prev,
@@ -148,32 +138,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }
 
   const handleSave = () => {
-    // 保存设置逻辑
     console.log('设置已保存:', settings)
-    // 这里可以将设置保存到 localStorage 或发送到服务器
     localStorage.setItem('app-settings', JSON.stringify(settings))
-    // 同步到全局 CSS 变量，便于各处样式生效
     try {
       const fontSizeMap: Record<string, string> = { '小': '14px', '中': '16px', '大': '18px', '特大': '20px', '超大': '22px' }
       const resolvedFontSize = fontSizeMap[settings.fontSize as keyof typeof fontSizeMap] || '14px'
       const resolvedLineHeight = '1.6'
       
-      // 设置全局字体大小
       document.documentElement.style.setProperty('--global-font-size', resolvedFontSize)
       document.documentElement.style.setProperty('--global-line-height', resolvedLineHeight)
       
-      // 保持编辑器字体大小设置（向后兼容）
       document.documentElement.style.setProperty('--editor-font-size', resolvedFontSize)
       document.documentElement.style.setProperty('--editor-line-height', resolvedLineHeight)
       
       console.log('全局字体大小已应用:', resolvedFontSize)
-      // 使用统一的背景图管理工具
       loadAndApplyBackground(
         settings.backgroundImageUrl,
         () => console.log('背景图已设置:', settings.backgroundImageUrl),
         () => console.log('背景图加载失败，使用默认背景')
       )
-      // 设置 favicon（浏览器标签logo）
       if (typeof settings.logoUrl === 'string') {
         const href = settings.logoUrl.trim()
         let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null
@@ -201,14 +184,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       }
       const resolvedFamily = familyMap[family] || familyMap['默认']
       document.documentElement.style.setProperty('--editor-font-family', resolvedFamily)
-      // 同步页面标题（浏览器标签）
       if (settings.username && typeof settings.username === 'string') {
         document.title = settings.username
       }
-      // 通知应用内其他组件设置已变更
       window.dispatchEvent(new CustomEvent('settings-changed', { detail: settings }))
       
-      // 显示成功提示
       modal.showAlert('外观设置已保存并生效！', { 
         type: 'success',
         title: '设置成功',
@@ -226,34 +206,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }
 
 
-  // 退出到登录页
   const handleLogout = () => {
     try {
-      // 清理本地登录相关数据
       localStorage.removeItem('password')
       sessionStorage.clear()
     } catch {}
-    // 跳转到登录页
     window.location.href = '/login'
   }
 
 
-  // 上传笔记状态
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadPreview, setUploadPreview] = useState<string>('')
   const [uploading, setUploading] = useState(false)
 
-  // 云端同步状态
   const [cloudSyncing, setCloudSyncing] = useState(false)
-  // 日志查看状态
+
   const [logsOpen, setLogsOpen] = useState(false)
   const [logsLoading, setLogsLoading] = useState(false)
   const [logsText, setLogsText] = useState('')
   const [logsData, setLogsData] = useState<any>(null)
   const [logsView, setLogsView] = useState<'table' | 'json'>('table')
 
-  // 日志中文映射
   const translateLevel = (level?: string) => {
     if (!level) return '信息'
     const map: Record<string, string> = { info: '信息', warn: '警告', warning: '警告', error: '错误', debug: '调试' }
@@ -333,7 +307,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (!meta) return '-'
     try {
       const obj = typeof meta === 'string' ? JSON.parse(meta) : meta
-      // 优先：若包含标题字段，仅显示标题文本
       if (obj && typeof obj === 'object') {
         const directTitle = typeof obj.title === 'string' && obj.title.trim()
         const nestedTitle = typeof obj.note?.title === 'string' && obj.note.title.trim()
@@ -344,11 +317,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           return obj.note.title
         }
       }
-      // 特例：notes.list 显示“笔记数量：x”
+
       if (msg === 'notes.list' && typeof obj.count === 'number') {
         return `笔记数量：${obj.count}`
       }
-      // 特例：notes.delete 系列优先显示标题；若无标题再用ID
+
       if (msg === 'notes.delete' || msg === 'notes.delete.not_found') {
         if (typeof obj.title === 'string' && obj.title.trim()) return obj.title
         if (typeof obj.id === 'string') return `ID：${obj.id}`
@@ -359,7 +332,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       if (msg === 'import.done' && typeof obj.imported === 'number') {
         return `导入成功：${obj.imported} / ${obj.total}`
       }
-      // 登录成功：显示地理位置（国家/城市，中文）与 IP
+
       if (msg === 'login.success' && (obj.country || obj.city || obj.ip)) {
         const loc = [translateCountry(obj.country), translateCity(obj.city)].filter(Boolean).join(' / ')
         const ipPart = obj.ip ? ` · IP：${obj.ip}` : ''
@@ -371,12 +344,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 打开上传弹窗
   const handleUploadNotes = () => {
     setIsUploadModalOpen(true)
   }
 
-  // 获取日志
   const handleViewLogs = async () => {
     setLogsOpen(true)
     setLogsLoading(true)
@@ -395,12 +366,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 处理文件选择
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       setUploadFile(file)
-      // 显示文件预览
+
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
@@ -410,7 +380,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 执行上传
   const handleConfirmUpload = async () => {
     if (!uploadFile) return
 
@@ -422,13 +391,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       let notes = []
       
       if (fileExtension === 'json') {
-        // JSON 格式
+
         notes = JSON.parse(text)
       } else if (['md', 'markdown', 'txt'].includes(fileExtension || '')) {
-        // Markdown 或文本格式
+
         const note = {
           id: Date.now().toString(),
-          title: uploadFile.name.replace(/\.[^/.]+$/, ''), // 去掉文件扩展名作为标题
+          title: uploadFile.name.replace(/\.[^/.]+$/, ''),
           content: text,
           tags: ['导入'],
           created_at: new Date().toISOString(),
@@ -437,10 +406,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         notes = [note]
       }
       
-      // 调用API导入笔记到数据库
       const response = await notesApi.importNotes(notes, fileExtension)
       if (response.data.success) {
-        // 成功提示
+
         const successMessage = document.createElement('div')
         successMessage.textContent = `成功导入 ${response.data.imported} 条笔记到数据库！`
         successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
@@ -449,12 +417,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           document.body.removeChild(successMessage)
         }, 3000)
         
-        // 触发笔记列表更新事件
         window.dispatchEvent(new CustomEvent('notes-imported', { 
           detail: { count: response.data.imported } 
         }))
         
-        // 关闭弹窗并重置状态
         setIsUploadModalOpen(false)
         setUploadFile(null)
         setUploadPreview('')
@@ -477,7 +443,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 关闭上传弹窗
   const handleCloseUploadModal = () => {
     setIsUploadModalOpen(false)
     setUploadFile(null)
@@ -485,7 +450,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }
 
 
-  // 上传笔记到云端
   const handleUploadToCloud = async () => {
     setCloudSyncing(true)
     try {
@@ -513,7 +477,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 从云端下载笔记
   const handleDownloadFromCloud = async () => {
     setCloudSyncing(true)
     try {
@@ -525,7 +488,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           title: '下载成功',
           confirmText: '确定'
         })
-        // 触发笔记列表刷新
+
         window.dispatchEvent(new CustomEvent('notes-imported'))
       } else {
         throw new Error(response.data?.error || '下载失败')
@@ -542,10 +505,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   }
 
-  // 下载笔记到本地
   const handleDownloadNotes = async () => {
     try {
-      // 获取所有笔记
+
       const response = await notesApi.getNotes()
       const notes = response.data
       
@@ -558,7 +520,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         return
       }
       
-      // 创建笔记选择对话框
       const noteSelection = await modal.showSelect(
         '请选择要下载的笔记：',
         {
@@ -581,13 +542,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       
       if (!noteSelection) return
       
-      // 根据选择筛选笔记
       let selectedNotes = notes
       if (noteSelection !== 'all') {
         selectedNotes = notes.filter((note: Note) => note.id === noteSelection)
       }
       
-      // 创建格式选择对话框
       const format = await modal.showSelect(
         '请选择导出格式：',
         {
@@ -620,14 +579,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       let mimeType = ''
       
       if (format === '1') {
-        // JSON 格式
+
         dataStr = JSON.stringify(selectedNotes, null, 2)
         const noteCount = selectedNotes.length
         const noteType = noteSelection === 'all' ? 'all' : 'single'
         fileName = `notes_${noteType}_${new Date().toISOString().slice(0, 10)}.json`
         mimeType = 'application/json'
       } else if (format === '2') {
-        // Markdown 格式
+
         dataStr = selectedNotes.map((note: Note) => 
           `# ${note.title || '无标题'}\n\n${note.content}\n\n---\n\n`
         ).join('')
@@ -636,7 +595,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         fileName = `notes_${noteType}_${new Date().toISOString().slice(0, 10)}.md`
         mimeType = 'text/markdown'
       } else if (format === '3') {
-        // TXT 格式
+
         dataStr = selectedNotes.map((note: Note) => 
           `${note.title || '无标题'}\n\n${note.content}\n\n${'='.repeat(50)}\n\n`
         ).join('')
@@ -653,7 +612,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         return
       }
       
-      // 创建下载链接
       const dataBlob = new Blob([dataStr], { type: mimeType })
       const url = URL.createObjectURL(dataBlob)
       
@@ -704,7 +662,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     try {
       setChanging(true)
       
-      // 获取当前存储的密码作为 currentPassword
       const currentPassword = localStorage.getItem('password') || ''
       if (!currentPassword) {
         modal.showAlert('未找到当前密码，请重新登录', { 
@@ -720,26 +677,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       
       await authApi.changePassword({ currentPassword, newPassword })
       
-      // 更新本地存储的密码
       localStorage.setItem('password', newPassword)
       
-      // 清空输入
       setNewPassword('')
-      // 更新密码状态
       setPasswordSource('d1')
       
-      // 成功提示
       modal.showAlert('密码修改成功！系统将在3秒后退出重新登录。', { 
         type: 'success',
         title: '修改成功',
         confirmText: '确定'
       })
       
-      // 延迟退出重新登录，让用户看到成功提示
       setTimeout(() => {
-        // 清除本地存储的密码
         localStorage.removeItem('password')
-        // 跳转到登录页面
         window.location.href = '/login'
       }, 3000)
     } catch (err: Note) {
