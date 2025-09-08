@@ -1,6 +1,5 @@
 import { logToD1 } from '../_utils/log'
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
-  // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -29,10 +28,8 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
       })
     }
 
-    // 确保表存在
     await env.DB.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`)
 
-    // 读取当前有效密码（根据 password_set 标志决定使用哪个密码）
     let storedPassword: string | null = null
     let useD1Password = false
     try {
@@ -54,7 +51,6 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
       })
     }
 
-    // 更新为新密码
     await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`).bind(newPassword).run()
     await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password_set', 'true', strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(key) DO UPDATE SET value = 'true', updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`).run()
 
