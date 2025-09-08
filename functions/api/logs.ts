@@ -19,12 +19,34 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
       const result = await db
         .prepare('SELECT id, level, message, meta, created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200')
         .all()
+
+      // 兼容历史数据：若 meta 是 {"title":"..."} 这样的 JSON，仅返回标题文本
+      const items = (result.results || []).map((row: any) => {
+        let meta = row.meta
+        if (typeof meta === 'string' && meta.trim()) {
+          const text = meta.trim()
+          if ((text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[') && text.endsWith(']'))) {
+            try {
+              const parsed = JSON.parse(text)
+              if (typeof parsed === 'string') {
+                meta = parsed
+              } else if (parsed && typeof parsed === 'object' && typeof parsed.title === 'string') {
+                meta = parsed.title
+              } // 其它对象类型保持原样字符串
+            } catch {
+              // 非法 JSON，保持原样
+            }
+          }
+        }
+        return { ...row, meta }
+      })
+
       return new Response(
         JSON.stringify({
           success: true,
           source: 'd1',
-          count: result.results?.length || 0,
-          items: result.results || [],
+          count: items.length,
+          items,
         }),
         { headers: { 'content-type': 'application/json; charset=utf-8' } }
       )
