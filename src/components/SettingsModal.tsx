@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Palette, User, Shield, Database, Cloud } from 'lucide-react'
+import { X, Palette, User, Shield, Database, Cloud, Eye, EyeOff } from 'lucide-react'
 import { authApi, notesApi, cloudApi, logsApi } from '@/lib/api'
 import { AlertModal, ConfirmModal, PromptModal, SelectModal } from './Modal'
 import { useModal } from '../hooks/useModal'
@@ -49,6 +49,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changing, setChanging] = useState(false)
   const [passwordSource, setPasswordSource] = useState<'d1' | 'env' | 'unknown'>('unknown')
+  const [showPassword, setShowPassword] = useState(false)
 
   // 弹窗管理
   const modal = useModal()
@@ -913,18 +914,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     {/* 修改密码 */}
                     <div className="flex items-center justify-between">
                       <label className="font-medium text-gray-700">修改密码</label>
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !changing && newPassword) {
-                            handleChangePassword()
-                          }
-                        }}
-                        className="border border-gray-300 rounded-md px-3 py-1 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="输入新密码"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !changing && newPassword) {
+                              handleChangePassword()
+                            }
+                          }}
+                          className="border border-gray-300 rounded-md px-3 py-1 pr-10 w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="输入新密码"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     
                     {/* 确定按钮 */}
