@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useRef } from 'react'
+import React, { useState, useEffect, Suspense, lazy, useRef, startTransition } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Settings, Tag } from 'lucide-react'
@@ -220,14 +220,32 @@ const NotesListPage: React.FC = () => {
         }]
       }
       
-      // 只在数据有变化时更新状态，避免不必要的重新渲染
-      if (JSON.stringify(newNotes) !== JSON.stringify(notes)) {
+      // 1) 基于关键字段稳定对比，避免无意义的整体替换导致闪动
+      const toComparable = (list: Note[]) =>
+        [...list]
+          .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0))
+          .map(n => ({ id: n.id, updatedAt: n.updatedAt }))
+
+      const prevComparable = toComparable(notes)
+      const nextComparable = toComparable(newNotes)
+
+      const isSame = prevComparable.length === nextComparable.length &&
+        prevComparable.every((item, idx) => item.id === nextComparable[idx].id && item.updatedAt === nextComparable[idx].updatedAt)
+
+      if (isSame) {
+        // 数据无变化，跳过更新
+        return
+      }
+
+      // 2) 使用低优先级更新，减少可见抖动
+      startTransition(() => {
         setNotes(newNotes)
         setFilteredNotes(newNotes)
-        try {
-          sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
-        } catch {}
-      }
+      })
+
+      try {
+        sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
+      } catch {}
     } catch (err: unknown) {
       console.error('Load notes error (silent):', err)
       // 静默加载失败时不显示错误，保持缓存内容
