@@ -1,8 +1,6 @@
 import { logToD1 } from '../_utils/log'
-// 类型定义
 type PagesFunction = (context: { request: Request; env: any }) => Promise<Response>;
 
-// 统一的API处理函数
 export const onRequest: PagesFunction = async ({ request, env }) => {
   const method = request.method;
   
@@ -23,7 +21,6 @@ export const onRequest: PagesFunction = async ({ request, env }) => {
     );
   }
 
-  // 处理CORS预检请求
   if (method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -35,7 +32,6 @@ export const onRequest: PagesFunction = async ({ request, env }) => {
     });
   }
 
-  // 根据HTTP方法路由到相应的处理函数
   switch (method) {
     case 'GET':
       return handleGet({ request, env });
@@ -62,10 +58,8 @@ export const onRequest: PagesFunction = async ({ request, env }) => {
   }
 };
 
-// GET请求处理
 const handleGet: PagesFunction = async ({ request, env }) => {
   const password = request.headers.get("Authorization")?.replace("Bearer ", "");
-  // 读取有效密码（D1 优先，其次环境变量）
   let effectivePassword = env.PASSWORD as string | undefined;
   let useD1Password = false;
   try {
@@ -91,9 +85,8 @@ const handleGet: PagesFunction = async ({ request, env }) => {
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/').filter(part => part);
 
-    // 支持 /api/notes 和 /api/notes/:id 两种路径
     if (pathParts.length >= 3 && pathParts[2]) {
-      // 获取单个笔记 /api/notes/{id}
+
       const noteId = pathParts[2];
       const data = await env.DB.prepare(
         `SELECT id, title, content, tags, created_at, updated_at FROM notes WHERE id = ?`
@@ -138,7 +131,6 @@ const handleGet: PagesFunction = async ({ request, env }) => {
         }
       });
     } else {
-      // 获取所有笔记 /api/notes
       const { results } = await env.DB.prepare(
         `SELECT id, title, content, tags, created_at, updated_at FROM notes ORDER BY updated_at DESC`
       ).all();
@@ -190,7 +182,6 @@ const handleGet: PagesFunction = async ({ request, env }) => {
   }
 };
 
-// POST请求处理
 const handlePost: PagesFunction = async ({ request, env }) => {
   const password = request.headers.get("Authorization")?.replace("Bearer ", "");
   let effectivePassword = env.PASSWORD as string | undefined;
@@ -283,7 +274,6 @@ const handlePost: PagesFunction = async ({ request, env }) => {
   }
 };
 
-// PUT请求处理
 const handlePut: PagesFunction = async ({ request, env }) => {
   const password = request.headers.get("Authorization")?.replace("Bearer ", "");
   let effectivePassword = env.PASSWORD as string | undefined;
