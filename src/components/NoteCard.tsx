@@ -1,5 +1,5 @@
 import React from 'react'
-import { Trash2, Calendar, FileText, Tag } from 'lucide-react'
+import { Trash2, Calendar, FileText, Tag, Share2 } from 'lucide-react'
 import { cn, getTagClassName } from '@/lib/utils'
 
 interface Note {
@@ -62,6 +62,58 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
     onDelete(note.id)
   }
 
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止事件冒泡
+    
+    // 创建分享内容
+    const shareData = {
+      title: note.title || '无标题',
+      text: note.content || '暂无内容',
+      url: window.location.origin + `/notes/${note.id}`
+    }
+    
+    // 检查是否支持 Web Share API
+    if (navigator.share) {
+      navigator.share(shareData).catch((error) => {
+        console.error('分享失败:', error)
+        // 如果分享失败，回退到复制链接
+        fallbackShare(shareData.url)
+      })
+    } else {
+      // 不支持 Web Share API，回退到复制链接
+      fallbackShare(shareData.url)
+    }
+  }
+
+  const fallbackShare = (url: string) => {
+    // 复制链接到剪贴板
+    navigator.clipboard.writeText(url).then(() => {
+      // 显示成功提示
+      const successMessage = document.createElement('div')
+      successMessage.textContent = '链接已复制到剪贴板！'
+      successMessage.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center'
+      document.body.appendChild(successMessage)
+      setTimeout(() => {
+        document.body.removeChild(successMessage)
+      }, 2000)
+    }).catch((error) => {
+      console.error('复制失败:', error)
+      // 如果复制也失败，显示链接让用户手动复制
+      const linkMessage = document.createElement('div')
+      linkMessage.innerHTML = `
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">分享链接</h3>
+            <p class="text-sm text-gray-600 mb-4">请复制以下链接：</p>
+            <div class="bg-gray-100 p-3 rounded border break-all text-sm font-mono">${url}</div>
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">关闭</button>
+          </div>
+        </div>
+      `
+      document.body.appendChild(linkMessage)
+    })
+  }
+
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', note.id)
     e.dataTransfer.effectAllowed = 'move'
@@ -108,14 +160,22 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onView, onDelete, onDragStart
             <span>更新于 {formatDate(note.updatedAt)}</span>
           </div>
         </div>
-        <button
-          onClick={handleDeleteClick}
-          className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md opacity-0 group-hover:opacity-100"
-          style={{ transition: 'none' }}
-          title="删除笔记"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100" style={{ transition: 'none' }}>
+          <button
+            onClick={handleShareClick}
+            className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md"
+            title="分享笔记"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleDeleteClick}
+            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md"
+            title="删除笔记"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* 卡片内容预览 */}
