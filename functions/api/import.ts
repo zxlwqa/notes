@@ -77,7 +77,7 @@ export const onRequestPost: PagesFunction<{
         const title = note.title || '导入的笔记';
         const content = note.content || '';
         const tags = note.tags ? JSON.stringify(note.tags) : JSON.stringify(['导入']);
-        const now = new Date().toISOString();
+        const now = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
 
         // 插入或更新笔记
         await env.DB.prepare(`INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title = excluded.title, content = excluded.content, tags = excluded.tags, updated_at = excluded.updated_at`).bind(noteId, title, content, tags, now, now).run();
