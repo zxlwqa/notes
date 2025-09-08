@@ -1,7 +1,6 @@
 import { logToD1 } from '../_utils/log'
 
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
-  // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -26,7 +25,6 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
         }
       });
     }
-    // 从 D1 读取已设置的密码，不存在则回退到环境变量
     if (!env.DB) {
       console.error('D1 not bound, fallback to env.PASSWORD');
     }
