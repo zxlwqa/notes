@@ -36,6 +36,9 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
           } else if (typeof parsed.id === 'string') {
             detail = parsed.id
           }
+        } else if (typeof parsed === 'string' && parsed) {
+          // 旧日志可能把纯文本以 JSON 字符串形式存储（例如 "新笔记"）
+          detail = parsed
         } else if (typeof row.meta === 'string' && row.meta && row.meta[0] !== '{') {
           // 非 JSON 的纯文本
           detail = row.meta
