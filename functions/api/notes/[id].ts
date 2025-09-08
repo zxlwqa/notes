@@ -187,7 +187,7 @@ const handlePut: PagesFunction = async ({ request, env }) => {
       }
     }
 
-    const existingNote = await env.DB.prepare(`SELECT id, title, content FROM notes WHERE id = ?`).bind(noteId).first();
+    const existingNote = await env.DB.prepare(`SELECT id, title FROM notes WHERE id = ?`).bind(noteId).first();
     if (!existingNote) {
       return new Response(JSON.stringify({ error: "Note not found" }), { 
         status: 404,
@@ -245,11 +245,11 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
 
     // 先检查笔记是否存在
     console.log('Checking if note exists before deletion...');
-    const existingNote = await env.DB.prepare(`SELECT id FROM notes WHERE id = ?`).bind(noteId).first();
+    const existingNote = await env.DB.prepare(`SELECT id, title FROM notes WHERE id = ?`).bind(noteId).first();
     console.log('Existing note check result:', existingNote);
     
     if (!existingNote) {
-      await logToD1(context.env as any, 'warn', 'notes.delete.not_found', { id: noteId })
+      await logToD1(env, 'warn', 'notes.delete.not_found', { id: noteId })
       console.log('Note not found for deletion:', noteId);
       return new Response(JSON.stringify({ error: "Note not found" }), { 
         status: 404,
@@ -263,16 +263,7 @@ const handleDelete: PagesFunction = async ({ request, env }) => {
     console.log('Note exists, attempting to delete:', noteId);
     const deleteResult = await env.DB.prepare(`DELETE FROM notes WHERE id = ?`).bind(noteId).run();
     console.log('Delete result:', deleteResult);
-    // 计算展示标题：优先使用 title；为空则取内容首行（截断50字符）
-    let displayTitle = String((existingNote as any)?.title || '').trim()
-    if (!displayTitle) {
-      const raw = String((existingNote as any)?.content || '').trim()
-      if (raw) {
-        const firstLine = raw.split('\n')[0].trim()
-        displayTitle = firstLine.length > 50 ? (firstLine.slice(0, 50) + '...') : firstLine
-      }
-    }
-    await logToD1(env, 'info', 'notes.delete', { id: noteId, title: displayTitle || '无标题' })
+    await logToD1(env, 'info', 'notes.delete', { id: noteId, title: (existingNote as any)?.title || '无标题' })
 
     return Response.json({ success: true }, { 
       headers: {
