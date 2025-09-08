@@ -510,6 +510,30 @@ const NotesListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60" style={{ backgroundImage: "var(--app-bg-image, url('/image/background.png'))", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
+      {/* 隐藏的登录表单，帮助密码管理器识别 */}
+      <form 
+        style={{ display: 'none' }}
+        method="post"
+        action="/login"
+        data-form="login"
+      >
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        <input
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        <button type="submit" tabIndex={-1} aria-hidden="true">登录</button>
+      </form>
+
       {/* Header */}
       <header className="bg-white/30 backdrop-blur-md shadow-sm border-b border-white/30">
         <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
