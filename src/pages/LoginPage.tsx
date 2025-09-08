@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 const LoginPage = () => {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -16,6 +17,8 @@ const LoginPage = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
+    document.title = '笔记系统 - 登录'
+    
     // 加载设置中的用户名作为标题
     const loadSettingsTitle = () => {
       try {
@@ -90,8 +93,6 @@ const LoginPage = () => {
     }
     window.addEventListener('settings-changed' as any, settingsHandler)
     
-    // logo图片已通过HTML预加载，无需额外处理
-    
     return () => {
       window.removeEventListener('settings-changed' as any, settingsHandler)
     }
@@ -103,14 +104,13 @@ const LoginPage = () => {
       setError('请输入密码')
       return
     }
-
+    
     setLoading(true)
     setError('')
 
     try {
       const success = await login(password)
       if (success) {
-        // 登录成功后尽量带着数据跳转，确保首页秒渲染
         try {
           // 优先使用本地缓存，加速首屏
           let cached: any[] | null = null
@@ -163,16 +163,28 @@ const LoginPage = () => {
             <h2 className="mt-4 font-bold text-gray-900" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.5)' }}>{displayTitle}</h2>
           </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit} data-form="login">
-            {/* 隐藏的用户名字段，帮助密码管理器识别登录表单 */}
-            <input
-              type="text"
-              name="username"
-              autoComplete="username"
-              style={{ display: 'none' }}
-              tabIndex={-1}
-              aria-hidden="true"
-            />
+          <form 
+            className="mt-8 space-y-6" 
+            onSubmit={handleSubmit} 
+            data-form="login"
+            method="post"
+            action="/login"
+          >
+            {/* 用户名字段，帮助密码管理器识别登录表单 */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                用户名（可选）
+              </label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="输入用户名（可选）"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+              />
+            </div>
             <div>
               <label htmlFor="password" className="sr-only">
                 密码
@@ -213,6 +225,7 @@ const LoginPage = () => {
                 loading={loading}
                 className="w-full"
                 size="lg"
+                data-action="login"
               >
                 登录
               </Button>
