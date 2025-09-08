@@ -788,6 +788,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                          type="text"
                          value={settings[option.value as keyof typeof settings] as string}
                          onChange={(e) => handleSettingChange(option.value, e.target.value)}
+                         placeholder={
+                           option.value === 'username' ? '输入用户名' :
+                           option.value === 'backgroundImageUrl' ? '输入背景图URL' :
+                           option.value === 'logoUrl' ? '输入logo图URL' : ''
+                         }
                          className="border border-gray-300 rounded-md px-3 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        />
                      )}
