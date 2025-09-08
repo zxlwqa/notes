@@ -35,7 +35,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const searchRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
-  // 更新建议面板位置
   const updateSuggestionPosition = useCallback(() => {
     if (searchRef.current) {
       const rect = searchRef.current.getBoundingClientRect()
@@ -47,7 +46,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     }
   }, [])
 
-  // 简单搜索逻辑
   const performSearch = useCallback((query: string): Note[] => {
     if (!query.trim()) return notes
 
@@ -56,17 +54,14 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     return notes.filter(note => {
       let matches = false
 
-      // 搜索标题
       if (note.title && note.title.toLowerCase().includes(searchText)) {
         matches = true
       }
       
-      // 搜索内容
       if (note.content && note.content.toLowerCase().includes(searchText)) {
         matches = true
       }
       
-      // 搜索标签
       if (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchText))) {
         matches = true
       }
@@ -75,7 +70,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     })
   }, [notes])
 
-  // 防抖搜索
   const debouncedSearch = useMemo(
     () => debounce((query: string) => {
       const results = performSearch(query)
@@ -84,12 +78,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     [performSearch, onSearch]
   )
 
-  // 搜索输入变化处理
   useEffect(() => {
     debouncedSearch(searchTerm)
   }, [searchTerm, debouncedSearch])
 
-  // 全局点击事件处理外部点击关闭
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
@@ -101,7 +93,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     }
 
     if (showSuggestions) {
-      // 使用 setTimeout 确保在 onClick 事件之后执行
       const timer = setTimeout(() => {
         document.addEventListener('click', handleGlobalClick)
       }, 0)
@@ -112,7 +103,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     }
   }, [showSuggestions])
 
-  // 生成搜索建议
   const getSuggestions = useMemo(() => {
     if (!searchTerm.trim() || searchTerm.length < 2) return []
     
@@ -120,7 +110,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     const searchText = searchTerm.toLowerCase()
     
     notes.forEach(note => {
-      // 标题建议
       if (note.title && note.title.toLowerCase().includes(searchText)) {
         suggestions.push({
           text: note.title,
@@ -129,7 +118,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         })
       }
       
-      // 标签建议
       if (note.tags) {
         note.tags.forEach(tag => {
           if (tag.toLowerCase().includes(searchText)) {
@@ -142,9 +130,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         })
       }
       
-      // 内容全文联想 - 改进版本
       if (note.content) {
-        // 1. 提取包含搜索词的完整句子
         const sentences = note.content.split(/[。！？\n]/).filter(sentence => 
           sentence.trim().length > 0 && sentence.toLowerCase().includes(searchText)
         )
@@ -152,7 +138,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         sentences.forEach(sentence => {
           const trimmed = sentence.trim()
           if (trimmed.length > 0 && trimmed.length <= 100) {
-            // 找到句子在原文中的位置
             const startIndex = note.content.indexOf(trimmed)
             const searchIndex = trimmed.toLowerCase().indexOf(searchText)
             
@@ -169,12 +154,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           }
         })
         
-        // 2. 提取包含搜索词的短语（3-20个字符）
         const words = note.content.split(/\s+/)
         for (let i = 0; i < words.length - 1; i++) {
           const phrase = words.slice(i, i + 3).join(' ')
           if (phrase.toLowerCase().includes(searchText) && phrase.length >= 3 && phrase.length <= 50) {
-            // 找到短语在原文中的位置
             const startIndex = note.content.indexOf(phrase)
             const searchIndex = phrase.toLowerCase().indexOf(searchText)
             
@@ -191,12 +174,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           }
         }
         
-        // 3. 提取包含搜索词的关键词（长度大于2的词）
         const keywords = words.filter(word => 
           word.length > 2 && word.toLowerCase().includes(searchText)
         )
         keywords.slice(0, 5).forEach(keyword => {
-          // 找到关键词在原文中的位置
           const startIndex = note.content.indexOf(keyword)
           const searchIndex = keyword.toLowerCase().indexOf(searchText)
           
@@ -214,40 +195,33 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       }
     })
     
-    // 去重并排序
     const uniqueSuggestions = suggestions.filter((item, index, self) => 
       index === self.findIndex(t => t.text === item.text && t.note.id === item.note.id)
     )
     
-    // 按相关性和长度排序
     const sortedSuggestions = uniqueSuggestions.sort((a, b) => {
       const aLower = a.text.toLowerCase()
       const bLower = b.text.toLowerCase()
       
-      // 优先显示以搜索词开头的建议
       const aStartsWith = aLower.startsWith(searchText)
       const bStartsWith = bLower.startsWith(searchText)
       
       if (aStartsWith && !bStartsWith) return -1
       if (!aStartsWith && bStartsWith) return 1
       
-      // 其次按类型排序（标题 > 标签 > 内容）
       const typeOrder = { title: 0, tag: 1, content: 2 }
       const typeDiff = typeOrder[a.type] - typeOrder[b.type]
       if (typeDiff !== 0) return typeDiff
       
-      // 最后按长度排序（较短的优先）
       return a.text.length - b.text.length
     })
     
-    return sortedSuggestions.slice(0, 10) // 增加到10个建议
+    return sortedSuggestions.slice(0, 10)
   }, [searchTerm, notes])
 
-  // 处理建议点击
   const handleSuggestionClick = (suggestion: SuggestionItem) => {
     setSearchTerm(suggestion.text)
     setShowSuggestions(false)
-    // 跳转到对应的笔记阅读页面，传递位置信息
     navigate(`/notes/${suggestion.note.id}`, { 
       state: { 
         note: suggestion.note,
@@ -256,7 +230,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     })
   }
 
-  // 获取建议图标
   const getSuggestionIcon = (suggestion: SuggestionItem) => {
     switch (suggestion.type) {
       case 'title':
