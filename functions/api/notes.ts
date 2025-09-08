@@ -219,7 +219,7 @@ const handlePost: PagesFunction = async ({ request, env }) => {
 
     if (body.content && !body.title) {
       await env.DB.prepare(
-        `INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (1, '我的笔记', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours'), strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`
+        `INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (1, '默认笔记', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours'), strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`
       ).bind(body.content).run();
 
       return Response.json({ success: true }, {
