@@ -72,22 +72,10 @@ const NotesListPage: React.FC = () => {
     const state = location.state as { notes?: Note[] } | null
     const hasCache = (state?.notes && state.notes.length > 0) || notes.length > 0
     if (hasCache) {
-      // 有缓存时后台静默刷新，不改变 loading 状态，改为空闲时刷新以减少抖动
-      const scheduleIdle = (fn: () => void) => {
-        try {
-          const w = window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number }
-          if (w.requestIdleCallback) {
-            w.requestIdleCallback(fn, { timeout: 1000 })
-          } else {
-            setTimeout(fn, 0)
-          }
-        } catch {
-          setTimeout(fn, 0)
-        }
-      }
-      scheduleIdle(() => {
+      // 有缓存时后台静默刷新，不改变 loading 状态
+      setTimeout(() => {
         loadNotesSilently()
-      })
+      }, 100)
     } else {
       // 无缓存时正常加载
       loadNotes()
