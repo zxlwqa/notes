@@ -301,6 +301,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
     return map[msg] || msg
   }
+  const formatLogTime = (value?: string) => {
+    if (!value) return '-'
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return String(value)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Shanghai'
+    }).replace(/\//g, '-')
+  }
   const formatMeta = (msg?: string, meta?: any) => {
     if (!meta) return '-'
     try {
@@ -1098,7 +1113,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                           const levelColor = it.level === 'error' ? 'text-red-600' : (it.level === 'warn' || it.level === 'warning') ? 'text-yellow-700' : 'text-gray-800'
                           return (
                             <tr key={it.id || idx} className={idx % 2 ? 'bg-white' : 'bg-gray-50/50'}>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-700">{it.created_at}</td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-700">{formatLogTime(it.created_at)}</td>
                               <td className={`px-3 py-2 whitespace-nowrap font-medium ${levelColor}`}>{translateLevel(it.level)}</td>
                               <td className="px-3 py-2 whitespace-pre-wrap text-gray-800">{translateMessage(it.message)}</td>
                               <td className="px-3 py-2 text-gray-700">
