@@ -5,10 +5,8 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { PageLoading } from '@/components/ui'
 
-// 登录页为首屏，改为同步加载，避免刷新时白屏等待
 import LoginPage from '@/pages/LoginPage'
 
-// 使用动态导入进行代码分割
 const NotesListPage = lazy(() => import('@/pages/NotesListPage'))
 const NoteViewPage = lazy(() => import('@/pages/NoteViewPage'))
 const NoteEditPage = lazy(() => import('@/pages/NoteEditPage'))
@@ -60,3 +58,4 @@ function App() {
 }
 
 export default App
+
