@@ -55,8 +55,8 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     }
 
     // 更新为新密码
-    await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password', ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`).bind(newPassword).run()
-    await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password_set', 'true', datetime('now')) ON CONFLICT(key) DO UPDATE SET value = 'true', updated_at = datetime('now')`).run()
+    await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00') ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00'`).bind(newPassword).run()
+    await env.DB.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password_set', 'true', strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00') ON CONFLICT(key) DO UPDATE SET value = 'true', updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours') || '+08:00'`).run()
 
     await logToD1(env, 'info', 'password.change.success')
     return new Response(JSON.stringify({ success: true }), {
