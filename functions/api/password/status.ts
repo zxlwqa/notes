@@ -1,7 +1,6 @@
 export const onRequestGet: PagesFunction<{
   DB: D1Database;
 }> = async ({ request, env }) => {
-  // 处理CORS预检请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -14,7 +13,6 @@ export const onRequestGet: PagesFunction<{
   }
 
   try {
-    // 验证认证
     const password = request.headers.get("Authorization")?.replace("Bearer ", "");
     if (!password) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -26,7 +24,6 @@ export const onRequestGet: PagesFunction<{
       });
     }
 
-    // 验证密码
     let effectivePassword = env.PASSWORD as string | undefined;
     let useD1Password = false;
     try {
@@ -49,7 +46,6 @@ export const onRequestGet: PagesFunction<{
       });
     }
 
-    // 返回密码状态
     return Response.json({
       usingD1: useD1Password,
       source: useD1Password ? 'd1' : 'env'
