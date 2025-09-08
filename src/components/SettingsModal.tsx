@@ -34,7 +34,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     spellCheck: false,
     syntaxHighlight: true,
     lineNumbers: false,
-    username: '科技刘',
+    username: '用户',
     emailNotification: false,
     shortcutHints: true,
     autoLock: true,
@@ -100,7 +100,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       title: '用户设置',
       icon: <User className="h-5 w-5" />,
       options: [
-        { label: '用户名', value: 'username', type: 'input', default: '科技刘' },
+        { label: '用户名', value: 'username', type: 'input', default: '用户' },
         { label: 'logo图URL', value: 'logoUrl', type: 'input', default: '' }
       ]
     },
