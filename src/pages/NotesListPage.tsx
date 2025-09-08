@@ -24,7 +24,7 @@ const NotesListPage: React.FC = () => {
       return state.notes
     }
     try {
-      const cache = sessionStorage.getItem('notes-cache')
+      const cache = sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache')
       return cache ? JSON.parse(cache) as Note[] : []
     } catch {
       return []
@@ -36,7 +36,7 @@ const NotesListPage: React.FC = () => {
       return state.notes
     }
     try {
-      const cache = sessionStorage.getItem('notes-cache')
+      const cache = sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache')
       return cache ? JSON.parse(cache) as Note[] : []
     } catch {
       return []
@@ -45,7 +45,7 @@ const NotesListPage: React.FC = () => {
   const [loading, setLoading] = useState(() => {
     // 如果有缓存数据，初始就不显示 loading
     try {
-      const cache = sessionStorage.getItem('notes-cache')
+      const cache = sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache')
       return !Boolean(cache)
     } catch {
       return true
@@ -60,7 +60,7 @@ const NotesListPage: React.FC = () => {
   // 记录页面首次加载时是否已有缓存，用于避免刷新后骨架闪烁
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
-    hasInitialCacheRef.current = !!sessionStorage.getItem('notes-cache')
+    hasInitialCacheRef.current = !!(sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache'))
   } catch {}
   
   // 弹窗管理
@@ -218,6 +218,7 @@ const NotesListPage: React.FC = () => {
         setFilteredNotes(ordered)
         try {
           sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
+          localStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
         saveNoteOrder(ordered)
       } else if (response.data && typeof response.data === 'object') {
@@ -236,6 +237,7 @@ const NotesListPage: React.FC = () => {
         setFilteredNotes(ordered)
         try {
           sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
+          localStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
         saveNoteOrder(ordered)
       } else {
@@ -287,6 +289,7 @@ const NotesListPage: React.FC = () => {
         setFilteredNotes(ordered)
         try {
           sessionStorage.setItem('notes-cache', JSON.stringify(ordered))
+          localStorage.setItem('notes-cache', JSON.stringify(ordered))
         } catch {}
         saveNoteOrder(ordered)
       }
@@ -457,6 +460,7 @@ const NotesListPage: React.FC = () => {
     // 更新缓存
     try {
       sessionStorage.setItem('notes-cache', JSON.stringify(newNotes))
+      localStorage.setItem('notes-cache', JSON.stringify(newNotes))
     } catch {}
     // 保存自定义顺序
     saveNoteOrder(newNotes)
