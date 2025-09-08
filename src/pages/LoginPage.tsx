@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { notesApi } from '@/lib/api'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -97,10 +98,29 @@ const LoginPage = () => {
     try {
       const success = await login(password)
       if (success) {
-        // 登录成功后立即跳转，不等待数据加载
+        // 登录成功后立即跳转
         navigate('/notes')
-        
-        // 去列表页加载，避免重复请求
+
+        // 后台预取并写缓存，不阻塞导航
+        ;(async () => {
+          try {
+            const response = await notesApi.getNotes()
+            if (Array.isArray(response.data)) {
+              sessionStorage.setItem('notes-cache', JSON.stringify(response.data))
+            } else if (response.data && typeof response.data === 'object') {
+              const single = response.data as any
+              const list = [{
+                id: single.id || '1',
+                title: single.title || '我的笔记',
+                content: single.content || '',
+                tags: single.tags || [],
+                createdAt: single.createdAt || new Date().toISOString(),
+                updatedAt: single.updatedAt || new Date().toISOString()
+              }]
+              sessionStorage.setItem('notes-cache', JSON.stringify(list))
+            }
+          } catch {}
+        })()
       } else {
         setError('密码错误')
       }
