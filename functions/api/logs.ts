@@ -17,7 +17,7 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
         `CREATE INDEX IF NOT EXISTS logs_created_at_idx ON logs(created_at)`
       ).run()
       const result = await db
-        .prepare('SELECT id, level, message, meta, created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200')
+        .prepare("SELECT id, level, message, meta, datetime(created_at, '+8 hours') AS created_at FROM logs ORDER BY datetime(created_at) DESC LIMIT 200")
         .all()
       return new Response(
         JSON.stringify({
