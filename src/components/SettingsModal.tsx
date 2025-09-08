@@ -305,6 +305,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (!meta) return '-'
     try {
       const obj = typeof meta === 'string' ? JSON.parse(meta) : meta
+      // 优先：若包含标题字段，仅显示标题文本
+      if (obj && typeof obj === 'object') {
+        const directTitle = typeof obj.title === 'string' && obj.title.trim()
+        const nestedTitle = typeof obj.note?.title === 'string' && obj.note.title.trim()
+        if (directTitle) {
+          return obj.title
+        }
+        if (nestedTitle) {
+          return obj.note.title
+        }
+      }
       // 特例：notes.list 显示“笔记数量：x”
       if (msg === 'notes.list' && typeof obj.count === 'number') {
         return `笔记数量：${obj.count}`
