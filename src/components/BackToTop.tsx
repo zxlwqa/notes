@@ -34,19 +34,19 @@ const BackToTop: React.FC<BackToTopProps> = ({ threshold = 200 }) => {
       aria-label="返回顶部"
       style={{
         position: 'fixed',
-        right: '16px',
-        bottom: '16px',
+        right: '20px',
+        bottom: '20px',
         zIndex: 9999,
         background: 'rgba(59, 130, 246, 0.95)',
         color: '#ffffff',
         border: 'none',
         borderRadius: '9999px',
-        width: '56px',
-        height: '56px',
+        width: '64px',
+        height: '64px',
         cursor: 'pointer',
         boxShadow: '0 10px 25px rgba(59, 130, 246, 0.4)',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease',
-        fontSize: '20px'
+        fontSize: '24px'
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)'
