@@ -999,7 +999,12 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror-sizer { min-width: 0 !important; }
         .notes-editor-container .editor-preview,
         .notes-editor-container .editor-preview-side { overflow-x: hidden !important; }
-        .notes-editor-container .CodeMirror pre { white-space: pre-wrap; word-wrap: break-word; }
+        .notes-editor-container .CodeMirror pre { 
+          white-space: pre-wrap !important; 
+          word-wrap: break-word !important; 
+          word-break: break-all !important;
+          overflow-wrap: break-word !important;
+        }
         .notes-editor-container .CodeMirror, .notes-editor-container .editor-toolbar, .notes-editor-container .editor-statusbar { background: transparent !important; }
         .notes-editor-container .CodeMirror-gutters { background: transparent !important; border: none !important; }
         
@@ -1042,15 +1047,23 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         /* 文本行样式 */
         .notes-editor-container .CodeMirror .CodeMirror-line {
           line-height: 1.6 !important;
-          height: 1.6em !important;
+          height: auto !important;
+          min-height: 1.6em !important;
           font-size: var(--editor-font-size, 14px) !important;
           font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
           white-space: pre-wrap !important;
+          word-wrap: break-word !important;
+          word-break: break-all !important;
+          overflow-wrap: break-word !important;
         }
         
         .notes-editor-container .CodeMirror .CodeMirror-line span {
           line-height: 1.6 !important;
           vertical-align: baseline !important;
+          white-space: pre-wrap !important;
+          word-wrap: break-word !important;
+          word-break: break-all !important;
+          overflow-wrap: break-word !important;
         }
       `}</style>
 
