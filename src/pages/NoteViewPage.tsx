@@ -423,15 +423,17 @@ const NoteViewPage: React.FC = () => {
                         position: relative !important;
                         padding: 1rem !important;
                         margin: 1rem 0 !important;
+                        overflow-x: auto !important;
+                        white-space: pre-wrap !important;
+                        word-wrap: break-word !important;
+                        word-break: break-all !important;
+                        overflow-wrap: break-word !important;
                       }
                       .prose pre:hover .copy-button {
                         opacity: 1 !important;
                       }
                       .copy-button {
-                        position: absolute !important;
-                        top: 0.5rem !important;
-                        right: 0.5rem !important;
-                        background: rgba(255, 255, 255, 0.8) !important;
+                        background: rgba(255, 255, 255, 0.9) !important;
                         border: 1px solid rgba(255, 255, 255, 0.4) !important;
                         border-radius: 4px !important;
                         padding: 0.25rem 0.5rem !important;
@@ -443,9 +445,11 @@ const NoteViewPage: React.FC = () => {
                         display: flex !important;
                         align-items: center !important;
                         gap: 0.25rem !important;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
                       }
                       .copy-button:hover {
-                        background: rgba(255, 255, 255, 0.9) !important;
+                        background: rgba(255, 255, 255, 1) !important;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
                       }
                       .copy-button svg {
                         width: 12px !important;
@@ -469,13 +473,15 @@ const NoteViewPage: React.FC = () => {
                             };
                             
                             return (
-                              <pre {...props}>
-                                <button className="copy-button" onClick={handleCopy}>
-                                  <svg viewBox="0 0 16 16" fill="currentColor">
-                                    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25v-7.5Z"/>
-                                    <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25v-7.5Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25h-7.5Z"/>
-                                  </svg>
-                                </button>
+                              <pre {...props} style={{ position: 'relative' }}>
+                                <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', zIndex: 10 }}>
+                                  <button className="copy-button" onClick={handleCopy}>
+                                    <svg viewBox="0 0 16 16" fill="currentColor">
+                                      <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25v-7.5Z"/>
+                                      <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25v-7.5Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25h-7.5Z"/>
+                                    </svg>
+                                  </button>
+                                </div>
                                 {children}
                               </pre>
                             );
