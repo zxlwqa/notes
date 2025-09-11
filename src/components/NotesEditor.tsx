@@ -405,7 +405,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
 
   return (
     <div className="notes-editor-container" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
-      {/* 自定义工具栏 */}
+      {/* 顶部：仅保留标签展示与添加 */}
       <div style={{
         background: 'rgba(255,255,255,0.1)',
         border: '1px solid rgba(255,255,255,0.2)',
@@ -414,578 +414,139 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         padding: '12px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        flexWrap: 'wrap',
-        color: '#111827'
+        gap: '12px',
+        flexWrap: 'wrap'
       }}>
-        {/* 标签页 */}
-        <div style={{ display: 'flex', gap: '2px', marginRight: '16px' }}>
-          <button
-            onClick={switchToEdit}
-            style={{
-              background: isPreview ? '#374151' : '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '8px 16px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            编辑
-          </button>
-          <button
-            onClick={switchToPreview}
-            style={{
-              background: isPreview ? '#3b82f6' : '#374151',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '8px 16px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            预览
-          </button>
-        </div>
-
-        {/* 工具栏按钮 */}
-        <button
-          onClick={() => insertText('# ', '')}
-          title="标题"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          H
-        </button>
-
-        <button
-          onClick={() => insertText('## ', '')}
-          title="二级标题"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          H2
-        </button>
-
-        <button
-          onClick={() => insertText('### ', '')}
-          title="三级标题"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          H3
-        </button>
-
-        <button
-          onClick={() => insertText('```\n', '\n```')}
-          title="代码块"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          &lt;/&gt; CB
-        </button>
-
-        <button
-          onClick={() => insertText('*', '*')}
-          title="斜体"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          I
-        </button>
-
-        <button
-          onClick={() => insertText('~~', '~~')}
-          title="删除线"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          S
-        </button>
-
-        <button
-          onClick={() => insertText('\n---\n', '')}
-          title="水平线"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          —
-        </button>
-
-        <button
-          onClick={() => insertText('> ', '')}
-          title="引用"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          66
-        </button>
-
-        <button
-          onClick={() => insertText('- ', '')}
-          title="无序列表"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          •
-        </button>
-
-        <button
-          onClick={() => insertText('1. ', '')}
-          title="有序列表"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          1.
-        </button>
-
-        <button
-          onClick={() => insertText('- [ ] ', '')}
-          title="任务列表"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          ☐
-        </button>
-
-        <button
-          onClick={() => insertText('![', '](url)')}
-          title="图片"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          🖼️
-        </button>
-
-        <button
-          onClick={() => insertText('[', '](url)')}
-          title="链接"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          🔗
-        </button>
-
-        <button
-          onClick={() => insertText('**', '**')}
-          title="粗体"
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            margin: '2px',
-            color: '#ffffff',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s',
-            minWidth: '32px',
-            textAlign: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4b5563'
-            e.currentTarget.style.borderColor = '#6b7280'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
-        >
-          B
-        </button>
-
-        {/* Scroll开关 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-          {/* 标签管理 */}
-          {tags && tags.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '16px' }}>
-              {tags.map((tag, index) => (
-                <span
-                  key={index}
-                  style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    color: '#3b82f6',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                    borderRadius: '12px',
-                    padding: '2px 8px',
-                    fontSize: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  🏷️ {tag}
-                  {onRemoveTag && (
-                    <button
-                      onClick={() => onRemoveTag(tag)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#3b82f6',
-                        cursor: 'pointer',
-                        padding: '0',
-                        marginLeft: '4px',
-                        fontSize: '12px'
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-          )}
-          
-          {/* 标签输入 */}
-          {onAddTag && onTagInputChange && onTagInputKeyPress && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '16px' }}>
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => onTagInputChange(e.target.value)}
-                onKeyPress={onTagInputKeyPress}
-                placeholder="添加标签..."
+        {tags && tags.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {tags.map((tag, index) => (
+              <span
+                key={index}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  border: '2px solid rgba(255, 255, 255, 0.4)',
-                  borderRadius: '6px',
-                  padding: '6px 10px',
-                  fontSize: '12px',
-                  color: '#ffffff',
-                  outline: 'none',
-                  width: '90px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.1)'
-                }}
-                onFocus={(e) => {
-                  e.target.style.border = '2px solid rgba(59, 130, 246, 0.8)'
-                  e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)'
-                }}
-                onBlur={(e) => {
-                  e.target.style.border = '2px solid rgba(255, 255, 255, 0.4)'
-                  e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.1)'
-                }}
-              />
-              <button
-                onClick={onAddTag}
-                style={{
-                  background: 'rgba(59, 130, 246, 0.2)',
-                  border: '2px solid rgba(59, 130, 246, 0.6)',
-                  borderRadius: '6px',
-                  padding: '6px 10px',
+                  background: 'rgba(59, 130, 246, 0.1)',
                   color: '#3b82f6',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s ease',
-                  minWidth: '32px',
-                  textAlign: 'center',
-                  boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.1)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)'
-                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.8)'
-                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(59, 130, 246, 0.1)'
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  borderRadius: '12px',
+                  padding: '2px 8px',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}
               >
-                +
-              </button>
-            </div>
-          )}
-          
-          <span style={{ color: '#ffffff', fontSize: '14px' }}>Scroll</span>
-          <button
-            onClick={() => setShowScroll(!showScroll)}
-            style={{
-              background: showScroll ? '#3b82f6' : '#374151',
-              border: 'none',
-              borderRadius: '12px',
-              width: '40px',
-              height: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+                🏷️ {tag}
+                {onRemoveTag && (
+                  <button
+                    onClick={() => onRemoveTag(tag)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#3b82f6',
+                      cursor: 'pointer',
+                      padding: '0',
+                      marginLeft: '4px',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {onAddTag && onTagInputChange && onTagInputKeyPress && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => onTagInputChange(e.target.value)}
+              onKeyPress={onTagInputKeyPress}
+              placeholder="添加标签..."
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '2px solid rgba(255, 255, 255, 0.4)',
+                borderRadius: '6px',
+                padding: '6px 10px',
+                fontSize: '12px',
+                color: '#ffffff',
+                outline: 'none',
+                width: '120px',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.1)'
+              }}
+              onFocus={(e) => {
+                e.target.style.border = '2px solid rgba(59, 130, 246, 0.8)'
+                e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)'
+              }}
+              onBlur={(e) => {
+                e.target.style.border = '2px solid rgba(255, 255, 255, 0.4)'
+                e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.1)'
+              }}
+            />
+            <button
+              onClick={onAddTag}
+              style={{
+                background: 'rgba(59, 130, 246, 0.2)',
+                border: '2px solid rgba(59, 130, 246, 0.6)',
+                borderRadius: '6px',
+                padding: '6px 10px',
+                color: '#3b82f6',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease',
+                minWidth: '32px',
+                textAlign: 'center',
+                boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.1)'
+              }}
+            >
+              +
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 主体：左侧垂直工具栏 + 右侧编辑器 */}
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '420px' }}>
+        {/* 左侧工具栏 */}
+        <div style={{
+          width: '56px',
+          background: 'rgba(255,255,255,0.08)',
+          borderRight: '1px solid rgba(255,255,255,0.2)',
+          padding: '8px 6px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          gap: '6px'
+        }}>
+          <button title="标题" onClick={() => insertText('# ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>H1</button>
+          <button title="二级标题" onClick={() => insertText('## ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>H2</button>
+          <button title="三级标题" onClick={() => insertText('### ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>H3</button>
+          <button title="代码块" onClick={() => insertText('```\n', '\n```')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>&lt;/&gt;</button>
+          <button title="粗体" onClick={() => insertText('**', '**')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>B</button>
+          <button title="斜体" onClick={() => insertText('*', '*')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>I</button>
+          <button title="删除线" onClick={() => insertText('~~', '~~')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>S</button>
+          <button title="引用" onClick={() => insertText('> ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>&gt;</button>
+          <button title="无序列表" onClick={() => insertText('- ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>•</button>
+          <button title="有序列表" onClick={() => insertText('1. ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>1.</button>
+          <button title="任务列表" onClick={() => insertText('- [ ] ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>☐</button>
+          <button title="链接" onClick={() => insertText('[', '](url)')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>🔗</button>
+          <button title="图片" onClick={() => insertText('![', '](url)')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>🖼️</button>
+        </div>
+
+        {/* 右侧编辑器 */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <SimpleMDE
+            ref={mdeRef}
+            value={value}
+            onChange={handleChange}
+            options={options}
+            key="stable-editor"
           />
         </div>
       </div>
-
-      <SimpleMDE
-        ref={mdeRef}
-        value={value}
-        onChange={handleChange}
-        options={options}
-        key="stable-editor"
-      />
 
       {/* 简化的编辑器样式 */}
       <style>{`
