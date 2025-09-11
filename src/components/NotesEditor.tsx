@@ -519,7 +519,11 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
-          gap: '6px'
+          gap: '6px',
+          position: 'sticky',
+          top: '16px',
+          alignSelf: 'flex-start',
+          zIndex: 5
         }}>
           <button title="标题" onClick={() => insertText('# ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>H1</button>
           <button title="二级标题" onClick={() => insertText('## ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer' }}>H2</button>
@@ -599,10 +603,15 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror {
           color: #1f2937 !important;
           background: transparent !important;
+          height: auto !important;
         }
         
         .notes-editor-container .CodeMirror-lines {
           padding: 16px !important;
+        }
+        .notes-editor-container .CodeMirror-scroll {
+          max-height: none !important;
+          overflow-y: visible !important;
         }
         
         /* 文本行样式 */
