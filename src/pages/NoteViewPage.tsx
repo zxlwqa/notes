@@ -461,7 +461,11 @@ const NoteViewPage: React.FC = () => {
                           pre: ({ children, ...props }) => {
                             const codeContent = children?.props?.children || '';
                             const handleCopy = () => {
-                              navigator.clipboard.writeText(codeContent);
+                              // 清理复制内容，移除首尾空白字符和多余的换行符
+                              let cleanContent = codeContent.toString().trim();
+                              // 移除末尾的换行符，但保留内容中的换行符
+                              cleanContent = cleanContent.replace(/\n+$/, '');
+                              navigator.clipboard.writeText(cleanContent);
                               // 居中显示复制成功提示
                               const successMessage = document.createElement('div')
                               successMessage.textContent = '已复制！'
