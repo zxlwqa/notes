@@ -15,7 +15,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="preload" as="image" href="/image/background.png" />
     <script>
-      
       (function() {
         try {
           const saved = localStorage.getItem('app-settings');
@@ -30,10 +29,12 @@
               document.head.appendChild(link);
             }
           }
-        } catch (e) {
-        }
+        } catch (e) {}
       })();
     </script>
+
+    <!-- Umami 统计代码 -->
+    <script defer src="https://umami.zxlwq.dpdns.org/script.js" data-website-id="ff1062e3-fdaa-4b2b-83ae-8ead1f5074c4"></script>
   </head>
   <body>
     <div id="root"></div>
