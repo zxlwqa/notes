@@ -3,6 +3,11 @@
 一个基于React + TypeScript + Cloudflare的现代化风格笔记应用，支持Markdown编辑、云同步
 
 <p align="center">
+  <img src="./notes.png" alt="notes" />
+</p>
+
+
+<p align="center">
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-lightgrey.svg?logo=open-source-initiative&logoColor=3DA639" alt="License: MIT">
   </a>
