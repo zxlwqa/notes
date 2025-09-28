@@ -3,7 +3,7 @@
 一个基于React + TypeScript + Cloudflare的现代化风格笔记应用，支持Markdown编辑、云同步
 
 <p align="center">
-  <img src="./notes.png" alt="notes" />
+  <img src="./logo.png" alt="notes" />
 </p>
 
 
