@@ -2,19 +2,45 @@
 
 一个基于React + TypeScript + Cloudflare的现代化风格笔记应用，支持Markdown编辑、云同步
 
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-lightgrey.svg?logo=open-source-initiative&logoColor=3DA639" alt="License: MIT">
+  </a>
+  <a href="https://reactjs.org/">
+    <img src="https://img.shields.io/badge/React-18.3.1-lightgrey.svg?logo=react&logoColor=61DAFB" alt="React">
+  </a>
+  <a href="https://www.typescriptlang.org/">
+    <img src="https://img.shields.io/badge/TypeScript-4.9.5-lightgrey.svg?logo=typescript&logoColor=3178C6" alt="TypeScript">
+  </a>
+  <a href="https://vitejs.dev/">
+    <img src="https://img.shields.io/badge/Vite-5.4.8-lightgrey.svg?logo=vite&logoColor=646CFF" alt="Vite">
+  </a>
+  <a href="https://pages.cloudflare.com/">
+    <img src="https://img.shields.io/badge/Cloudflare-Pages-lightgrey.svg?logo=cloudflare&logoColor=F38020" alt="Cloudflare Pages">
+  </a>
+  <a href="https://github.com/zxlwq/music">
+    <img src="https://img.shields.io/badge/GitHub-Repo-181717.svg?logo=github&logoColor=white" alt="GitHub Repo">
+  </a>
+  <a href="https://hub.docker.com/r/zxlwq/music">
+    <img src="https://img.shields.io/badge/Docker-Image-lightgrey.svg?logo=docker&logoColor=2496ED" alt="Docker Image">
+  </a>
+</p>
+
+
+![notes](./notes.png)
+
 ## 🚀 技术栈
 
 - **前端框架**: React 18 + TypeScript
 - **构建工具**: Vite
 - **样式框架**: Tailwind CSS + PostCSS
-- **路由管理**: React Router DOM
-- **Markdown**: React SimpleMDE Editor + React Markdown
+- **Markdown**: React Markdown
 - **部署平台**: Cloudflare Pages
 - **数据库**:  D1 SQL数据库
-- **UI组件**: Lucide React图标库
 
 ## Cloudflare Pages部署
 - 框架预设：React (Vite)
+- 添加环境变量
 
 ## 环境变量
 
