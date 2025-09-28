@@ -23,11 +23,8 @@
   <a href="https://pages.cloudflare.com/">
     <img src="https://img.shields.io/badge/Cloudflare-Pages-lightgrey.svg?logo=cloudflare&logoColor=F38020" alt="Cloudflare Pages">
   </a>
-  <a href="https://github.com/zxlwq/music">
+  <a href="https://github.com/zxlwq/notes">
     <img src="https://img.shields.io/badge/GitHub-Repo-181717.svg?logo=github&logoColor=white" alt="GitHub Repo">
-  </a>
-  <a href="https://hub.docker.com/r/zxlwq/music">
-    <img src="https://img.shields.io/badge/Docker-Image-lightgrey.svg?logo=docker&logoColor=2496ED" alt="Docker Image">
   </a>
 </p>
 
