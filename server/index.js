@@ -11,7 +11,7 @@ import axios from 'axios'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '..')
-const distDir = path.resolve(rootDir, '..', 'dist')
+const distDir = path.resolve(rootDir, 'dist')
 
 // Env
 const PORT = process.env.PORT || 3000
@@ -290,6 +290,7 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`[server] listening on http://0.0.0.0:${PORT}${VITE_BASE}`)
+  console.log(`[server] dist dir: ${distDir}`)
 })
 
 
