@@ -40,7 +40,7 @@ export const onRequestPost: PagesFunction<{
   const username = context.env.WEBDAV_USER;
   const password = context.env.WEBDAV_PASS;
 
-  const filename = `notes-latest.md`;
+  const filename = `notes.md`;
 
   const webdavUrl = webdavFolder.endsWith('/')
     ? webdavFolder + filename
@@ -110,7 +110,7 @@ export const onRequestGet: PagesFunction<{
   const username = context.env.WEBDAV_USER;
   const password = context.env.WEBDAV_PASS;
 
-  const filename = `notes-latest.md`;
+  const filename = `notes.md`;
 
   const webdavUrl = webdavFolder.endsWith('/')
     ? webdavFolder + filename
