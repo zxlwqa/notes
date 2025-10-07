@@ -86,6 +86,31 @@ app.get('/api/password/status', (req, res) => {
   res.json({ passwordSet: Boolean(PASSWORD) })
 })
 
+// 测试 Redis 连接和日志功能
+app.get('/api/test-logs', authMiddleware, async (req, res) => {
+  try {
+    // 写入一条测试日志
+    await appendLog('info', 'test log entry', { test: true, timestamp: Date.now() })
+    
+    // 读取日志
+    const raw = await redis.lrange(LOGS_KEY, 0, 5)
+    const logs = raw.map(x => JSON.parse(x))
+    
+    res.json({ 
+      success: true, 
+      redisConnected: true,
+      logsCount: logs.length,
+      latestLog: logs[0] || null
+    })
+  } catch (e) {
+    res.json({ 
+      success: false, 
+      redisConnected: false,
+      error: String(e)
+    })
+  }
+})
+
 app.post('/api/login', async (req, res) => {
   const { password } = req.body || {}
   if (!PASSWORD || password === PASSWORD) {
@@ -350,18 +375,31 @@ function parseMarkdownToNotes(content) {
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
+    console.log('[debug] fetching logs from Redis key:', LOGS_KEY)
     const raw = await redis.lrange(LOGS_KEY, 0, 200)
+    console.log('[debug] raw logs count:', raw ? raw.length : 0)
+    
+    if (!raw || raw.length === 0) {
+      console.log('[debug] no logs found, returning empty items array')
+      return res.json({ items: [] })
+    }
+    
     const list = raw.map((x) => {
       try {
         return JSON.parse(x)
       } catch (e) {
+        console.error('[debug] failed to parse log entry:', x, e)
         return { id: Date.now(), level: 'error', message: 'Invalid log entry', created_at: new Date().toISOString() }
       }
     })
-    res.json(list)
+    
+    console.log('[debug] returning logs count:', list.length)
+    // 前端期望的格式：{ items: [...] }
+    res.json({ items: list })
   } catch (e) {
     console.error('Failed to load logs:', e)
-    await appendLog('error', 'failed to load logs', { error: String(e) })
+    // 避免递归调用 appendLog
+    console.log(`[ERROR] failed to load logs: ${String(e)}`)
     res.status(500).json({ success: false, error: 'Failed to load logs' })
   }
 })
@@ -386,7 +424,16 @@ app.get('*', (req, res) => {
 app.listen(PORT, async () => {
   console.log(`[server] listening on http://0.0.0.0:${PORT}${VITE_BASE}`)
   console.log(`[server] dist dir: ${distDir}`)
-  await appendLog('info', 'server started', { port: PORT, distDir })
+  
+  // 测试 Redis 连接
+  try {
+    await redis.ping()
+    console.log('[server] Redis connection successful')
+    await appendLog('info', 'server started', { port: PORT, distDir, redis: 'connected' })
+  } catch (e) {
+    console.error('[server] Redis connection failed:', e)
+    await appendLog('error', 'server started but Redis failed', { port: PORT, distDir, redis: 'failed', error: String(e) })
+  }
 })
 
 
