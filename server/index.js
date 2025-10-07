@@ -4,34 +4,65 @@ import compression from 'compression'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import serveStatic from 'serve-static'
-import { Redis } from '@upstash/redis'
+import { Pool } from 'pg'
 import axios from 'axios'
 
 // Resolve __dirname in ESM
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const rootDir = path.resolve(__dirname, '..')
-const distDir = path.resolve(rootDir, 'dist')
+const distDir = path.resolve(__dirname, '..', 'dist')
 
 // Env
 const PORT = process.env.PORT || 3000
 const PASSWORD = process.env.PASSWORD || ''
-const VITE_BASE = process.env.VITE_BASE || ''
 const WEBDAV_URL = process.env.WEBDAV_URL || ''
 const WEBDAV_USER = process.env.WEBDAV_USER || ''
 const WEBDAV_PASS = process.env.WEBDAV_PASS || ''
 
-// Upstash Redis config
-const redis = new Redis({
-  url: process.env.UPSTASH_URL,
-  token: process.env.UPSTASH_TOKEN,
+// PostgreSQL config
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 
-// Keys
-const NOTES_KEY = 'notes:list'
-const NOTE_KEY = (id) => `notes:item:${id}`
-const LOGS_KEY = 'notes:logs'
-const SETTINGS_KEY = 'notes:settings'
+// Initialize database
+async function initDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        tags TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS logs (
+        id SERIAL PRIMARY KEY,
+        level TEXT,
+        message TEXT NOT NULL,
+        meta TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    
+    console.log('[server] Database tables initialized')
+  } catch (e) {
+    console.error('[server] Database initialization failed:', e)
+    throw e
+  }
+}
 
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization || ''
@@ -54,31 +85,38 @@ app.use(express.json({ limit: '2mb' }))
 // Logs helper
 async function appendLog(level, message, meta) {
   const entry = {
-    id: Date.now(),
     level,
     message,
     meta: meta ? JSON.stringify(meta) : null,
-    created_at: new Date().toISOString(),
   }
   try {
-    await redis.lpush(LOGS_KEY, JSON.stringify(entry))
-    await redis.ltrim(LOGS_KEY, 0, 999)
+    await pool.query(
+      'INSERT INTO logs (level, message, meta) VALUES ($1, $2, $3)',
+      [level, message, entry.meta]
+    )
     console.log(`[${level.toUpperCase()}] ${message}`, meta ? JSON.stringify(meta) : '')
   } catch (e) {
-    console.error('Failed to write log to Redis:', e)
+    console.error('Failed to write log to PostgreSQL:', e)
     console.log(`[${level.toUpperCase()}] ${message}`, meta ? JSON.stringify(meta) : '')
   }
 }
 
 // Notes helpers
 async function getAllNotes() {
-  const ids = await redis.smembers(NOTES_KEY)
-  if (!ids || ids.length === 0) return []
-  const keys = ids.map((id) => NOTE_KEY(id))
-  const values = await redis.mget(...keys)
-  return values
-    .map((v) => (typeof v === 'string' ? JSON.parse(v) : v))
-    .filter(Boolean)
+  try {
+    const result = await pool.query('SELECT * FROM notes ORDER BY updated_at DESC')
+    return result.rows.map(row => ({
+      id: row.id,
+      title: row.title || '',
+      content: row.content || '',
+      tags: row.tags ? JSON.parse(row.tags) : [],
+      createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+      updatedAt: row.updated_at?.toISOString() || new Date().toISOString(),
+    }))
+  } catch (e) {
+    console.error('Failed to get notes:', e)
+    return []
+  }
 }
 
 // API routes
@@ -86,26 +124,26 @@ app.get('/api/password/status', (req, res) => {
   res.json({ passwordSet: Boolean(PASSWORD) })
 })
 
-// 测试 Redis 连接和日志功能
+// 测试 PostgreSQL 连接和日志功能
 app.get('/api/test-logs', authMiddleware, async (req, res) => {
   try {
     // 写入一条测试日志
     await appendLog('info', 'test log entry', { test: true, timestamp: Date.now() })
     
     // 读取日志
-    const raw = await redis.lrange(LOGS_KEY, 0, 5)
-    const logs = raw.map(x => JSON.parse(x))
+    const result = await pool.query('SELECT * FROM logs ORDER BY created_at DESC LIMIT 5')
+    const logs = result.rows
     
     res.json({ 
       success: true, 
-      redisConnected: true,
+      postgresConnected: true,
       logsCount: logs.length,
       latestLog: logs[0] || null
     })
   } catch (e) {
     res.json({ 
       success: false, 
-      redisConnected: false,
+      postgresConnected: false,
       error: String(e)
     })
   }
@@ -134,9 +172,23 @@ app.get('/api/notes', authMiddleware, async (req, res) => {
 app.get('/api/notes/:id', authMiddleware, async (req, res) => {
   try {
     const id = req.params.id
-    const raw = await redis.get(NOTE_KEY(id))
-    if (!raw) return res.status(404).json({ success: false, error: 'Not found' })
-    res.json(typeof raw === 'string' ? JSON.parse(raw) : raw)
+    const result = await pool.query('SELECT * FROM notes WHERE id = $1', [id])
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Not found' })
+    }
+    
+    const row = result.rows[0]
+    const note = {
+      id: row.id,
+      title: row.title || '',
+      content: row.content || '',
+      tags: row.tags ? JSON.parse(row.tags) : [],
+      createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+      updatedAt: row.updated_at?.toISOString() || new Date().toISOString(),
+    }
+    
+    res.json(note)
   } catch (e) {
     await appendLog('error', 'get note failed', { error: String(e) })
     res.status(500).json({ success: false, error: 'Failed to load note' })
@@ -155,8 +207,18 @@ app.post('/api/notes', authMiddleware, async (req, res) => {
       createdAt: body.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await redis.set(NOTE_KEY(id), JSON.stringify(note))
-    await redis.sadd(NOTES_KEY, id)
+    
+    await pool.query(
+      `INSERT INTO notes (id, title, content, tags, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id) DO UPDATE SET
+       title = EXCLUDED.title,
+       content = EXCLUDED.content,
+       tags = EXCLUDED.tags,
+       updated_at = EXCLUDED.updated_at`,
+      [note.id, note.title, note.content, JSON.stringify(note.tags), note.createdAt, note.updatedAt]
+    )
+    
     await appendLog('info', 'note created/updated', { id })
     res.json({ success: true, id })
   } catch (e) {
@@ -168,19 +230,29 @@ app.post('/api/notes', authMiddleware, async (req, res) => {
 app.put('/api/notes/:id', authMiddleware, async (req, res) => {
   try {
     const id = req.params.id
-    const raw = await redis.get(NOTE_KEY(id))
-    const oldNote = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : {}
     const body = req.body || {}
+    
+    // 检查笔记是否存在
+    const existing = await pool.query('SELECT * FROM notes WHERE id = $1', [id])
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Note not found' })
+    }
+    
+    const oldNote = existing.rows[0]
     const note = {
       id,
       title: body.title ?? oldNote.title ?? '',
       content: body.content ?? oldNote.content ?? '',
-      tags: Array.isArray(body.tags) ? body.tags : oldNote.tags || [],
-      createdAt: oldNote.createdAt || new Date().toISOString(),
+      tags: Array.isArray(body.tags) ? body.tags : (oldNote.tags ? JSON.parse(oldNote.tags) : []),
+      createdAt: oldNote.created_at?.toISOString() || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    await redis.set(NOTE_KEY(id), JSON.stringify(note))
-    await redis.sadd(NOTES_KEY, id)
+    
+    await pool.query(
+      'UPDATE notes SET title = $1, content = $2, tags = $3, updated_at = $4 WHERE id = $5',
+      [note.title, note.content, JSON.stringify(note.tags), note.updatedAt, note.id]
+    )
+    
     await appendLog('info', 'note updated', { id })
     res.json({ success: true })
   } catch (e) {
@@ -192,8 +264,7 @@ app.put('/api/notes/:id', authMiddleware, async (req, res) => {
 app.delete('/api/notes/:id', authMiddleware, async (req, res) => {
   try {
     const id = req.params.id
-    await redis.del(NOTE_KEY(id))
-    await redis.srem(NOTES_KEY, id)
+    await pool.query('DELETE FROM notes WHERE id = $1', [id])
     await appendLog('info', 'note deleted', { id })
     res.json({ success: true })
   } catch (e) {
@@ -206,8 +277,9 @@ app.post('/api/import', authMiddleware, async (req, res) => {
   try {
     const list = Array.isArray(req.body) ? req.body : (req.body?.notes || [])
     let imported = 0
+    
     for (const item of list) {
-      const id = item.id || String(Date.now())
+      const id = item.id || String(Date.now() + Math.random())
       const note = {
         id,
         title: item.title || '',
@@ -216,10 +288,20 @@ app.post('/api/import', authMiddleware, async (req, res) => {
         createdAt: item.createdAt || item.created_at || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-      await redis.set(NOTE_KEY(id), JSON.stringify(note))
-      await redis.sadd(NOTES_KEY, id)
+      
+      await pool.query(
+        `INSERT INTO notes (id, title, content, tags, created_at, updated_at) 
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (id) DO UPDATE SET
+         title = EXCLUDED.title,
+         content = EXCLUDED.content,
+         tags = EXCLUDED.tags,
+         updated_at = EXCLUDED.updated_at`,
+        [note.id, note.title, note.content, JSON.stringify(note.tags), note.createdAt, note.updatedAt]
+      )
       imported += 1
     }
+    
     await appendLog('info', 'notes imported', { count: imported })
     res.json({ success: true, imported })
   } catch (e) {
@@ -259,9 +341,12 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
       return res.json({ success: true, fileName, totalNotes: notes.length })
     }
 
-    // 否则退回使用 Redis 存储最新备份（Markdown 文本）
-    await redis.set('notes:backup:latest:md', content)
-    await appendLog('info', 'backup saved to redis', { totalNotes: notes.length })
+    // 否则存储到 PostgreSQL
+    await pool.query(
+      'INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at',
+      ['backup_latest', content, new Date().toISOString()]
+    )
+    await appendLog('info', 'backup saved to postgres', { totalNotes: notes.length })
     res.json({ success: true, fileName, totalNotes: notes.length })
   } catch (e) {
     await appendLog('error', 'backup failed', { error: String(e) })
@@ -283,31 +368,28 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
       })
       markdown = String(response.data || '')
     } else {
-      const raw = await redis.get('notes:backup:latest:md')
-      markdown = typeof raw === 'string' ? raw : (raw ? String(raw) : '')
+      const result = await pool.query('SELECT value FROM settings WHERE key = $1', ['backup_latest'])
+      markdown = result.rows[0]?.value || ''
     }
     
-    // 完全清空 Redis 中的旧数据
-    const oldIds = await redis.smembers(NOTES_KEY)
-    if (oldIds && oldIds.length > 0) {
-      const oldKeys = oldIds.map(id => NOTE_KEY(id))
-      await redis.del(...oldKeys)
-      await redis.del(NOTES_KEY)
-      await appendLog('info', 'cleared old notes from redis', { count: oldIds.length })
-    }
+    // 完全清空 PostgreSQL 中的旧数据
+    await pool.query('DELETE FROM notes')
+    await appendLog('info', 'cleared old notes from postgres', { count: 0 })
     
-    // 解析 Markdown 为笔记数组并完全覆盖 Redis
+    // 解析 Markdown 为笔记数组并完全覆盖 PostgreSQL
     const parsedNotes = parseMarkdownToNotes(markdown)
     let importedCount = 0
     
     for (const item of parsedNotes) {
-      await redis.set(NOTE_KEY(item.id), JSON.stringify(item))
-      await redis.sadd(NOTES_KEY, item.id)
+      await pool.query(
+        'INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)',
+        [item.id, item.title, item.content, JSON.stringify(item.tags), item.createdAt, item.updatedAt]
+      )
       importedCount += 1
     }
     
     await appendLog('info', 'notes downloaded and imported', { 
-      source: WEBDAV_URL ? 'webdav' : 'redis', 
+      source: WEBDAV_URL ? 'webdav' : 'postgres', 
       importedCount,
       fileName: 'notes.md'
     })
@@ -375,38 +457,26 @@ function parseMarkdownToNotes(content) {
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
-    console.log('[debug] fetching logs from Redis key:', LOGS_KEY)
-    const raw = await redis.lrange(LOGS_KEY, 0, 200)
-    console.log('[debug] raw logs count:', raw ? raw.length : 0)
+    const result = await pool.query('SELECT * FROM logs ORDER BY created_at DESC LIMIT 200')
+    const logs = result.rows.map(row => ({
+      id: row.id,
+      level: row.level,
+      message: row.message,
+      meta: row.meta,
+      created_at: row.created_at?.toISOString() || new Date().toISOString(),
+    }))
     
-    if (!raw || raw.length === 0) {
-      console.log('[debug] no logs found, returning empty items array')
-      return res.json({ items: [] })
-    }
-    
-    const list = raw.map((x) => {
-      try {
-        return JSON.parse(x)
-      } catch (e) {
-        console.error('[debug] failed to parse log entry:', x, e)
-        return { id: Date.now(), level: 'error', message: 'Invalid log entry', created_at: new Date().toISOString() }
-      }
-    })
-    
-    console.log('[debug] returning logs count:', list.length)
     // 前端期望的格式：{ items: [...] }
-    res.json({ items: list })
+    res.json({ items: logs })
   } catch (e) {
     console.error('Failed to load logs:', e)
-    // 避免递归调用 appendLog
-    console.log(`[ERROR] failed to load logs: ${String(e)}`)
     res.status(500).json({ success: false, error: 'Failed to load logs' })
   }
 })
 
 app.delete('/api/logs', authMiddleware, async (req, res) => {
   try {
-    await redis.del(LOGS_KEY)
+    await pool.query('DELETE FROM logs')
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to clear logs' })
@@ -421,19 +491,26 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distDir, 'index.html'))
 })
 
-app.listen(PORT, async () => {
-  console.log(`[server] listening on http://0.0.0.0:${PORT}${VITE_BASE}`)
-  console.log(`[server] dist dir: ${distDir}`)
-  
-  // 测试 Redis 连接
+// Start server
+async function startServer() {
   try {
-    await redis.ping()
-    console.log('[server] Redis connection successful')
-    await appendLog('info', 'server started', { port: PORT, distDir, redis: 'connected' })
+    // Initialize database
+    await initDatabase()
+    
+    // Test PostgreSQL connection
+    await pool.query('SELECT 1')
+    console.log('[server] PostgreSQL connection successful')
+    
+    // Start listening
+    app.listen(PORT, async () => {
+      console.log(`[server] listening on http://0.0.0.0:${PORT}`)
+      console.log(`[server] dist dir: ${distDir}`)
+      await appendLog('info', 'server started', { port: PORT, distDir, postgres: 'connected' })
+    })
   } catch (e) {
-    console.error('[server] Redis connection failed:', e)
-    await appendLog('error', 'server started but Redis failed', { port: PORT, distDir, redis: 'failed', error: String(e) })
+    console.error('[server] Failed to start server:', e)
+    process.exit(1)
   }
-})
+}
 
-
+startServer()
