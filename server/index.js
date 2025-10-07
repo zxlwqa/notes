@@ -60,8 +60,14 @@ async function appendLog(level, message, meta) {
     meta: meta ? JSON.stringify(meta) : null,
     created_at: new Date().toISOString(),
   }
-  await redis.lpush(LOGS_KEY, JSON.stringify(entry))
-  await redis.ltrim(LOGS_KEY, 0, 999)
+  try {
+    await redis.lpush(LOGS_KEY, JSON.stringify(entry))
+    await redis.ltrim(LOGS_KEY, 0, 999)
+    console.log(`[${level.toUpperCase()}] ${message}`, meta ? JSON.stringify(meta) : '')
+  } catch (e) {
+    console.error('Failed to write log to Redis:', e)
+    console.log(`[${level.toUpperCase()}] ${message}`, meta ? JSON.stringify(meta) : '')
+  }
 }
 
 // Notes helpers
@@ -80,11 +86,13 @@ app.get('/api/password/status', (req, res) => {
   res.json({ passwordSet: Boolean(PASSWORD) })
 })
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { password } = req.body || {}
   if (!PASSWORD || password === PASSWORD) {
+    await appendLog('info', 'user login successful', { ip: req.ip })
     return res.json({ success: true })
   }
+  await appendLog('warn', 'user login failed', { ip: req.ip, reason: 'invalid password' })
   res.status(401).json({ success: false, error: 'Invalid password' })
 })
 
@@ -327,9 +335,17 @@ function parseMarkdownToNotes(content) {
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
     const raw = await redis.lrange(LOGS_KEY, 0, 200)
-    const list = raw.map((x) => JSON.parse(x))
+    const list = raw.map((x) => {
+      try {
+        return JSON.parse(x)
+      } catch (e) {
+        return { id: Date.now(), level: 'error', message: 'Invalid log entry', created_at: new Date().toISOString() }
+      }
+    })
     res.json(list)
   } catch (e) {
+    console.error('Failed to load logs:', e)
+    await appendLog('error', 'failed to load logs', { error: String(e) })
     res.status(500).json({ success: false, error: 'Failed to load logs' })
   }
 })
@@ -351,9 +367,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distDir, 'index.html'))
 })
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`[server] listening on http://0.0.0.0:${PORT}${VITE_BASE}`)
   console.log(`[server] dist dir: ${distDir}`)
+  await appendLog('info', 'server started', { port: PORT, distDir })
 })
 
 
