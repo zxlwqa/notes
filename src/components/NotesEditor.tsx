@@ -566,6 +566,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container .CodeMirror-scroll,
         .notes-editor-container .CodeMirror-wrap,
         .notes-editor-container .CodeMirror-wrap .CodeMirror-scroll { overflow-x: hidden !important; }
+        /* 移除底部状态栏与任何边框/阴影，避免底部横线 */
+        .notes-editor-container .editor-statusbar { display: none !important; border: none !important; box-shadow: none !important; background: transparent !important; height: 0 !important; padding: 0 !important; }
+        .notes-editor-container .CodeMirror { border: none !important; box-shadow: none !important; }
+        .notes-editor-container .editor-toolbar { border-bottom: none !important; }
         .notes-editor-container .CodeMirror-hscrollbar,
         .notes-editor-container .CodeMirror-hscrollbar > div { display: none !important; height: 0 !important; }
         .notes-editor-container .CodeMirror-sizer { min-width: 0 !important; }
