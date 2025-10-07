@@ -198,15 +198,17 @@ app.post('/api/import', authMiddleware, async (req, res) => {
 app.post('/api/backup', authMiddleware, async (req, res) => {
   try {
     const notes = await getAllNotes()
-    const fileName = 'notes-latest.json'
-    const content = JSON.stringify(notes, null, 2)
+    const fileName = 'notes.md'
+    const content = (notes || [])
+      .map((n) => (n && typeof n.content === 'string' ? n.content : ''))
+      .join('\n\n---\n\n')
 
     // 优先上传到 WebDAV（如果配置了）
     if (WEBDAV_URL) {
       const base = WEBDAV_URL.replace(/\/$/, '')
       const targetUrl = `${base}/${fileName}`
       await axios.put(targetUrl, content, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
         auth: WEBDAV_USER || WEBDAV_PASS ? { username: WEBDAV_USER, password: WEBDAV_PASS } : undefined,
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
@@ -215,8 +217,8 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
       return res.json({ success: true, fileName, totalNotes: notes.length })
     }
 
-    // 否则退回使用 Redis 存储最新备份
-    await redis.set('notes:backup:latest', content)
+    // 否则退回使用 Redis 存储最新备份（Markdown 文本）
+    await redis.set('notes:backup:latest:md', content)
     res.json({ success: true, fileName, totalNotes: notes.length })
   } catch (e) {
     await appendLog('error', 'backup failed', { error: String(e) })
@@ -226,40 +228,63 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
 
 app.get('/api/backup', authMiddleware, async (req, res) => {
   try {
-    let list = []
+    let markdown = ''
 
     if (WEBDAV_URL) {
       const base = WEBDAV_URL.replace(/\/$/, '')
-      const targetUrl = `${base}/notes-latest.json`
+      const targetUrl = `${base}/notes.md`
       const response = await axios.get(targetUrl, {
         responseType: 'text',
         auth: WEBDAV_USER || WEBDAV_PASS ? { username: WEBDAV_USER, password: WEBDAV_PASS } : undefined,
         validateStatus: (s) => s >= 200 && s < 300,
       })
-      try {
-        list = JSON.parse(response.data || '[]')
-      } catch (_) {
-        list = []
-      }
+      markdown = String(response.data || '')
     } else {
-      const raw = await redis.get('notes:backup:latest')
-      list = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : []
+      const raw = await redis.get('notes:backup:latest:md')
+      markdown = typeof raw === 'string' ? raw : (raw ? String(raw) : '')
     }
+    // 解析 Markdown 为笔记数组
+    const parsedNotes = parseMarkdownToNotes(markdown)
     let importedCount = 0
     let updatedCount = 0
-    for (const item of list) {
+    for (const item of parsedNotes) {
       const existing = await redis.get(NOTE_KEY(item.id))
       if (existing) updatedCount += 1
       else importedCount += 1
       await redis.set(NOTE_KEY(item.id), JSON.stringify(item))
       await redis.sadd(NOTES_KEY, item.id)
     }
-    res.json({ success: true, fileName: 'notes-latest.json', importedCount, updatedCount })
+    res.json({ success: true, fileName: 'notes.md', importedCount, updatedCount })
   } catch (e) {
     await appendLog('error', 'download failed', { error: String(e) })
     res.status(500).json({ success: false, error: 'Download failed' })
   }
 })
+
+function parseMarkdownToNotes(content) {
+  if (!content || typeof content !== 'string') return []
+  const parts = content
+    .split(/\n\n---\n\n/g)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+
+  const result = []
+  for (let i = 0; i < parts.length; i++) {
+    const text = parts[i]
+    const firstLine = text.split('\n')[0] || ''
+    const title = firstLine.length > 50 ? firstLine.slice(0, 50) + '...' : (firstLine || `导入笔记 ${i + 1}`)
+    const now = new Date().toISOString()
+    result.push({
+      id: `imported-${Date.now()}-${i}`,
+      title,
+      content: text,
+      tags: [],
+      createdAt: now,
+      updatedAt: now,
+    })
+  }
+  return result
+}
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
