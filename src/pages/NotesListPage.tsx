@@ -106,7 +106,6 @@ const NotesListPage: React.FC = () => {
         const data = JSON.parse(raw)
         if (data && (data.action === 'created' || data.action === 'updated') && typeof data.title === 'string' && typeof data.timestamp === 'number') {
           setFlash({ action: data.action, title: data.title, noteId: data.noteId, timestamp: data.timestamp })
-          localStorage.removeItem('note-flash')
         }
       }
     } catch {}
@@ -546,6 +545,8 @@ const NotesListPage: React.FC = () => {
                 if (flash.noteId) {
                   navigate(`/notes/${flash.noteId}`)
                 }
+                try { localStorage.removeItem('note-flash') } catch {}
+                setFlash(null)
               }}
               className={`absolute left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border transition-colors hover:opacity-90 ${flash.action === 'created' ? 'bg-green-50/80 text-green-700 border-green-200/80' : 'bg-blue-50/80 text-blue-700 border-blue-200/80'}`}
               style={{ backdropFilter: 'blur(2px)' }}
