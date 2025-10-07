@@ -55,6 +55,7 @@ const NotesListPage: React.FC = () => {
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [draggedTag, setDraggedTag] = useState<string | null>(null)
   const [tagOrder, setTagOrder] = useState<string[]>([])
+  const [flash, setFlash] = useState<{ action: 'created' | 'updated'; title: string; timestamp: number } | null>(null)
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
     hasInitialCacheRef.current = !!(sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache'))
@@ -98,6 +99,17 @@ const NotesListPage: React.FC = () => {
       } catch {}
     }
     loadTagOrder()
+    
+    try {
+      const raw = localStorage.getItem('note-flash')
+      if (raw) {
+        const data = JSON.parse(raw)
+        if (data && (data.action === 'created' || data.action === 'updated') && typeof data.title === 'string' && typeof data.timestamp === 'number') {
+          setFlash({ action: data.action, title: data.title, timestamp: data.timestamp })
+          localStorage.removeItem('note-flash')
+        }
+      }
+    } catch {}
     
     const settingsHandler = (event: SettingsChangedEvent) => {
       loadSettingsTitle()
@@ -477,6 +489,26 @@ const NotesListPage: React.FC = () => {
     } catch {}
   }
 
+  const formatRelativeTime = (time: number) => {
+    const diff = Date.now() - time
+    const sec = Math.floor(diff / 1000)
+    if (sec < 10) return '刚刚'
+    if (sec < 60) return `${sec}秒前`
+    const min = Math.floor(sec / 60)
+    if (min < 60) return `${min}分钟前`
+    const hr = Math.floor(min / 60)
+    if (hr < 24) return `${hr}小时前`
+    const day = Math.floor(hr / 24)
+    if (day < 7) return `${day}天前`
+    const d = new Date(time)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    return `${y}-${m}-${dd} ${hh}:${mm}`
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60" style={{ backgroundImage: "var(--app-bg-image, url('/image/background.png'))", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
@@ -512,6 +544,16 @@ const NotesListPage: React.FC = () => {
           
           {/* 右侧操作区域 */}
           <div className="flex items-center gap-4">
+            {/* 新建/修改 提示 */}
+            {flash && (
+              <span
+                className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${flash.action === 'created' ? 'bg-green-50/70 text-green-700 border-green-200/70' : 'bg-blue-50/70 text-blue-700 border-blue-200/70'}`}
+                style={{ backdropFilter: 'blur(2px)' }}
+              >
+                {flash.action === 'created' ? '新建了' : '修改了'}
+                {`“${flash.title || '无标题'}”笔记 · ${formatRelativeTime(flash.timestamp)}`}
+              </span>
+            )}
             {/* 按钮 */}
             <div className="flex space-x-2">
               <Button
