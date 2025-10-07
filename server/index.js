@@ -230,12 +230,13 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       })
-      await appendLog('info', 'backup uploaded to webdav', { url: targetUrl })
+      await appendLog('info', 'backup uploaded to webdav', { url: targetUrl, totalNotes: notes.length })
       return res.json({ success: true, fileName, totalNotes: notes.length })
     }
 
     // 否则退回使用 Redis 存储最新备份（Markdown 文本）
     await redis.set('notes:backup:latest:md', content)
+    await appendLog('info', 'backup saved to redis', { totalNotes: notes.length })
     res.json({ success: true, fileName, totalNotes: notes.length })
   } catch (e) {
     await appendLog('error', 'backup failed', { error: String(e) })
@@ -260,18 +261,33 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
       const raw = await redis.get('notes:backup:latest:md')
       markdown = typeof raw === 'string' ? raw : (raw ? String(raw) : '')
     }
-    // 解析 Markdown 为笔记数组
+    
+    // 完全清空 Redis 中的旧数据
+    const oldIds = await redis.smembers(NOTES_KEY)
+    if (oldIds && oldIds.length > 0) {
+      const oldKeys = oldIds.map(id => NOTE_KEY(id))
+      await redis.del(...oldKeys)
+      await redis.del(NOTES_KEY)
+      await appendLog('info', 'cleared old notes from redis', { count: oldIds.length })
+    }
+    
+    // 解析 Markdown 为笔记数组并完全覆盖 Redis
     const parsedNotes = parseMarkdownToNotes(markdown)
     let importedCount = 0
-    let updatedCount = 0
+    
     for (const item of parsedNotes) {
-      const existing = await redis.get(NOTE_KEY(item.id))
-      if (existing) updatedCount += 1
-      else importedCount += 1
       await redis.set(NOTE_KEY(item.id), JSON.stringify(item))
       await redis.sadd(NOTES_KEY, item.id)
+      importedCount += 1
     }
-    res.json({ success: true, fileName: 'notes.md', importedCount, updatedCount })
+    
+    await appendLog('info', 'notes downloaded and imported', { 
+      source: WEBDAV_URL ? 'webdav' : 'redis', 
+      importedCount,
+      fileName: 'notes.md'
+    })
+    
+    res.json({ success: true, fileName: 'notes.md', importedCount, updatedCount: 0 })
   } catch (e) {
     await appendLog('error', 'download failed', { error: String(e) })
     res.status(500).json({ success: false, error: 'Download failed' })
