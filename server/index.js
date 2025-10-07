@@ -263,11 +263,14 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
 
 function parseMarkdownToNotes(content) {
   if (!content || typeof content !== 'string') return []
+  console.log('[debug] parsing markdown content length:', content.length)
+  console.log('[debug] first 200 chars:', content.substring(0, 200))
   const parts = content
     .split(/\n\n---\n\n/g)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
 
+  console.log('[debug] parsed parts count:', parts.length)
   const result = []
   for (let i = 0; i < parts.length; i++) {
     const text = parts[i]
@@ -283,6 +286,7 @@ function parseMarkdownToNotes(content) {
       updatedAt: now,
     })
   }
+  console.log('[debug] final notes count:', result.length)
   return result
 }
 
