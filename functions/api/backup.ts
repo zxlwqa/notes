@@ -17,7 +17,7 @@ export const onRequestPost: PagesFunction<{
   let content = "";
   let notesCount = 0;
   try {
-    const { results } = await context.env.DB.prepare("SELECT content FROM notes").all();
+    const { results } = await context.env.DB.prepare("SELECT id, title, content, tags, created_at, updated_at FROM notes").all();
     notesCount = results.length;
     if (notesCount === 0) {
       await logToD1(context.env, 'warn', 'backup.upload.no_notes')
@@ -26,7 +26,15 @@ export const onRequestPost: PagesFunction<{
         { status: 404, headers: corsHeaders }
       );
     }
-    content = results.map((row: any) => row.content).join('\n\n---\n\n');
+    content = results.map((row: any) => {
+      const title = row.title || '无标题'
+      const tags = row.tags ? JSON.parse(row.tags).join(', ') : ''
+      const createdAt = row.created_at || ''
+      const updatedAt = row.updated_at || ''
+      const noteContent = row.content || ''
+      
+      return `# ${title}\n标签: ${tags}\n创建时间: ${createdAt}\n更新时间: ${updatedAt}\n\n${noteContent}`
+    }).join('\n\n---\n\n');
   } catch (e) {
     console.error("数据库读取失败:", e);
     await logToD1(context.env, 'error', 'backup.upload.db_error', { message: (e as any)?.message })
@@ -212,22 +220,50 @@ function parseMarkdownToNotes(content: string): Array<{
     const trimmedContent = noteContent.trim();
     if (trimmedContent) {
       const lines = trimmedContent.split('\n');
-      const firstLine = lines[0].trim();
-      const title = firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
+      
+      // 解析标题（第一行，去掉 # 前缀）
+      let title = lines[0] || `导入笔记 ${index + 1}`
+      if (title.startsWith('# ')) {
+        title = title.slice(2)
+      }
+      
+      // 解析元数据
+      let tags: string[] = []
+      let createdAt = new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '')
+        .replace(/\.\d{3}$/, '')
+      let updatedAt = new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('Z', '')
+        .replace(/\.\d{3}$/, '')
+      let contentStartIndex = 1
+      
+      for (let j = 1; j < lines.length; j++) {
+        const line = lines[j]
+        if (line.startsWith('标签: ')) {
+          const tagStr = line.slice(3).trim()
+          tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t) : []
+        } else if (line.startsWith('创建时间: ')) {
+          createdAt = line.slice(5).trim() || createdAt
+        } else if (line.startsWith('更新时间: ')) {
+          updatedAt = line.slice(5).trim() || updatedAt
+        } else if (line === '') {
+          contentStartIndex = j + 1
+          break
+        }
+      }
+      
+      // 提取笔记内容（跳过元数据行）
+      const noteContentText = lines.slice(contentStartIndex).join('\n')
       
       notes.push({
         id: `imported-${Date.now()}-${index}`,
-        title: title || `导入笔记 ${index + 1}`,
-        content: trimmedContent,
-        tags: [],
-        createdAt: new Date(Date.now() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .replace('Z', '')
-          .replace(/\.\d{3}$/, ''),
-        updatedAt: new Date(Date.now() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .replace('Z', '')
-          .replace(/\.\d{3}$/, '')
+        title,
+        content: noteContentText,
+        tags,
+        createdAt,
+        updatedAt
       });
     }
   });
