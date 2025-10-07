@@ -200,7 +200,16 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
     const notes = await getAllNotes()
     const fileName = 'notes.md'
     const content = (notes || [])
-      .map((n) => (n && typeof n.content === 'string' ? n.content : ''))
+      .map((n) => {
+        if (!n || typeof n !== 'object') return ''
+        const title = n.title || '无标题'
+        const tags = Array.isArray(n.tags) ? n.tags.join(', ') : ''
+        const createdAt = n.createdAt || ''
+        const updatedAt = n.updatedAt || ''
+        const noteContent = n.content || ''
+        
+        return `# ${title}\n标签: ${tags}\n创建时间: ${createdAt}\n更新时间: ${updatedAt}\n\n${noteContent}`
+      })
       .join('\n\n---\n\n')
 
     // 优先上传到 WebDAV（如果配置了）
@@ -263,30 +272,55 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
 
 function parseMarkdownToNotes(content) {
   if (!content || typeof content !== 'string') return []
-  console.log('[debug] parsing markdown content length:', content.length)
-  console.log('[debug] first 200 chars:', content.substring(0, 200))
   const parts = content
     .split(/\n\n---\n\n/g)
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
 
-  console.log('[debug] parsed parts count:', parts.length)
   const result = []
   for (let i = 0; i < parts.length; i++) {
     const text = parts[i]
-    const firstLine = text.split('\n')[0] || ''
-    const title = firstLine.length > 50 ? firstLine.slice(0, 50) + '...' : (firstLine || `导入笔记 ${i + 1}`)
-    const now = new Date().toISOString()
+    const lines = text.split('\n')
+    
+    // 解析标题（第一行，去掉 # 前缀）
+    let title = lines[0] || `导入笔记 ${i + 1}`
+    if (title.startsWith('# ')) {
+      title = title.slice(2)
+    }
+    
+    // 解析元数据
+    let tags = []
+    let createdAt = new Date().toISOString()
+    let updatedAt = new Date().toISOString()
+    let contentStartIndex = 1
+    
+    for (let j = 1; j < lines.length; j++) {
+      const line = lines[j]
+      if (line.startsWith('标签: ')) {
+        const tagStr = line.slice(3).trim()
+        tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t) : []
+      } else if (line.startsWith('创建时间: ')) {
+        createdAt = line.slice(5).trim() || createdAt
+      } else if (line.startsWith('更新时间: ')) {
+        updatedAt = line.slice(5).trim() || updatedAt
+      } else if (line === '') {
+        contentStartIndex = j + 1
+        break
+      }
+    }
+    
+    // 提取笔记内容（跳过元数据行）
+    const noteContent = lines.slice(contentStartIndex).join('\n')
+    
     result.push({
       id: `imported-${Date.now()}-${i}`,
       title,
-      content: text,
-      tags: [],
-      createdAt: now,
-      updatedAt: now,
+      content: noteContent,
+      tags,
+      createdAt,
+      updatedAt,
     })
   }
-  console.log('[debug] final notes count:', result.length)
   return result
 }
 
