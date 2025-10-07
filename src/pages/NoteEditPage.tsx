@@ -195,6 +195,7 @@ const NoteEditPage: React.FC = () => {
           localStorage.setItem('note-flash', JSON.stringify({
             action: 'created',
             title: noteData.title,
+            noteId: newNoteId,
             timestamp: Date.now()
           }))
         } catch {}
@@ -236,6 +237,7 @@ const NoteEditPage: React.FC = () => {
           localStorage.setItem('note-flash', JSON.stringify({
             action: 'updated',
             title: note.title || '无标题',
+            noteId: note.id,
             timestamp: Date.now()
           }))
         } catch {}
@@ -375,13 +377,6 @@ const NoteEditPage: React.FC = () => {
 
             </div>
             <div className="flex items-center space-x-4">
-              {/* 新建/编辑 状态提示徽标 */}
-              <span
-                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${isNewNote ? 'bg-green-50/70 text-green-700 border-green-200/70' : 'bg-blue-50/70 text-blue-700 border-blue-200/70'}`}
-                style={{ backdropFilter: 'blur(2px)' }}
-              >
-                {isNewNote ? '新建笔记' : '编辑笔记'}
-              </span>
               <Button
                 onClick={handleSave}
                 loading={saving}
