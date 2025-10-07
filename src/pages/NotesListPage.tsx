@@ -55,7 +55,7 @@ const NotesListPage: React.FC = () => {
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [draggedTag, setDraggedTag] = useState<string | null>(null)
   const [tagOrder, setTagOrder] = useState<string[]>([])
-  const [flash, setFlash] = useState<{ action: 'created' | 'updated'; title: string; timestamp: number } | null>(null)
+  const [flash, setFlash] = useState<{ action: 'created' | 'updated'; title: string; noteId?: string; timestamp: number } | null>(null)
   const hasInitialCacheRef = useRef<boolean>(false)
   try {
     hasInitialCacheRef.current = !!(sessionStorage.getItem('notes-cache') || localStorage.getItem('notes-cache'))
@@ -105,7 +105,7 @@ const NotesListPage: React.FC = () => {
       if (raw) {
         const data = JSON.parse(raw)
         if (data && (data.action === 'created' || data.action === 'updated') && typeof data.title === 'string' && typeof data.timestamp === 'number') {
-          setFlash({ action: data.action, title: data.title, timestamp: data.timestamp })
+          setFlash({ action: data.action, title: data.title, noteId: data.noteId, timestamp: data.timestamp })
           localStorage.removeItem('note-flash')
         }
       }
@@ -538,41 +538,38 @@ const NotesListPage: React.FC = () => {
 
       {/* Header */}
       <header className="bg-white/30 backdrop-blur-md shadow-sm border-b border-white/30">
-        <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 relative">
+          {/* 居中提示（同一行） */}
+          {flash && (
+            <button
+              onClick={() => {
+                if (flash.noteId) {
+                  navigate(`/notes/${flash.noteId}`)
+                }
+              }}
+              className={`absolute left-1/2 -translate-x-1/2 inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border transition-colors hover:opacity-90 ${flash.action === 'created' ? 'bg-green-50/80 text-green-700 border-green-200/80' : 'bg-blue-50/80 text-blue-700 border-blue-200/80'}`}
+              style={{ backdropFilter: 'blur(2px)' }}
+            >
+              {flash.action === 'created' ? '新建了' : '修改了'}
+              {`“${flash.title || '无标题'}”笔记 · ${formatRelativeTime(flash.timestamp)}`}
+            </button>
+          )}
+
           {/* 标题 */}
           <h1 className="font-semibold text-gray-900" style={{ fontSize: 'var(--global-font-size, 16px)' }}>{displayTitle || '笔记系统'}</h1>
-          
+
           {/* 右侧操作区域 */}
           <div className="flex items-center gap-4">
-            {/* 新建/修改 提示 */}
-            {flash && (
-              <span
-                className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${flash.action === 'created' ? 'bg-green-50/70 text-green-700 border-green-200/70' : 'bg-blue-50/70 text-blue-700 border-blue-200/70'}`}
-                style={{ backdropFilter: 'blur(2px)' }}
-              >
-                {flash.action === 'created' ? '新建了' : '修改了'}
-                {`“${flash.title || '无标题'}”笔记 · ${formatRelativeTime(flash.timestamp)}`}
-              </span>
-            )}
-            {/* 按钮 */}
             <div className="flex space-x-2">
-              <Button
-                onClick={handleCreateNote}
-                variant="success"
-              >
+              <Button onClick={handleCreateNote} variant="success">
                 <Plus className="h-4 w-4 mr-2" />
                 新建笔记
               </Button>
-              <Button
-                onClick={handleSettings}
-                variant="secondary"
-              >
+              <Button onClick={handleSettings} variant="secondary">
                 <Settings className="h-4 w-4 mr-2" />
                 设置
               </Button>
             </div>
-
-            {/* 搜索框 */}
             <div className="w-80 relative z-[9998]">
               <AdvancedSearch
                 notes={notes}
