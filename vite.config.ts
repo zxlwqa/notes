@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import postcssConfig from './postcss.js'
 
 export default defineConfig({
   plugins: [react()],
@@ -8,6 +9,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  css: {
+    postcss: postcssConfig,
   },
   build: {
     outDir: 'dist',
