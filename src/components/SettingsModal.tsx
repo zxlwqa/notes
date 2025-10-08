@@ -46,7 +46,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changing, setChanging] = useState(false)
-  const [passwordSource, setPasswordSource] = useState<'d1' | 'env' | 'unknown'>('unknown')
+  const [passwordSource, setPasswordSource] = useState<'d1' | 'env' | 'postgresql' | 'unknown'>('unknown')
   const [showPassword, setShowPassword] = useState(false)
 
   const modal = useModal()
@@ -76,15 +76,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const checkPasswordSource = async () => {
     try {
-      // 尝试调用密码状态接口（Cloudflare Pages 支持）
+      // 尝试调用密码状态接口
       const response = await authApi.getPasswordStatus()
+      
       if (response.data?.usingD1) {
+        // Cloudflare Pages with D1
         setPasswordSource('d1')
+      } else if (response.data?.usingPostgreSQL) {
+        // Vercel with PostgreSQL
+        setPasswordSource('postgresql')
+      } else if (response.data?.passwordSource) {
+        // 使用后端返回的密码来源
+        setPasswordSource(response.data.passwordSource)
       } else {
+        // 默认环境变量
         setPasswordSource('env')
       }
     } catch (error) {
-      // 如果接口不存在（如 Vercel），则默认为环境变量
+      // 如果接口不存在，则默认为环境变量
       console.log('密码状态接口不可用，使用默认设置')
       setPasswordSource('env')
     }
@@ -861,6 +870,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         )}
                         {passwordSource === 'd1' && (
                           <span>D1数据库</span>
+                        )}
+                        {passwordSource === 'postgresql' && (
+                          <span>PostgreSQL数据库</span>
                         )}
                         {passwordSource === 'unknown' && (
                           <span>环境变量</span>
