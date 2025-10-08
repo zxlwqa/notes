@@ -87,35 +87,6 @@ export default async function handler(req, res) {
       return res.json({ success: true, id })
     }
 
-    if (req.method === 'PUT') {
-      // PUT /api/notes/:id - 更新笔记
-      const { id } = req.query
-      const { title, content, tags } = req.body
-      
-      if (!id) {
-        return res.status(400).json({ success: false, error: 'Missing note ID' })
-      }
-      
-      await pool.query(
-        'UPDATE notes SET title = $1, content = $2, tags = $3, updated_at = $4 WHERE id = $5',
-        [title, content, JSON.stringify(tags || []), new Date().toISOString(), id]
-      )
-      
-      return res.json({ success: true })
-    }
-
-    if (req.method === 'DELETE') {
-      // DELETE /api/notes/:id - 删除笔记
-      const { id } = req.query
-      
-      if (!id) {
-        return res.status(400).json({ success: false, error: 'Missing note ID' })
-      }
-      
-      await pool.query('DELETE FROM notes WHERE id = $1', [id])
-      return res.json({ success: true })
-    }
-
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   } catch (e) {
     console.error('Notes API error:', e)
