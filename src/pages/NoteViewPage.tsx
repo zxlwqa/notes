@@ -130,7 +130,6 @@ const NoteViewPage: React.FC = () => {
       setLoading(true)
       setError('')
       const response = await notesApi.getNote(id)
-      console.log('API Response:', response.data)
       setNote(response.data)
       try {
         sessionStorage.setItem('note-cache:' + window.location.pathname, JSON.stringify(response.data))
