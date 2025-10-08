@@ -41,6 +41,15 @@
 - **部署平台**: Cloudflare Pages
 - **数据库**:  D1 SQL数据库
 
+## 部署方式
+
+本项目支持三种部署方式：
+
+1. Cloudflare Pages + D1
+2. Docker + PostgreSQL
+3. Vercel + PostgreSQL
+
+
 ## Cloudflare Pages部署
 - 框架预设：React (Vite)
 - 添加环境变量
@@ -48,6 +57,7 @@
 ## 环境变量
 
 - `PASSWORD`: 登录密码
+- `DATABASE_URL`：PostgreSQL 数据库连接字符串
 - `WEBDAV_URL`: WebDAV 服务器地址
 - `WEBDAV_USER`: WebDAV 用户名
 - `WEBDAV_PASS`: WebDAV 密码
