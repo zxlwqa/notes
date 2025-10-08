@@ -76,6 +76,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const checkPasswordSource = async () => {
     try {
+      // 尝试调用密码状态接口（Cloudflare Pages 支持）
       const response = await authApi.getPasswordStatus()
       if (response.data?.usingD1) {
         setPasswordSource('d1')
@@ -83,8 +84,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         setPasswordSource('env')
       }
     } catch (error) {
-      console.error('检查密码来源失败:', error)
-      setPasswordSource('unknown')
+      // 如果接口不存在（如 Vercel），则默认为环境变量
+      console.log('密码状态接口不可用，使用默认设置')
+      setPasswordSource('env')
     }
   }
 
