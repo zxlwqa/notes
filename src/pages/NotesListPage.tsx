@@ -204,7 +204,6 @@ const NotesListPage: React.FC = () => {
       setError('')
       
       const response = await notesApi.getNotes()
-      console.log('Notes API Response:', response.data)
       
       if (Array.isArray(response.data)) {
         const ordered = applyOrder(response.data)
@@ -254,7 +253,6 @@ const NotesListPage: React.FC = () => {
   const loadNotesSilently = async () => {
     try {
       const response = await notesApi.getNotes()
-      console.log('Notes API Response (silent):', response.data)
       
       let newNotes: Note[] = []
       
