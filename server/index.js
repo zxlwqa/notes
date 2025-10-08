@@ -82,6 +82,16 @@ app.use(cors())
 app.use(compression())
 app.use(express.json({ limit: '2mb' }))
 
+// 清理 IP 地址格式
+function cleanIP(ip) {
+  if (!ip) return 'unknown'
+  // 移除 IPv6 映射前缀
+  if (ip.startsWith('::ffff:')) {
+    return ip.substring(7)
+  }
+  return ip
+}
+
 // Logs helper
 async function appendLog(level, message, meta) {
   const entry = {
@@ -152,10 +162,10 @@ app.get('/api/test-logs', authMiddleware, async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { password } = req.body || {}
   if (!PASSWORD || password === PASSWORD) {
-    await appendLog('info', '用户登录成功', `IP: ${req.ip}`)
+    await appendLog('info', '用户登录成功', `IP: ${cleanIP(req.ip)}`)
     return res.json({ success: true })
   }
-  await appendLog('warn', '用户登录失败', `IP: ${req.ip}, 原因: 密码错误`)
+  await appendLog('warn', '用户登录失败', `IP: ${cleanIP(req.ip)}, 原因: 密码错误`)
   res.status(401).json({ success: false, error: 'Invalid password' })
 })
 
