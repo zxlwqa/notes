@@ -1,13 +1,16 @@
 {
-  "functions": {
-    "api/login.js": {
-      "runtime": "nodejs18.x"
+  "rewrites": [
+    {
+      "source": "/api/login",
+      "destination": "/api/login"
     },
-    "api/debug.js": {
-      "runtime": "nodejs18.x"
+    {
+      "source": "/api/debug/env",
+      "destination": "/api/debug"
     },
-    "api/password.js": {
-      "runtime": "nodejs18.x"
+    {
+      "source": "/api/password/status",
+      "destination": "/api/password"
     }
-  }
+  ]
 }
