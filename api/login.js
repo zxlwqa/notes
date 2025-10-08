@@ -52,14 +52,6 @@ app.post('/api/login', async (req, res) => {
     
     const { password } = req.body || {}
     
-    // 调试日志
-    console.log('[DEBUG] Login attempt:', {
-      hasPassword: !!PASSWORD,
-      passwordLength: PASSWORD ? PASSWORD.length : 0,
-      inputPasswordLength: password ? password.length : 0,
-      passwordsMatch: password === PASSWORD
-    })
-    
     if (!PASSWORD || password === PASSWORD) {
       await appendLog('info', '用户登录成功', `IP: ${req.ip}`)
       return res.json({ success: true })
