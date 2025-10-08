@@ -64,8 +64,8 @@ async function initDatabase() {
   }
 }
 
-// Initialize database on startup
-initDatabase()
+// Initialize database on startup (moved to function level for Vercel)
+// initDatabase()
 
 // Logging function
 async function appendLog(level, message, meta = null) {
@@ -130,22 +130,30 @@ app.get('/api/debug/env', (req, res) => {
 })
 
 app.post('/api/login', async (req, res) => {
-  const { password } = req.body || {}
-  
-  // 调试日志
-  console.log('[DEBUG] Login attempt:', {
-    hasPassword: !!PASSWORD,
-    passwordLength: PASSWORD ? PASSWORD.length : 0,
-    inputPasswordLength: password ? password.length : 0,
-    passwordsMatch: password === PASSWORD
-  })
-  
-  if (!PASSWORD || password === PASSWORD) {
-    await appendLog('info', '用户登录成功', `IP: ${req.ip}`)
-    return res.json({ success: true })
+  try {
+    // 确保数据库已初始化
+    await initDatabase()
+    
+    const { password } = req.body || {}
+    
+    // 调试日志
+    console.log('[DEBUG] Login attempt:', {
+      hasPassword: !!PASSWORD,
+      passwordLength: PASSWORD ? PASSWORD.length : 0,
+      inputPasswordLength: password ? password.length : 0,
+      passwordsMatch: password === PASSWORD
+    })
+    
+    if (!PASSWORD || password === PASSWORD) {
+      await appendLog('info', '用户登录成功', `IP: ${req.ip}`)
+      return res.json({ success: true })
+    }
+    await appendLog('warn', '用户登录失败', `IP: ${req.ip}, 原因: 密码错误`)
+    res.status(401).json({ success: false, error: 'Invalid password' })
+  } catch (e) {
+    console.error('[ERROR] Login failed:', e)
+    res.status(500).json({ success: false, error: 'Internal server error' })
   }
-  await appendLog('warn', '用户登录失败', `IP: ${req.ip}, 原因: 密码错误`)
-  res.status(401).json({ success: false, error: 'Invalid password' })
 })
 
 app.get('/api/notes', authMiddleware, async (req, res) => {
