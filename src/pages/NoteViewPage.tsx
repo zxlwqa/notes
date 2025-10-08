@@ -98,7 +98,6 @@ const NoteViewPage: React.FC = () => {
   }, [highlightPosition, note?.content, highlightAndScrollToText])
 
   useEffect(() => {
-    console.log('NoteViewPage mounted with id:', id)
     if (id && !note) {
       loadNote()
     } else {
