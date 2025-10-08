@@ -46,9 +46,19 @@ export const onRequestGet: PagesFunction<{
       });
     }
 
+    // 检查是否有环境变量密码
+    const hasEnvPassword = Boolean(env.PASSWORD);
+    
+    // 检查数据库中是否有密码设置
+    const hasDbPassword = useD1Password && Boolean(effectivePassword);
+
     return Response.json({
-      usingD1: useD1Password,
-      source: useD1Password ? 'd1' : 'env'
+      success: true,
+      usingD1: true, // Cloudflare Pages 使用 D1
+      usingPostgreSQL: false, // Cloudflare Pages 不使用 PostgreSQL
+      hasEnvPassword,
+      hasDbPassword,
+      passwordSource: useD1Password ? 'd1' : 'env'
     }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
