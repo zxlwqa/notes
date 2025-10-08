@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/login.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/debug.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/password.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
