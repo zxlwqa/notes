@@ -1,0 +1,25 @@
+# 忽略不需要部署的文件
+node_modules
+.git
+.github
+*.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 忽略 Docker 相关文件
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 忽略 Cloudflare Pages 相关文件
+functions
+wrangler.toml
+
+# 忽略开发文件
+src
+public
+*.md
+!README.md
