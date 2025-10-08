@@ -16,7 +16,7 @@ const LoginPage = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    document.title = '笔记系统 - 登录'
+    document.title = '笔记系统'
     
     const loadSettingsTitle = () => {
       try {
