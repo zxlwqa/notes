@@ -128,7 +128,7 @@ app.get('/api/password/status', (req, res) => {
 app.get('/api/test-logs', authMiddleware, async (req, res) => {
   try {
     // 写入一条测试日志
-    await appendLog('info', 'test log entry', { test: true, timestamp: Date.now() })
+    await appendLog('info', '测试日志条目', `时间戳: ${Date.now()}`)
     
     // 读取日志
     const result = await pool.query('SELECT * FROM logs ORDER BY created_at DESC LIMIT 5')
@@ -152,10 +152,10 @@ app.get('/api/test-logs', authMiddleware, async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { password } = req.body || {}
   if (!PASSWORD || password === PASSWORD) {
-    await appendLog('info', 'user login successful', { ip: req.ip })
+    await appendLog('info', '用户登录成功', `IP: ${req.ip}`)
     return res.json({ success: true })
   }
-  await appendLog('warn', 'user login failed', { ip: req.ip, reason: 'invalid password' })
+  await appendLog('warn', '用户登录失败', `IP: ${req.ip}, 原因: 密码错误`)
   res.status(401).json({ success: false, error: 'Invalid password' })
 })
 
@@ -302,10 +302,10 @@ app.post('/api/import', authMiddleware, async (req, res) => {
       imported += 1
     }
     
-    await appendLog('info', 'notes imported', { count: imported })
+    await appendLog('info', '笔记已导入', `导入数量: ${imported} 条笔记`)
     res.json({ success: true, imported })
   } catch (e) {
-    await appendLog('error', 'import failed', { error: String(e) })
+    await appendLog('error', '导入失败', `错误: ${String(e)}`)
     res.status(500).json({ success: false, error: 'Import failed' })
   }
 })
@@ -337,7 +337,7 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       })
-      await appendLog('info', 'backup uploaded to webdav', { url: targetUrl, totalNotes: notes.length })
+      await appendLog('info', '笔记已上传到云端', `上传数量: ${notes.length} 条笔记`)
       return res.json({ success: true, fileName, totalNotes: notes.length })
     }
 
@@ -346,10 +346,10 @@ app.post('/api/backup', authMiddleware, async (req, res) => {
       'INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at',
       ['backup_latest', content, new Date().toISOString()]
     )
-    await appendLog('info', 'backup saved to postgres', { totalNotes: notes.length })
+    await appendLog('info', '笔记已保存到本地', `保存数量: ${notes.length} 条笔记`)
     res.json({ success: true, fileName, totalNotes: notes.length })
   } catch (e) {
-    await appendLog('error', 'backup failed', { error: String(e) })
+    await appendLog('error', '备份失败', `错误: ${String(e)}`)
     res.status(500).json({ success: false, error: 'Backup failed' })
   }
 })
@@ -388,15 +388,11 @@ app.get('/api/backup', authMiddleware, async (req, res) => {
       importedCount += 1
     }
     
-    await appendLog('info', 'notes downloaded and imported', { 
-      source: WEBDAV_URL ? 'webdav' : 'postgres', 
-      importedCount,
-      fileName: 'notes.md'
-    })
+    await appendLog('info', '笔记已从云端下载并导入', `导入数量: ${importedCount} 条笔记`)
     
     res.json({ success: true, fileName: 'notes.md', importedCount, updatedCount: 0 })
   } catch (e) {
-    await appendLog('error', 'download failed', { error: String(e) })
+    await appendLog('error', '下载失败', `错误: ${String(e)}`)
     res.status(500).json({ success: false, error: 'Download failed' })
   }
 })
@@ -505,7 +501,7 @@ async function startServer() {
     app.listen(PORT, async () => {
       console.log(`[server] listening on http://0.0.0.0:${PORT}`)
       console.log(`[server] dist dir: ${distDir}`)
-      await appendLog('info', 'server started', { port: PORT, distDir, postgres: 'connected' })
+      await appendLog('info', '服务器已启动', `端口: ${PORT}, 数据库: 已连接`)
     })
   } catch (e) {
     console.error('[server] Failed to start server:', e)
