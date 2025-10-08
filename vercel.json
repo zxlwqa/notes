@@ -5,12 +5,24 @@
       "destination": "/api/login"
     },
     {
-      "source": "/api/debug/env",
-      "destination": "/api/debug"
+      "source": "/api/notes",
+      "destination": "/api/notes"
     },
     {
-      "source": "/api/password/status",
-      "destination": "/api/password"
+      "source": "/api/notes/(.*)",
+      "destination": "/api/notes"
+    },
+    {
+      "source": "/api/import",
+      "destination": "/api/import"
+    },
+    {
+      "source": "/api/backup",
+      "destination": "/api/backup"
+    },
+    {
+      "source": "/api/logs",
+      "destination": "/api/logs"
     }
   ]
 }
