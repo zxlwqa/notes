@@ -32,6 +32,10 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
             detail = `数量：${parsed.count}`
           } else if (typeof parsed.id === 'string') {
             detail = parsed.id
+          } else if (typeof parsed.location === 'string' && parsed.location) {
+            // 格式化地理位置信息显示
+            const ip = parsed.ip || ''
+            detail = `位置：${parsed.location}${ip ? ` · IP：${ip}` : ''}`
           }
         } else if (typeof parsed === 'string' && parsed) {
           detail = parsed
