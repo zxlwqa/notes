@@ -1,5 +1,3 @@
-import express from 'express'
-import cors from 'cors'
 import { Pool } from 'pg'
 
 // PostgreSQL config
@@ -53,20 +51,31 @@ async function appendLog(level, message, meta = null) {
 }
 
 // Auth middleware
-function authMiddleware(req, res, next) {
-  if (!PASSWORD) return next()
+function checkAuth(req) {
+  if (!PASSWORD) return true
   const auth = req.headers.authorization
-  if (!auth || auth !== `Bearer ${PASSWORD}`) {
-    return res.status(401).json({ success: false, error: 'Unauthorized' })
-  }
-  next()
+  return auth && auth === `Bearer ${PASSWORD}`
 }
 
-const app = express()
-app.use(cors())
-app.use(express.json({ limit: '10mb' }))
+export default async function handler(req, res) {
+  // 设置 CORS 头
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
 
-app.post('/api/import', authMiddleware, async (req, res) => {
+  // 检查认证
+  if (!checkAuth(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' })
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
   try {
     await initDatabase()
     const { notes } = req.body
@@ -86,11 +95,9 @@ app.post('/api/import', authMiddleware, async (req, res) => {
     }
     
     await appendLog('info', '笔记已导入', `导入数量: ${imported} 条笔记`)
-    res.json({ success: true, imported })
+    return res.json({ success: true, imported })
   } catch (e) {
     await appendLog('error', '导入失败', `错误: ${String(e)}`)
-    res.status(500).json({ success: false, error: 'Import failed' })
+    return res.status(500).json({ success: false, error: 'Import failed' })
   }
-})
-
-export default app
+}
