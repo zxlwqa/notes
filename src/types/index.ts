@@ -141,8 +141,11 @@ export interface ChangePasswordRequest {
 }
 
 export interface PasswordStatusResponse {
-  source: 'd1' | 'env'
+  source: 'd1' | 'env' | 'postgresql'
   hasPassword: boolean
+  usingD1?: boolean
+  usingPostgreSQL?: boolean
+  passwordSource?: 'd1' | 'env' | 'postgresql'
 }
 
 export interface ImportRequest {
