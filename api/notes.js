@@ -1,5 +1,3 @@
-import express from 'express'
-import cors from 'cors'
 import { Pool } from 'pg'
 
 // PostgreSQL config
@@ -31,13 +29,10 @@ async function initDatabase() {
 }
 
 // Auth middleware
-function authMiddleware(req, res, next) {
-  if (!PASSWORD) return next()
+function checkAuth(req) {
+  if (!PASSWORD) return true
   const auth = req.headers.authorization
-  if (!auth || auth !== `Bearer ${PASSWORD}`) {
-    return res.status(401).json({ success: false, error: 'Unauthorized' })
-  }
-  next()
+  return auth && auth === `Bearer ${PASSWORD}`
 }
 
 // Get all notes
@@ -53,69 +48,77 @@ async function getAllNotes() {
   }))
 }
 
-const app = express()
-app.use(cors())
-app.use(express.json({ limit: '2mb' }))
-
-app.get('/api/notes', authMiddleware, async (req, res) => {
-  try {
-    await initDatabase()
-    const notes = await getAllNotes()
-    res.json(notes)
-  } catch (e) {
-    console.error('Failed to load notes:', e)
-    res.status(500).json({ success: false, error: 'Failed to load notes' })
+export default async function handler(req, res) {
+  // 设置 CORS 头
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
   }
-})
 
-app.post('/api/notes', authMiddleware, async (req, res) => {
+  // 检查认证
+  if (!checkAuth(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' })
+  }
+
   try {
     await initDatabase()
-    const { id, title, content, tags } = req.body
-    if (!id || !title || !content) {
-      return res.status(400).json({ success: false, error: 'Missing required fields' })
+
+    if (req.method === 'GET') {
+      // GET /api/notes - 获取所有笔记
+      const notes = await getAllNotes()
+      return res.json(notes)
     }
-    
-    await pool.query(
-      'INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.content, tags = EXCLUDED.tags, updated_at = EXCLUDED.updated_at',
-      [id, title, content, JSON.stringify(tags || []), new Date().toISOString(), new Date().toISOString()]
-    )
-    
-    res.json({ success: true, id })
-  } catch (e) {
-    console.error('Failed to save note:', e)
-    res.status(500).json({ success: false, error: 'Failed to save note' })
-  }
-})
 
-app.put('/api/notes/:id', authMiddleware, async (req, res) => {
-  try {
-    await initDatabase()
-    const { id } = req.params
-    const { title, content, tags } = req.body
-    
-    await pool.query(
-      'UPDATE notes SET title = $1, content = $2, tags = $3, updated_at = $4 WHERE id = $5',
-      [title, content, JSON.stringify(tags || []), new Date().toISOString(), id]
-    )
-    
-    res.json({ success: true })
-  } catch (e) {
-    console.error('Failed to update note:', e)
-    res.status(500).json({ success: false, error: 'Failed to update note' })
-  }
-})
+    if (req.method === 'POST') {
+      // POST /api/notes - 创建或更新笔记
+      const { id, title, content, tags } = req.body
+      if (!id || !title || !content) {
+        return res.status(400).json({ success: false, error: 'Missing required fields' })
+      }
+      
+      await pool.query(
+        'INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.content, tags = EXCLUDED.tags, updated_at = EXCLUDED.updated_at',
+        [id, title, content, JSON.stringify(tags || []), new Date().toISOString(), new Date().toISOString()]
+      )
+      
+      return res.json({ success: true, id })
+    }
 
-app.delete('/api/notes/:id', authMiddleware, async (req, res) => {
-  try {
-    await initDatabase()
-    const { id } = req.params
-    await pool.query('DELETE FROM notes WHERE id = $1', [id])
-    res.json({ success: true })
-  } catch (e) {
-    console.error('Failed to delete note:', e)
-    res.status(500).json({ success: false, error: 'Failed to delete note' })
-  }
-})
+    if (req.method === 'PUT') {
+      // PUT /api/notes/:id - 更新笔记
+      const { id } = req.query
+      const { title, content, tags } = req.body
+      
+      if (!id) {
+        return res.status(400).json({ success: false, error: 'Missing note ID' })
+      }
+      
+      await pool.query(
+        'UPDATE notes SET title = $1, content = $2, tags = $3, updated_at = $4 WHERE id = $5',
+        [title, content, JSON.stringify(tags || []), new Date().toISOString(), id]
+      )
+      
+      return res.json({ success: true })
+    }
 
-export default app
+    if (req.method === 'DELETE') {
+      // DELETE /api/notes/:id - 删除笔记
+      const { id } = req.query
+      
+      if (!id) {
+        return res.status(400).json({ success: false, error: 'Missing note ID' })
+      }
+      
+      await pool.query('DELETE FROM notes WHERE id = $1', [id])
+      return res.json({ success: true })
+    }
+
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  } catch (e) {
+    console.error('Notes API error:', e)
+    return res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
