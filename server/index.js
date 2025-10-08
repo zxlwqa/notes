@@ -130,8 +130,28 @@ async function getAllNotes() {
 }
 
 // API routes
-app.get('/api/password/status', (req, res) => {
-  res.json({ passwordSet: Boolean(PASSWORD) })
+app.get('/api/password/status', authMiddleware, async (req, res) => {
+  try {
+    // 检查是否有环境变量密码
+    const hasEnvPassword = Boolean(PASSWORD)
+    
+    // 检查数据库中是否有密码设置
+    const result = await pool.query('SELECT value FROM settings WHERE key = $1', ['password'])
+    const hasDbPassword = result.rows.length > 0 && result.rows[0].value
+
+    // 返回密码状态
+    res.json({
+      success: true,
+      usingD1: false, // Docker 不使用 D1
+      usingPostgreSQL: true, // Docker 使用 PostgreSQL
+      hasEnvPassword,
+      hasDbPassword,
+      passwordSource: hasEnvPassword ? 'env' : (hasDbPassword ? 'postgresql' : 'none')
+    })
+  } catch (e) {
+    console.error('Password status error:', e)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
 })
 
 // 测试 PostgreSQL 连接和日志功能
