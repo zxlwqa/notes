@@ -52,7 +52,19 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
       const cf: any = (request as any)?.cf || {}
       const country = cf.country || undefined
       const city = cf.city || undefined
-      await logToD1(env, 'info', 'login.success', { ua: request.headers.get('user-agent'), ip, country, city })
+      
+      // 格式化地理位置信息
+      let location = ''
+      if (country && city) {
+        // 如果国家和城市都存在，只显示国家
+        location = country
+      } else if (country) {
+        location = country
+      } else if (city) {
+        location = city
+      }
+      
+      await logToD1(env, 'info', 'login.success', { ua: request.headers.get('user-agent'), ip, location })
       return Response.json(
         { success: true },
         { 
