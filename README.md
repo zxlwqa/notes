@@ -1,6 +1,6 @@
 # 个人笔记系统
 
-一个基于React + TypeScript的现代化风格笔记应用，支持Markdown编辑、云同步，支持Cloudflare Pages EdgeOne Vercel Docker多平台部署
+一个基于React + TypeScript的现代化风格笔记应用，支持Markdown编辑、笔记云同步，支持多平台部署
 
 <p align="center">
   <img src="./logo.png" alt="notes" />
