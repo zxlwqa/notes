@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api": {
+      "entrypoint": "edgeone/_worker.ts"
+    }
+  }
+}
+
+
