@@ -13,49 +13,8 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
   }
 
   try {
-    // 兼容空体/无效 JSON/表单编码，避免解析异常导致 500
-    let password: string | undefined
-    try {
-      const contentType = request.headers.get('content-type') || ''
-      if (contentType.includes('application/json')) {
-        const raw = await request.text()
-        if (raw && raw.trim().length > 0) {
-          try {
-            const parsed: any = JSON.parse(raw)
-            if (parsed && typeof parsed.password === 'string') {
-              password = parsed.password
-            }
-          } catch {
-            // 忽略 JSON 解析错误，后续走其他解析分支/校验
-          }
-        }
-      } else if (contentType.includes('application/x-www-form-urlencoded')) {
-        const raw = await request.text()
-        const params = new URLSearchParams(raw)
-        const p = params.get('password')
-        password = p ? String(p) : undefined
-      } else if (contentType.includes('multipart/form-data')) {
-        const form = await request.formData()
-        const p = form.get('password')
-        password = typeof p === 'string' ? p : (p ? String(p) : undefined)
-      } else {
-        // 无 content-type 或其他情况，尝试按 JSON 再退化为空
-        const raw = await request.text().catch(() => '')
-        if (raw) {
-          try {
-            const parsed: any = JSON.parse(raw)
-            if (parsed && typeof parsed.password === 'string') {
-              password = parsed.password
-            }
-          } catch {
-            // 不可解析则保持 undefined
-          }
-        }
-      }
-    } catch (e) {
-      // 读取/解析请求体出现异常时，不抛出 500，按缺少密码处理
-    }
-
+    const { password } = await request.json();
+    
     if (!password || typeof password !== 'string') {
       await logToD1(env, 'warn', 'login.missing_password')
       return new Response(JSON.stringify({ error: "Password is required" }), { 
