@@ -1,4 +1,5 @@
 import { logToD1 } from '../_utils/log'
+import { getDb } from '../_utils/db'
 
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
   if (request.method === 'OPTIONS') {
@@ -25,19 +26,16 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
         }
       });
     }
-    if (!env.DB) {
-      console.error('D1 not bound, fallback to env.PASSWORD');
-    }
+    // 支持在 EdgeOne 使用 PostgreSQL
     let storedPassword: string | null = null;
     let useD1Password = false;
     try {
-      if (env.DB) {
-        await env.DB.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`);
-        const row: any = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'password'`).first();
-        storedPassword = row?.value || null;
-        const flagRow: any = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'password_set'`).first();
-        useD1Password = (flagRow?.value === 'true');
-      }
+      const db = await getDb(env)
+      await db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`);
+      const row: any = await db.prepare(`SELECT value FROM settings WHERE key = 'password'`).bind().first();
+      storedPassword = row?.value || null;
+      const flagRow: any = await db.prepare(`SELECT value FROM settings WHERE key = 'password_set'`).bind().first();
+      useD1Password = (flagRow?.value === 'true');
     } catch (e) {
       console.error('Read password from D1 failed:', e);
     }
