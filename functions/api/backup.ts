@@ -1,4 +1,5 @@
 import { logToD1 } from '../_utils/log'
+import { getDb } from '../_utils/db'
 export const onRequestPost: PagesFunction<{
   DB: D1Database;
   WEBDAV_URL: string;
@@ -17,7 +18,8 @@ export const onRequestPost: PagesFunction<{
   let content = "";
   let notesCount = 0;
   try {
-    const { results } = await context.env.DB.prepare("SELECT id, title, content, tags, created_at, updated_at FROM notes").all();
+    const db = await getDb(context.env)
+    const { results } = await db.prepare("SELECT id, title, content, tags, created_at, updated_at FROM notes").all();
     notesCount = results.length;
     if (notesCount === 0) {
       await logToD1(context.env, 'warn', 'backup.upload.no_notes')
@@ -144,12 +146,14 @@ export const onRequestGet: PagesFunction<{
         );
       }
 
-      await context.env.DB.prepare("DELETE FROM notes").run();
+      const db = await getDb(context.env)
+      await db.prepare("DELETE FROM notes").run();
       
       let importedCount = 0;
       for (const note of notes) {
         try {
-          await context.env.DB.prepare(`
+          const db = await getDb(context.env)
+          await db.prepare(`
             INSERT INTO notes (id, title, content, tags, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?)
           `).bind(
