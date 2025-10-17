@@ -509,7 +509,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       </div>
 
       {/* 主体：左侧垂直工具栏 + 右侧编辑器 */}
-      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '420px', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '420px' }}>
         {/* 左侧工具栏 */}
         <div style={{
           width: '56px',
@@ -520,8 +520,6 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           flexDirection: 'column',
           alignItems: 'stretch',
           gap: '6px',
-          position: 'static',
-          zIndex: 10,
           borderRadius: '8px',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
