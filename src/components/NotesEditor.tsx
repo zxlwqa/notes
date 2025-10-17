@@ -509,7 +509,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       </div>
 
       {/* 主体：左侧垂直工具栏 + 右侧编辑器 */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', minHeight: '420px', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '420px', position: 'relative' }}>
         {/* 左侧工具栏 */}
         <div style={{
           width: '56px',
@@ -520,15 +520,13 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           flexDirection: 'column',
           alignItems: 'stretch',
           gap: '6px',
-          position: 'sticky',
-          top: '0',
+          position: 'relative',
           zIndex: 10,
           borderRadius: '8px',
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           minHeight: 'fit-content',
-          height: 'fit-content',
-          alignSelf: 'flex-start'
+          height: 'fit-content'
         }}>
           <button title="任务列表" onClick={() => insertText('- [ ] ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}>☐</button>
           <button title="链接" onClick={() => insertText('[', '](url)')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}>🔗</button>
