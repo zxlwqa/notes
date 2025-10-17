@@ -511,7 +511,7 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
       {/* 主体：左侧垂直工具栏 + 右侧编辑器 */}
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '420px' }}>
         {/* 左侧工具栏 */}
-        <div style={{
+        <div className="toolbar-container" style={{
           width: '56px',
           background: 'rgba(255,255,255,0.08)',
           borderRight: '1px solid rgba(255,255,255,0.2)',
@@ -524,7 +524,14 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
           backdropFilter: 'blur(8px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           minHeight: '100%',
-          height: 'auto'
+          height: 'auto',
+          position: 'static',
+          transform: 'none',
+          top: 'auto',
+          left: 'auto',
+          right: 'auto',
+          bottom: 'auto',
+          zIndex: 'auto'
         }}>
           <button title="任务列表" onClick={() => insertText('- [ ] ', '')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}>☐</button>
           <button title="链接" onClick={() => insertText('[', '](url)')} style={{ background: 'transparent', color: '#fff', border: '1px solid transparent', borderRadius: '6px', padding: '8px 0', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}>🔗</button>
@@ -558,6 +565,17 @@ const NotesEditor: React.FC<NotesEditorProps> = ({
         .notes-editor-container { 
           overflow-x: hidden !important; 
           overflow-y: visible !important;
+        }
+        
+        /* 确保工具栏跟随页面滚动 */
+        .notes-editor-container .toolbar-container {
+          position: static !important;
+          transform: none !important;
+          top: auto !important;
+          left: auto !important;
+          right: auto !important;
+          bottom: auto !important;
+          z-index: auto !important;
         }
         .notes-editor-container .CodeMirror,
         .notes-editor-container .CodeMirror-scroll,
