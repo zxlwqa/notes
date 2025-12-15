@@ -1,0 +1,73 @@
+import { logToD1 } from '../_utils/log'
+import type { PagesFunction } from '../types'
+
+export const onRequestPost: PagesFunction = async ({ request, env }) => {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
+  }
+
+  try {
+    const { currentPassword, newPassword } = await request.json()
+    if (!currentPassword || !newPassword) {
+      await logToD1(env, 'warn', 'password.change.missing_fields')
+      return new Response(JSON.stringify({ error: 'Missing password fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
+    if (!env.NOTESD) {
+      return new Response(JSON.stringify({ error: 'Database not bound' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
+    await env.NOTESD.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)`)
+
+    let storedPassword: string | null = null
+    let useD1Password = false
+    try {
+      const row = await env.NOTESD.prepare(`SELECT value FROM settings WHERE key = 'password'`).first<{ value: string }>()
+      const flagRow = await env.NOTESD.prepare(`SELECT value FROM settings WHERE key = 'password_set'`).first<{ value: string }>()
+      storedPassword = row?.value || null
+      useD1Password = (flagRow?.value === 'true')
+    } catch (e) {
+      console.error('Read password failed:', e)
+    }
+    
+    const effectivePassword = useD1Password && storedPassword ? storedPassword : env.PASSWORD
+
+    if (currentPassword !== effectivePassword) {
+      await logToD1(env, 'warn', 'password.change.invalid_current')
+      return new Response(JSON.stringify({ error: 'Invalid current password' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      })
+    }
+
+    await env.NOTESD.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password', ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`).bind(newPassword).run()
+    await env.NOTESD.prepare(`INSERT INTO settings (key, value, updated_at) VALUES ('password_set', 'true', strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')) ON CONFLICT(key) DO UPDATE SET value = 'true', updated_at = strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours')`).run()
+
+    await logToD1(env, 'info', 'password.change.success')
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    })
+  } catch (error) {
+    console.error('Change password error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    await logToD1(env, 'error', 'password.change.exception', { message: errorMessage })
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    })
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "name": "notes",
+  "public": true,
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/edge-functions/api/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico",
+      "headers": {
+        "Cache-Control": "public, max-age=315360000, immutable",
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "image/x-icon"
+      }
+    },
+    {
+      "src": "/background.webp",
+      "dest": "/background.webp",
+      "headers": {
+        "Cache-Control": "public, max-age=315360000, immutable",
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "image/webp"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "functions": {
+    "edge-functions/api/login.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/notes.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/notes/[id].js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/password/status.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/logs.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/import.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/backup.js": {
+      "maxDuration": 30
+    },
+    "edge-functions/api/order/[key].js": {
+      "maxDuration": 30
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": "vite"
+}

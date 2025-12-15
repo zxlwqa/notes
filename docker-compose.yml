@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=notes
+      - POSTGRES_USER=notes
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  notes:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PASSWORD=${PASSWORD}
+      - DATABASE_URL=postgresql://notes:${POSTGRES_PASSWORD}@postgres:5432/notes
+      - WEBDAV_URL=${WEBDAV_URL}
+      - WEBDAV_USER=${WEBDAV_USER}
+      - WEBDAV_PASS=${WEBDAV_PASS}
+      - ACCOUNT_ID=${ACCOUNT_ID}
+      - ACCESS_KEY_ID=${ACCESS_KEY_ID}
+      - SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}
+      - GIT_TOKEN=${GIT_TOKEN}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
