@@ -31,6 +31,7 @@ interface CodeMirrorInstance {
   lineCount: () => number
   operation: (fn: () => void) => void
   getWrapperElement: () => HTMLElement
+  getInputField: () => HTMLTextAreaElement
   on: (event: string, handler: () => void) => void
   off: (event: string, handler: () => void) => void
 }
@@ -102,16 +103,22 @@ const Editor: React.FC<EditorProps> = ({
   const cursorPosRef = useRef<CursorPos>({ line: 0, ch: 0 })
   const onChangeRef = useRef(onChange)
   const valueRef = useRef(value)
+  const placeholderRef = useRef(placeholder)
   const [cmReady, setCmReady] = useState(false)
 
   onChangeRef.current = onChange
   valueRef.current = value
+  placeholderRef.current = placeholder
 
   const bindCodemirror = useCallback((cm: CodeMirrorInstance) => {
     cmRef.current = cm
     const doc = cm.getDoc()
     collapseBlankDoc(cm, doc)
     cursorPosRef.current = clampCursor(doc, cm.getCursor())
+    const input = cm.getInputField()
+    input.id = 'notes-editor-content'
+    input.name = 'content'
+    input.setAttribute('aria-label', placeholderRef.current || '笔记内容')
     setCmReady(true)
   }, [])
 

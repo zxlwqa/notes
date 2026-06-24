@@ -973,126 +973,142 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="space-y-4">
-                {category.options.map((option, optionIndex) => (
-                  <div key={optionIndex} className="flex items-center justify-between">
-                    <label
-                      htmlFor={
-                        option.type === 'input'
-                          ? `settings-input-${option.value}`
-                          : option.type === 'select'
-                            ? `settings-select-${option.value}`
-                            : undefined
-                      }
-                      className="font-medium text-gray-700"
-                    >
-                      {option.label}
-                    </label>
+                {category.options.map((option, optionIndex) => {
+                  const controlId =
+                    option.type === 'input'
+                      ? `settings-input-${option.value}`
+                      : option.type === 'select'
+                        ? `settings-select-${option.value}`
+                        : option.type === 'toggle'
+                          ? `settings-toggle-${option.value}`
+                          : undefined
+                  const labelId =
+                    option.type === 'custom' ? `settings-label-${option.value}` : undefined
 
-                    {option.type === 'toggle' && (
-                      <button
-                        onClick={() => toggleSetting(option.value)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          settings[option.value as keyof typeof settings]
-                            ? 'bg-blue-600'
-                            : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block size-4 transform rounded-full bg-white transition-transform ${
+                  return (
+                    <div key={optionIndex} className="flex items-center justify-between">
+                      {controlId ? (
+                        <label htmlFor={controlId} className="font-medium text-gray-700">
+                          {option.label}
+                        </label>
+                      ) : (
+                        <span id={labelId} className="font-medium text-gray-700">
+                          {option.label}
+                        </span>
+                      )}
+
+                      {option.type === 'toggle' && (
+                        <button
+                          id={controlId}
+                          type="button"
+                          role="switch"
+                          aria-checked={Boolean(settings[option.value as keyof typeof settings])}
+                          onClick={() => toggleSetting(option.value)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                             settings[option.value as keyof typeof settings]
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
+                              ? 'bg-blue-600'
+                              : 'bg-gray-200'
                           }`}
-                        />
-                      </button>
-                    )}
+                        >
+                          <span
+                            className={`inline-block size-4 transform rounded-full bg-white transition-transform ${
+                              settings[option.value as keyof typeof settings]
+                                ? 'translate-x-6'
+                                : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      )}
 
-                    {option.type === 'select' && 'options' in option && (
-                      <select
-                        id={`settings-select-${option.value}`}
-                        value={settings[option.value as keyof typeof settings] as string}
-                        disabled={option.value === 'lockTimeout' && !settings.autoLock}
-                        onChange={(e) =>
-                          handleSettingChange(option.value as keyof AppSettings, e.target.value)
-                        }
-                        className="rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {(option.options || []).map((opt: string, optIndex: number) => (
-                          <option key={optIndex} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    {option.type === 'input' && (
-                      <div className="flex items-center gap-2">
-                        <input
-                          id={`settings-input-${option.value}`}
-                          type="text"
+                      {option.type === 'select' && 'options' in option && (
+                        <select
+                          id={`settings-select-${option.value}`}
                           value={settings[option.value as keyof typeof settings] as string}
+                          disabled={option.value === 'lockTimeout' && !settings.autoLock}
                           onChange={(e) =>
                             handleSettingChange(option.value as keyof AppSettings, e.target.value)
                           }
-                          placeholder={
-                            option.value === 'username'
-                              ? '输入用户名'
-                              : option.value === 'backgroundImageUrl'
-                                ? '输入背景图URL'
-                                : option.value === 'logoUrl'
-                                  ? '输入logo图URL'
-                                  : ''
-                          }
-                          className="w-32 rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {(option.value === 'backgroundImageUrl' || option.value === 'logoUrl') && (
-                          <div className="relative">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) =>
-                                handleImageFileSelect(option.value as 'background' | 'logo', e)
-                              }
-                              className="hidden"
-                              id={`image-upload-${option.value}`}
-                              disabled={uploadingImage}
-                            />
-                            <label
-                              htmlFor={`image-upload-${option.value}`}
-                              className={`flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-2 py-1 text-xs font-medium text-white ${
-                                uploadingImage
-                                  ? 'cursor-not-allowed bg-gray-400'
-                                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                              }`}
-                              title={`上传${option.value === 'backgroundImageUrl' ? '背景图' : 'logo图'}`}
-                            >
-                              <Upload className="size-3" />
-                              {uploadingImage ? '上传中...' : '上传'}
-                            </label>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          className="rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {(option.options || []).map((opt: string, optIndex: number) => (
+                            <option key={optIndex} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      )}
 
-                    {option.type === 'custom' && (
-                      <Backup
-                        optionValue={String(option.value)}
-                        cloudSyncing={cloudSyncing}
-                        gistSyncing={gistSyncing}
-                        r2Syncing={r2Syncing}
-                        onUploadNotes={handleUploadNotes}
-                        onDownloadNotes={handleDownloadNotes}
-                        onUploadToCloud={handleUploadToCloud}
-                        onDownloadFromCloud={handleDownloadFromCloud}
-                        onUploadToGist={handleUploadToGist}
-                        onDownloadFromGist={handleDownloadFromGist}
-                        onUploadToR2={handleUploadToR2}
-                        onDownloadFromR2={handleDownloadFromR2}
-                        onViewLogs={handleViewLogs}
-                      />
-                    )}
-                  </div>
-                ))}
+                      {option.type === 'input' && (
+                        <div className="flex items-center gap-2">
+                          <input
+                            id={`settings-input-${option.value}`}
+                            type="text"
+                            value={settings[option.value as keyof typeof settings] as string}
+                            onChange={(e) =>
+                              handleSettingChange(option.value as keyof AppSettings, e.target.value)
+                            }
+                            placeholder={
+                              option.value === 'username'
+                                ? '输入用户名'
+                                : option.value === 'backgroundImageUrl'
+                                  ? '输入背景图URL'
+                                  : option.value === 'logoUrl'
+                                    ? '输入logo图URL'
+                                    : ''
+                            }
+                            className="w-32 rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          {(option.value === 'backgroundImageUrl' ||
+                            option.value === 'logoUrl') && (
+                            <div className="relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                  handleImageFileSelect(option.value as 'background' | 'logo', e)
+                                }
+                                className="hidden"
+                                id={`image-upload-${option.value}`}
+                                disabled={uploadingImage}
+                              />
+                              <label
+                                htmlFor={`image-upload-${option.value}`}
+                                className={`flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-2 py-1 text-xs font-medium text-white ${
+                                  uploadingImage
+                                    ? 'cursor-not-allowed bg-gray-400'
+                                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                }`}
+                                title={`上传${option.value === 'backgroundImageUrl' ? '背景图' : 'logo图'}`}
+                              >
+                                <Upload className="size-3" />
+                                {uploadingImage ? '上传中...' : '上传'}
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {option.type === 'custom' && (
+                        <Backup
+                          optionValue={String(option.value)}
+                          labelId={labelId}
+                          cloudSyncing={cloudSyncing}
+                          gistSyncing={gistSyncing}
+                          r2Syncing={r2Syncing}
+                          onUploadNotes={handleUploadNotes}
+                          onDownloadNotes={handleDownloadNotes}
+                          onUploadToCloud={handleUploadToCloud}
+                          onDownloadFromCloud={handleDownloadFromCloud}
+                          onUploadToGist={handleUploadToGist}
+                          onDownloadFromGist={handleDownloadFromGist}
+                          onUploadToR2={handleUploadToR2}
+                          onDownloadFromR2={handleDownloadFromR2}
+                          onViewLogs={handleViewLogs}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
                 {category.title === '体验设置' && (
                   <Pwd
                     passwordSource={passwordSource}

@@ -2,6 +2,7 @@ import React from 'react'
 
 interface BackupProps {
   optionValue: string
+  labelId?: string
   cloudSyncing: boolean
   gistSyncing: boolean
   r2Syncing: boolean
@@ -21,6 +22,7 @@ const btn =
 
 const Backup: React.FC<BackupProps> = ({
   optionValue,
+  labelId,
   cloudSyncing,
   gistSyncing,
   r2Syncing,
@@ -34,9 +36,11 @@ const Backup: React.FC<BackupProps> = ({
   onDownloadFromR2,
   onViewLogs,
 }) => {
+  const groupProps = labelId ? { role: 'group' as const, 'aria-labelledby': labelId } : {}
+
   if (optionValue === 'backupNotes') {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2" {...groupProps}>
         <button
           onClick={onUploadNotes}
           className={`${btn} bg-blue-600 hover:bg-blue-700 focus:ring-blue-500`}
@@ -55,7 +59,7 @@ const Backup: React.FC<BackupProps> = ({
 
   if (optionValue === 'cloudNotes') {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2" {...groupProps}>
         <button
           onClick={onUploadToCloud}
           disabled={cloudSyncing}
@@ -76,7 +80,7 @@ const Backup: React.FC<BackupProps> = ({
 
   if (optionValue === 'gistNotes') {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2" {...groupProps}>
         <button
           onClick={onUploadToGist}
           disabled={gistSyncing}
@@ -97,7 +101,7 @@ const Backup: React.FC<BackupProps> = ({
 
   if (optionValue === 'r2Notes') {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2" {...groupProps}>
         <button
           onClick={onUploadToR2}
           disabled={r2Syncing}
@@ -118,7 +122,7 @@ const Backup: React.FC<BackupProps> = ({
 
   if (optionValue === 'viewLogs') {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2" {...groupProps}>
         <button
           onClick={onViewLogs}
           className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
