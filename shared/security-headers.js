@@ -3,7 +3,7 @@
  * 同步维护：server/index.js、public/_headers、vercel.json、edgeone.json
  */
 export const CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; font-src 'self' data:; frame-ancestors 'none'"
+  "default-src 'self'; script-src 'self' https://umami.zxlwq.dpdns.org https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://umami.zxlwq.dpdns.org https://cloudflareinsights.com; font-src 'self' data: https://fonts.gstatic.com; frame-ancestors 'none'"
 
 export const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP,

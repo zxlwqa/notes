@@ -73,6 +73,7 @@ export default [
     ignores: [
       'dist/**',
       'node_modules/**',
+      'public/**',
       'build/**',
       '.vite/**',
       '*.config.js',
