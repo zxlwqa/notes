@@ -4,7 +4,7 @@ import { parsePageLimit, buildNotesListResponse } from './pagination.js'
 import { runD1Migrations } from './d1-migrate.js'
 
 export async function ensureNotesTable(db) {
-  await db.exec(D1_SQL.CREATE_NOTES_TABLE)
+  await db.prepare(D1_SQL.CREATE_NOTES_TABLE).run()
   await runD1Migrations(db)
 }
 

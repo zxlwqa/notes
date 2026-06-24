@@ -45,13 +45,13 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   try {
-    await env.NOTESD.exec(`
-      CREATE TABLE IF NOT EXISTS order_data (
+    await env.NOTESD.prepare(
+      `CREATE TABLE IF NOT EXISTS order_data (
         key TEXT PRIMARY KEY,
         value TEXT,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
+      )`
+    ).run()
   } catch (e) {
     console.error('Failed to create order_data table:', e)
   }
