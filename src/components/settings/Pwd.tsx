@@ -47,6 +47,16 @@ const Pwd: React.FC<PwdProps> = ({
         if (!changing && newPassword) onChangePassword()
       }}
     >
+      <input
+        type="text"
+        name="username"
+        autoComplete="username"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        defaultValue=""
+        readOnly
+      />
       <div className="flex items-center justify-between">
         <label htmlFor="new-password" className="font-medium text-gray-700">
           修改密码
