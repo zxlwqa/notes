@@ -206,6 +206,16 @@ const Login = () => {
             method="post"
             action="/login"
           >
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+              defaultValue=""
+              readOnly
+            />
             <div>
               <label htmlFor="password" className="sr-only">
                 密码
