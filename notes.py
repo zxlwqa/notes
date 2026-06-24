@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser(description="创建 Hugging Face Space")
 parser.add_argument("--token", type=str, required=True, help="Hugging Face Token（需要写权限）")
 parser.add_argument("--image", type=str, default="", help="Docker 镜像地址")
 parser.add_argument("--password", type=str, required=True, help="管理员密码")
+parser.add_argument("--jwt-secret", type=str, required=True, help="JWT 签名密钥（与登录密码不同）")
 parser.add_argument("--webdav-url", type=str, default="", help="WebDAV 地址（可选）")
 parser.add_argument("--webdav-user", type=str, default="", help="WebDAV 用户名（可选）")
 parser.add_argument("--webdav-pass", type=str, default="", help="WebDAV 密码（可选）")
@@ -67,6 +68,7 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
     secrets = [
         {"key": "PASSWORD", "value": args.password},
+        {"key": "JWT_SECRET", "value": args.jwt_secret},
         {"key": "DATABASE_URL", "value": args.neon_url},
         {"key": "WEBDAV_URL", "value": args.webdav_url},
         {"key": "WEBDAV_USER", "value": args.webdav_user},

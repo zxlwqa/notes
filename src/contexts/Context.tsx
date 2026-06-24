@@ -1,16 +1,23 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { api } from '@/lib/api'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { authApi } from '@/lib/api'
+import { setEncryptionPassword, clearEncryptionPassword, hasEncryptionPassword } from '@/lib/crypto'
+import { lockSettingsFromDetail, readLockSettings } from '@/lib/lock'
+import { setSessionToken, clearSessionToken } from '@/lib/session'
+import { clearSearchCache } from '@/lib/search'
+import type { AppSettings } from '@/types'
 
 interface AuthContextType {
   isAuthenticated: boolean
-  password: string | null
+  isUnlocked: boolean
   login: (password: string) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   loading: boolean
+  needsUnlock: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook exported alongside provider
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
@@ -24,18 +31,78 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [password, setPassword] = useState<string | null>(localStorage.getItem('password'))
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState(hasEncryptionPassword())
+  const [loading, setLoading] = useState(true)
 
-  const [loading] = useState(false)
+  useEffect(() => {
+    authApi
+      .getSession()
+      .then((res) => {
+        setIsAuthenticated(Boolean(res.data.authenticated))
+        setIsUnlocked(hasEncryptionPassword())
+      })
+      .catch(() => {
+        setIsAuthenticated(false)
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
+  useEffect(() => {
+    if (!isAuthenticated || !isUnlocked) return
+
+    let lastActivity = Date.now()
+    let lockConfig = readLockSettings()
+
+    const lock = () => {
+      clearEncryptionPassword()
+      setIsUnlocked(false)
+    }
+
+    const shouldLock = () => {
+      if (!lockConfig.autoLock) return false
+      return Date.now() - lastActivity >= lockConfig.timeoutMs
+    }
+
+    const touch = () => {
+      lastActivity = Date.now()
+    }
+
+    const tick = () => {
+      if (shouldLock()) lock()
+    }
+
+    const onSettings = (event: Event) => {
+      const detail = (event as CustomEvent<Partial<AppSettings>>).detail
+      lockConfig = detail ? lockSettingsFromDetail(detail) : readLockSettings()
+      if (shouldLock()) lock()
+    }
+
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'] as const
+    events.forEach((e) => window.addEventListener(e, touch, { passive: true }))
+    document.addEventListener('visibilitychange', tick)
+    window.addEventListener('settings-changed', onSettings)
+    const interval = window.setInterval(tick, 30_000)
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, touch))
+      document.removeEventListener('visibilitychange', tick)
+      window.removeEventListener('settings-changed', onSettings)
+      window.clearInterval(interval)
+    }
+  }, [isAuthenticated, isUnlocked])
 
   const login = async (passwordInput: string): Promise<boolean> => {
     try {
-      const response = await api.post('/api/login', { password: passwordInput })
-      
+      const response = await authApi.login({ password: passwordInput })
+
       if (response.data.success) {
-        setPassword(passwordInput)
-        localStorage.setItem('password', passwordInput)
+        if (response.data.token) {
+          setSessionToken(response.data.token)
+        }
+        setEncryptionPassword(passwordInput)
+        setIsAuthenticated(true)
+        setIsUnlocked(true)
         return true
       }
       return false
@@ -44,17 +111,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  const logout = () => {
-    setPassword(null)
-    localStorage.removeItem('password')
+  const logout = async () => {
+    try {
+      await authApi.logout()
+    } catch {
+      // ignore
+    }
+    clearSessionToken()
+    clearEncryptionPassword()
+    clearSearchCache()
+    setIsAuthenticated(false)
+    setIsUnlocked(false)
   }
 
   const value: AuthContextType = {
-    isAuthenticated: !!password,
-    password,
+    isAuthenticated: isAuthenticated && isUnlocked,
+    isUnlocked,
     login,
     logout,
     loading,
+    needsUnlock: isAuthenticated && !isUnlocked,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -6,14 +6,9 @@ interface PreloadProps extends Omit<LinkProps, 'onMouseEnter'> {
   children: React.ReactNode
 }
 
-const Preload: React.FC<PreloadProps> = ({ 
-  preloadComponent, 
-  children, 
-  ...props 
-}) => {
+const Preload: React.FC<PreloadProps> = ({ preloadComponent, children, ...props }) => {
   const handleMouseEnter = useCallback(() => {
     if (preloadComponent) {
-
       preloadComponent()
     }
   }, [preloadComponent])

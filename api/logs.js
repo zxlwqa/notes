@@ -1,11 +1,10 @@
 import { Pool } from 'pg'
+import { checkAuth, setCorsHeaders } from './_utils/auth.js'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
-
-const PASSWORD = process.env.PASSWORD || ''
 
 async function initDatabase() {
   try {
@@ -24,22 +23,14 @@ async function initDatabase() {
   }
 }
 
-function checkAuth(req) {
-  if (!PASSWORD) return true
-  const auth = req.headers.authorization
-  return auth && auth === `Bearer ${PASSWORD}`
-}
-
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
+  setCorsHeaders(req, res)
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  if (!checkAuth(req)) {
+  if (!(await checkAuth(req, pool))) {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
@@ -48,14 +39,14 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const result = await pool.query('SELECT * FROM logs ORDER BY created_at DESC LIMIT 200')
-      const logs = result.rows.map(row => ({
+      const logs = result.rows.map((row) => ({
         id: row.id,
         level: row.level,
         message: row.message,
         meta: row.meta,
         created_at: row.created_at?.toISOString() || new Date().toISOString(),
       }))
-      
+
       return res.json({ items: logs })
     }
 

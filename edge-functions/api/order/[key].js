@@ -1,44 +1,30 @@
 import { neon } from '@neondatabase/serverless'
+import { checkAuth, unauthorizedResponse } from '../../_utils/auth.js'
+import { apiCors, apiPreflight } from '../../_utils/cors.js'
 import { logError } from '../../_utils/log.js'
 
 export default async function onRequest(context) {
   const { request, params, env } = context
-  
+
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+      headers: apiPreflight(request, env, 'GET, POST, OPTIONS'),
     })
   }
 
-  const envPassword = env.PASSWORD || ''
-  
-  const auth = request.headers.get('Authorization') || ''
-  if (envPassword && auth !== `Bearer ${envPassword}`) {
-    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
-    })
+  if (!(await checkAuth(request, env))) {
+    return unauthorizedResponse(request, env)
   }
 
   try {
     const sql = neon(env.DATABASE_URL)
     const key = params?.key
-    
+
     if (!key) {
       return new Response(JSON.stringify({ success: false, error: 'Key is required' }), {
         status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        }
+        headers: apiCors(request, env),
       })
     }
 
@@ -51,7 +37,7 @@ export default async function onRequest(context) {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `
-    
+
     await sql`
       CREATE TABLE IF NOT EXISTS order_data (
         key TEXT PRIMARY KEY,
@@ -64,17 +50,14 @@ export default async function onRequest(context) {
       const result = await sql`
         SELECT value FROM order_data WHERE key = ${key}
       `
-      
+
       if (result.length === 0) {
         return new Response(JSON.stringify({ success: true, data: null }), {
           status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          }
+          headers: apiCors(request, env),
         })
       }
-      
+
       const value = result[0].value
       let parsed = null
       try {
@@ -82,31 +65,25 @@ export default async function onRequest(context) {
       } catch {
         parsed = value
       }
-      
+
       return new Response(JSON.stringify({ success: true, data: parsed }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        }
+        headers: apiCors(request, env),
       })
     }
 
     if (request.method === 'POST') {
       const value = await request.json()
-      
+
       if (typeof value === 'undefined') {
         return new Response(JSON.stringify({ success: false, error: 'Value is required' }), {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          }
+          headers: apiCors(request, env),
         })
       }
-      
+
       const valueStr = JSON.stringify(value)
-      
+
       await sql`
         INSERT INTO order_data (key, value, updated_at) 
         VALUES (${key}, ${valueStr}, ${new Date().toISOString()})
@@ -114,7 +91,7 @@ export default async function onRequest(context) {
           value = EXCLUDED.value, 
           updated_at = EXCLUDED.updated_at
       `
-      
+
       try {
         await sql`
           INSERT INTO logs (level, message, meta) 
@@ -123,37 +100,30 @@ export default async function onRequest(context) {
       } catch (e) {
         console.error('Failed to log order save:', e)
       }
-      
+
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        }
+        headers: apiCors(request, env),
       })
     }
 
     return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), {
       status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
+      headers: apiCors(request, env),
     })
   } catch (error) {
     console.error('[ORDER] Error:', error)
     logError('order:unhandled', { message: error?.message }, env)
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: 'Internal server error',
-      details: error.message
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        details: error.message,
+      }),
+      {
+        status: 500,
+        headers: apiCors(request, env),
       }
-    })
+    )
   }
 }
-

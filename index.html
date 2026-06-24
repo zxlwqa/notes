@@ -8,49 +8,57 @@
     <meta name="application-name" content="笔记系统" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#3b82f6" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="login-page" content="true" />
     <title>笔记系统</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="preload" as="image" href="/background.webp" />
     <script>
-      (function() {
+      ;(function () {
         try {
-          const saved = localStorage.getItem('app-settings');
+          const saved = localStorage.getItem('app-settings')
           if (saved) {
-            const parsed = JSON.parse(saved);
-            
-            const bg = parsed.backgroundImageUrl?.trim();
+            const parsed = JSON.parse(saved)
+
+            const bg = parsed.backgroundImageUrl?.trim()
             if (bg) {
-              document.documentElement.style.setProperty('--app-bg-image', `url('${bg}')`);
-              const link = document.createElement('link');
-              link.rel = 'preload';
-              link.as = 'image';
-              link.href = bg;
-              document.head.appendChild(link);
+              document.documentElement.style.setProperty('--app-bg-image', `url('${bg}')`)
+              const link = document.createElement('link')
+              link.rel = 'preload'
+              link.as = 'image'
+              link.href = bg
+              document.head.appendChild(link)
             }
-            
-            const logo = parsed.logoUrl?.trim();
+
+            const logo = parsed.logoUrl?.trim()
             if (logo) {
-              let link = document.querySelector("link[rel='icon']");
+              let link = document.querySelector("link[rel='icon']")
               if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                link.type = 'image/x-icon';
-                document.head.appendChild(link);
+                link = document.createElement('link')
+                link.rel = 'icon'
+                link.type = 'image/x-icon'
+                document.head.appendChild(link)
               }
-              link.href = logo;
+              link.href = logo
             }
             if (parsed.username && typeof parsed.username === 'string') {
-              document.title = parsed.username;
+              document.title = parsed.username
             }
           }
         } catch (e) {}
-      })();
+      })()
     </script>
 
-    <script defer src="https://umami.zxlwq.dpdns.org/script.js" data-website-id="ff1062e3-fdaa-4b2b-83ae-8ead1f5074c4"></script>
+    <script
+      defer
+      src="https://umami.zxlwq.dpdns.org/script.js"
+      data-website-id="ff1062e3-fdaa-4b2b-83ae-8ead1f5074c4"
+    ></script>
   </head>
   <body>
     <div id="root"></div>

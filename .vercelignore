@@ -56,6 +56,10 @@ server/
 functions/
 edge-functions/
 edgeone.json
+wrangler.toml
+scripts/
+.cfignore
+.edgeignore
 .local
 test/
 tests/

@@ -1,66 +1,36 @@
-import { Pool } from 'pg'
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-})
-
-const PASSWORD = process.env.PASSWORD || ''
-
-async function initDatabase() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS notes (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        tags TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      )
-    `)
-    console.warn('[vercel] Notes table initialized')
-  } catch (e) {
-    console.error('[vercel] Failed to initialize notes table:', e)
-  }
-}
-
-function checkAuth(req) {
-  if (!PASSWORD) return true
-  const auth = req.headers.authorization
-  return auth && auth === `Bearer ${PASSWORD}`
-}
-
-async function getAllNotes() {
-  const result = await pool.query('SELECT * FROM notes ORDER BY updated_at DESC')
-  return result.rows.map(row => ({
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    tags: row.tags ? JSON.parse(row.tags) : [],
-    createdAt: row.created_at?.toISOString() || new Date().toISOString(),
-    updatedAt: row.updated_at?.toISOString() || new Date().toISOString(),
-  }))
-}
+import { checkAuth, setCorsHeaders } from './_utils/auth.js'
+import { pool } from './_utils/pg.js'
+import {
+  ensureNotesTable,
+  listNoteSummaries,
+  listNoteSummariesPage,
+  upsertNote,
+} from '../shared/pg-notes.js'
+import { parsePageLimit, buildNotesListResponse } from '../shared/pagination.js'
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
+  setCorsHeaders(req, res)
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  if (!checkAuth(req)) {
+  if (!(await checkAuth(req, pool))) {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
   try {
-    await initDatabase()
+    await ensureNotesTable(pool)
 
     if (req.method === 'GET') {
-      const notes = await getAllNotes()
+      if (req.query?.page !== undefined || req.query?.limit !== undefined) {
+        const { page, limit } = parsePageLimit(req.query)
+        const result = await listNoteSummariesPage(pool, page, limit)
+        return res.json(
+          buildNotesListResponse(result.items, result.total, result.page, result.limit)
+        )
+      }
+      const notes = await listNoteSummaries(pool)
       return res.json(notes)
     }
 
@@ -69,13 +39,9 @@ export default async function handler(req, res) {
       if (!id || !title || !content) {
         return res.status(400).json({ success: false, error: 'Missing required fields' })
       }
-      
-      await pool.query(
-        'INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, content = EXCLUDED.content, tags = EXCLUDED.tags, updated_at = EXCLUDED.updated_at',
-        [id, title, content, JSON.stringify(tags || []), new Date().toISOString(), new Date().toISOString()]
-      )
-      
-      return res.json({ success: true, id })
+
+      const noteId = await upsertNote(pool, { id, title, content, tags })
+      return res.json({ success: true, id: noteId })
     }
 
     return res.status(405).json({ success: false, error: 'Method not allowed' })

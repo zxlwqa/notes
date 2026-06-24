@@ -35,4 +35,5 @@ Thumbs.db
 edgeone.json
 .github/
 vercel.json
-vercelignore
+.vercelignore
+scripts/

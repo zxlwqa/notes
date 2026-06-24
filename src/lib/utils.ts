@@ -48,7 +48,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 
   function debounced(...args: Parameters<T>) {
     const time = Date.now()
-    const isInvoking = (time - lastInvokeTime) >= wait
+    const isInvoking = time - lastInvokeTime >= wait
 
     if (isInvoking) {
       lastInvokeTime = time
@@ -243,14 +243,14 @@ export const TAG_COLORS = [
   { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
 ] as const
 
-export function getTagColor(tagName: string): typeof TAG_COLORS[number] {
+export function getTagColor(tagName: string): (typeof TAG_COLORS)[number] {
   let hash = 0
   for (let i = 0; i < tagName.length; i++) {
     const char = tagName.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
+    hash = (hash << 5) - hash + char
     hash = hash & hash
   }
-  
+
   const index = Math.abs(hash) % TAG_COLORS.length
   return TAG_COLORS[index]
 }
@@ -263,16 +263,16 @@ export function getTagClassName(tagName: string): string {
 export function setPageTitle(username?: string): void {
   const defaultTitle = '笔记系统'
   const title = username || defaultTitle
-  
+
   document.title = title
-  
+
   const descMeta = document.querySelector('meta[name="description"]') as HTMLMetaElement
   const appMeta = document.querySelector('meta[name="application-name"]') as HTMLMetaElement
-  
+
   if (descMeta) {
     descMeta.content = username ? `${username} - 个人笔记管理系统` : '个人笔记管理系统'
   }
-  
+
   if (appMeta) {
     appMeta.content = title
   }
@@ -291,7 +291,7 @@ export function loadAndSetPageTitle(): string | null {
   } catch (error) {
     console.error('加载设置失败:', error)
   }
-  
+
   setPageTitle()
   return null
 }

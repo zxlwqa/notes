@@ -16,11 +16,11 @@ export async function logToPostgreSQL(level, message, meta = null) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
-    
+
     await pool.query(`
       CREATE INDEX IF NOT EXISTS logs_created_at_idx ON logs(created_at)
     `)
-    
+
     const metaJson = meta ? JSON.stringify(meta) : null
     await pool.query(
       `INSERT INTO logs(level, message, meta, created_at) VALUES($1, $2, $3, NOW())`,

@@ -1,84 +1,47 @@
 import { neon } from '@neondatabase/serverless'
+import { signSessionToken, buildSessionCookie } from '../_utils/session.js'
+import { jsonResponse } from '../_utils/auth.js'
+import { apiPreflight } from '../_utils/cors.js'
+import { getEffectivePassword, getPasswordVersion } from '../_utils/credentials.js'
+import { verifyPassword, rehashLegacyPassword } from '../_utils/password.js'
+import { createRateLimiter, getFetchRequestIp } from '../_utils/rateLimit.js'
 import { logError } from '../_utils/log.js'
+
+const loginRateLimit = createRateLimiter()
 
 export default async function onRequest(context) {
   const { request, env } = context
-  console.warn('[LOGIN] Edge Function called')
-  console.warn('[LOGIN] Environment variables:', Object.keys(env || {}))
-  console.warn('[LOGIN] Context:', Object.keys(context))
-  
+
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
-    })
+    return new Response(null, { status: 204, headers: apiPreflight(request, env) })
   }
 
   if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
+    return jsonResponse({ success: false, error: 'Method not allowed' }, 405, request, env)
+  }
+
+  const limit = loginRateLimit(getFetchRequestIp(request))
+  if (!limit.allowed) {
+    return jsonResponse({ success: false, error: '请求过于频繁，请稍后再试' }, 429, request, env, {
+      'Retry-After': String(limit.retryAfterSec),
     })
   }
 
   try {
     const { password } = await request.json()
     const envPassword = env.PASSWORD || ''
-    
+    const isProduction = env.NODE_ENV === 'production'
+
+    if (!envPassword) {
+      return jsonResponse({ success: false, error: 'PASSWORD not configured' }, 500, request, env)
+    }
+
+    if (isProduction && !env.JWT_SECRET) {
+      return jsonResponse({ success: false, error: 'JWT_SECRET not configured' }, 500, request, env)
+    }
+
     const sql = neon(env.DATABASE_URL)
 
-    const getClientIp = (context) => {
-      const headers = request.headers
-      
-      const ipHeaders = [
-        'cf-connecting-ip',
-        'x-real-ip',
-        'x-forwarded-for',
-        'client-ip',
-        'x-client-ip',
-        'x-edgeone-ip',
-        'x-edge-ip',
-        'x-forwarded-ip',
-        'x-remote-addr',
-        'remote-addr',
-        'true-client-ip',
-        'x-client-ipaddress',
-        'client-address'
-      ]
-      
-      for (const headerName of ipHeaders) {
-        const value = headers.get(headerName)
-        if (value) {
-          if (headerName === 'x-forwarded-for') {
-            const ips = value.split(',').map(ip => ip.trim())
-            return ips[0]
-          }
-          return value
-        }
-      }
-      
-      if (context?.clientIP) {
-        return context.clientIP
-      }
-      
-      if (request?.cf?.connectingIP) {
-        return request.cf.connectingIP
-      }
-      
-      const host = headers.get('host')
-      if (host && host.includes('edgeone')) {
-        return 'EdgeOne CDN'
-      }
-      
-      return '未知'
-    }
     await sql`
       CREATE TABLE IF NOT EXISTS logs (
         id SERIAL PRIMARY KEY,
@@ -88,68 +51,47 @@ export default async function onRequest(context) {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `
-    
-    const ip = getClientIp(context)
-    console.warn('[LOGIN] Client IP:', ip)
-    
-    if (!envPassword || password === envPassword) {
+    await sql`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `
+
+    const storedCredential = await getEffectivePassword(sql, envPassword)
+
+    if (await verifyPassword(password, storedCredential)) {
+      await rehashLegacyPassword(sql, password, storedCredential)
+      const pwdVer = await getPasswordVersion(sql)
+
       try {
-        const ipDisplay = ip && ip !== '未知' ? ip : 'EdgeOne CDN'
-        await sql`
-          INSERT INTO logs (level, message, meta) 
-          VALUES ('info', '用户登录成功', ${'IP: ' + ipDisplay})
-        `
-        console.warn('[LOGIN] Login success logged to Neon database')
+        await sql`INSERT INTO logs (level, message, meta) VALUES ('info', '用户登录成功', 'Edge login')`
       } catch (dbError) {
-        console.error('[LOGIN] Database log failed:', dbError)
         logError('login:log:error', { message: dbError?.message }, env)
       }
-      
-      return new Response(JSON.stringify({ 
-        success: true,
-        message: 'Login successful'
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        }
+
+      const token = await signSessionToken(
+        envPassword,
+        env.JWT_SECRET,
+        { pwdVer },
+        isProduction,
+        env
+      )
+      return jsonResponse({ success: true, token }, 200, request, env, {
+        'Set-Cookie': buildSessionCookie(token, isProduction, env),
       })
     }
-    
+
     try {
-      const ipDisplay = ip && ip !== '未知' ? ip : 'EdgeOne CDN'
-      await sql`
-        INSERT INTO logs (level, message, meta) 
-        VALUES ('warn', '用户登录失败', ${'IP: ' + ipDisplay + ', 原因: 密码错误'})
-      `
-      console.warn('[LOGIN] Login failure logged to Neon database')
+      await sql`INSERT INTO logs (level, message, meta) VALUES ('warn', '用户登录失败', 'Edge login')`
     } catch (dbError) {
-      console.error('[LOGIN] Database log failed:', dbError)
       logError('login:log:error', { message: dbError?.message }, env)
     }
-    
-    return new Response(JSON.stringify({ 
-      error: "Invalid password"
-    }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
-    })
+
+    return jsonResponse({ success: false, error: 'Invalid password' }, 401, request, env)
   } catch (error) {
-    console.error('[LOGIN] Error:', error)
     logError('login:unhandled', { message: error?.message }, env)
-    return new Response(JSON.stringify({ 
-      error: "Internal server error", 
-      details: error.message
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
-    })
+    return jsonResponse({ success: false, error: 'Internal server error' }, 500, request, env)
   }
 }

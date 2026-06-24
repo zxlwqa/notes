@@ -52,6 +52,11 @@ LICENSE
 api/
 functions/
 edge-functions/
+wrangler.toml
+scripts/
+.cfignore
+.edgeignore
+.vercelignore
 .local
 test/
 tests/

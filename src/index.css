@@ -3,73 +3,104 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
   * {
     font-family: var(--editor-font-family, 'Segoe UI', system-ui, sans-serif);
     font-size: var(--global-font-size, 14px);
     line-height: var(--global-line-height, 1.6);
   }
-  
+
   *:not(.CodeMirror):not(.CodeMirror *) {
     font-size: inherit;
   }
-  
+
   h1 {
     font-size: calc(var(--global-font-size, 14px) * 1.5) !important;
     font-weight: bold;
   }
-  
+
   h2 {
     font-size: calc(var(--global-font-size, 14px) * 1.25) !important;
     font-weight: bold;
   }
-  
+
   h3 {
     font-size: var(--global-font-size, 14px) !important;
     font-weight: 600;
   }
-  
-  h4, h5, h6 {
+
+  h4,
+  h5,
+  h6 {
     font-size: var(--global-font-size, 14px) !important;
     font-weight: 500;
   }
-  
-  .text-sm, small {
+
+  .text-sm,
+  small {
     font-size: calc(var(--global-font-size, 14px) * 0.875) !important;
   }
-  
-  button, input:not(.title-input):not([style*="fontSize"]), select, textarea, label {
+
+  button,
+  input:not(.title-input):not([style*='fontSize']),
+  select,
+  textarea,
+  label {
     font-size: var(--global-font-size, 14px) !important;
   }
-  
+
   .title-input {
     font-size: calc(var(--global-font-size, 16px) * 1.5) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
-  
-  input[type="text"] {
+
+  input[type='text'] {
     font-size: var(--global-font-size, 14px) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
-  
+
   input.title-input {
     font-size: calc(var(--global-font-size, 16px) * 1.5) !important;
     font-family: var(--editor-font-family, inherit) !important;
     line-height: var(--global-line-height, 1.6) !important;
   }
-  
-  .text-xs { font-size: calc(var(--global-font-size, 14px) * 0.75) !important; }
-  .text-sm { font-size: calc(var(--global-font-size, 14px) * 0.875) !important; }
-  .text-base { font-size: var(--global-font-size, 14px) !important; }
-  .text-lg { font-size: calc(var(--global-font-size, 14px) * 1.125) !important; }
-  .text-xl { font-size: calc(var(--global-font-size, 14px) * 1.25) !important; }
-  .text-2xl { font-size: calc(var(--global-font-size, 14px) * 1.5) !important; }
-  .text-3xl { font-size: calc(var(--global-font-size, 14px) * 1.875) !important; }
-  .text-4xl { font-size: calc(var(--global-font-size, 14px) * 2.25) !important; }
-  .text-5xl { font-size: calc(var(--global-font-size, 14px) * 3) !important; }
-  .text-6xl { font-size: calc(var(--global-font-size, 14px) * 3.75) !important; }
-  
+
+  .text-xs {
+    font-size: calc(var(--global-font-size, 14px) * 0.75) !important;
+  }
+  .text-sm {
+    font-size: calc(var(--global-font-size, 14px) * 0.875) !important;
+  }
+  .text-base {
+    font-size: var(--global-font-size, 14px) !important;
+  }
+  .text-lg {
+    font-size: calc(var(--global-font-size, 14px) * 1.125) !important;
+  }
+  .text-xl {
+    font-size: calc(var(--global-font-size, 14px) * 1.25) !important;
+  }
+  .text-2xl {
+    font-size: calc(var(--global-font-size, 14px) * 1.5) !important;
+  }
+  .text-3xl {
+    font-size: calc(var(--global-font-size, 14px) * 1.875) !important;
+  }
+  .text-4xl {
+    font-size: calc(var(--global-font-size, 14px) * 2.25) !important;
+  }
+  .text-5xl {
+    font-size: calc(var(--global-font-size, 14px) * 3) !important;
+  }
+  .text-6xl {
+    font-size: calc(var(--global-font-size, 14px) * 3.75) !important;
+  }
+
   body {
     background-image: var(--app-bg-image, url('/background.webp'));
     background-size: cover;
@@ -78,111 +109,107 @@
     background-attachment: fixed;
     background-color: transparent;
   }
-  
 }
 
 @layer components {
   .prose {
     @apply text-gray-900 leading-relaxed;
   }
-  
+
   .prose h1 {
     @apply text-3xl font-bold mb-4 text-gray-900;
   }
-  
+
   .prose h2 {
     @apply text-2xl font-semibold mb-3 text-gray-800;
   }
-  
+
   .prose h3 {
     @apply text-xl font-semibold mb-2 text-gray-800;
   }
-  
+
   .prose p {
     @apply mb-4;
   }
-  
-  .prose code {
-    @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono;
+
+  .prose :not(pre) > code {
+    @apply inline bg-gray-100 px-2 py-1 rounded text-sm font-mono;
   }
-  
-  .prose pre {
+
+  .prose td code,
+  .prose th code {
+    @apply bg-transparent px-0 py-0 rounded-none;
+  }
+
+  .prose pre:not(.md-pre) {
     @apply bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
   }
-  
+
   .prose pre code {
     @apply bg-transparent p-0;
   }
-  
+
   .prose blockquote {
     @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
   }
-  
-  .prose ul, .prose ol {
+
+  .prose ul,
+  .prose ol {
     @apply mb-4 pl-6;
   }
-  
+
   .prose li {
     @apply mb-1;
   }
-  
+
   .prose strong {
     @apply font-semibold;
   }
-  
+
   .prose em {
     @apply italic;
   }
-  
+
   .prose a {
     @apply text-blue-600 hover:text-blue-800 underline;
   }
-  
+
   .prose img {
     @apply max-w-full h-auto rounded-lg shadow-sm mb-4;
   }
-  
+
   .prose table {
-    @apply w-full border-collapse border border-gray-300 mb-4;
+    @apply w-full border-collapse border border-white/60 mb-4;
   }
-  
-  .prose th, .prose td {
-    @apply border border-gray-300 px-4 py-2 text-left;
+
+  .prose th,
+  .prose td {
+    @apply border border-white/60 px-4 py-2 text-left bg-transparent;
   }
-  
+
   .prose th {
-    @apply bg-gray-100 font-semibold;
+    @apply font-semibold;
   }
 }
 
 @layer utilities {
-  
   .EasyMDEContainer {
     @apply w-full;
   }
-  
+
   .EasyMDEContainer .CodeMirror {
     @apply min-h-[400px] border-0;
   }
-  
+
   .EasyMDEContainer .CodeMirror-cursor {
     border-left: 2px solid #3b82f6 !important;
     border-right: none !important;
-    width: 0 !important;
-    height: 1.2em !important;
-    background: transparent !important;
-    vertical-align: baseline !important;
-    position: relative !important;
-    display: inline-block !important;
-    line-height: 1.6 !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
-  
+
   .EasyMDEContainer .editor-statusbar {
     @apply border-gray-300 bg-gray-50 text-gray-600;
   }
-  
+
   .EasyMDEContainer .CodeMirror.CodeMirror-fullscreen {
     @apply z-50;
   }
@@ -197,4 +224,3 @@
   bottom: auto !important;
   z-index: auto !important;
 }
-

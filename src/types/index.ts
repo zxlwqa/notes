@@ -11,14 +11,21 @@ export interface ApiResponse<T = unknown> {
 export interface Note {
   id: string
   title: string
-  content: string
+  /** 仅详情接口返回；列表接口不返回正文 */
+  content?: string
+  /** 列表接口返回的字数，不含正文内容 */
+  contentLength?: number
   tags: string[]
   createdAt: string
   updatedAt: string
 }
 
-export interface NoteResponse {
-  content: string
+export interface NotesListResponse {
+  items: Note[]
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
 }
 
 export interface LoginRequest {
@@ -31,103 +38,29 @@ export interface LoginResponse {
   error?: string
 }
 
-export interface User {
-  id: string
-  username: string
-}
-
-export interface Session {
-  token: string
-  userId: string
-  createdAt: Date
-}
-
-export interface EditorConfig {
-  height: string
-  language: string
-  toolbarItems: string[][]
-}
-
-export interface ButtonProps {
-  children: React.ReactNode
-  onClick?: () => void
-  disabled?: boolean
-  variant?: 'primary' | 'secondary' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
-}
-
-export interface InputProps {
-  type?: string
-  value: string
-  onChange: (_value: string) => void
-  placeholder?: string
-  required?: boolean
-  className?: string
-}
-
-export interface RouteConfig {
-  path: string
-  element: React.ComponentType
-  protected?: boolean
-}
-
-export interface AppError {
-  message: string
-  code?: string
-  details?: unknown
-}
-
-export interface Theme {
-  name: string
-  primary: string
-  secondary: string
-  background: string
-  text: string
-}
-
 export interface AppSettings {
   fontSize: string
   backgroundImageUrl: string
   logoUrl: string
   fontFamily: string
-  theme: string
-  autoSave: boolean
-  spellCheck: boolean
-  syntaxHighlight: boolean
-  lineNumbers: boolean
   username: string
-  emailNotification: boolean
-  shortcutHints: boolean
   autoLock: boolean
   lockTimeout: string
-  passwordStrength: string
-}
-
-export interface SearchResult {
-  id: string
-  title: string
-  content: string
-  tags: string[]
-  createdAt: string
-  updatedAt: string
-  displayText: string
-  matchType: 'title' | 'content' | 'tag'
-}
-
-export interface SearchHistory {
-  id: string
-  query: string
-  timestamp: number
-  resultCount: number
+  /** 列表页静默刷新间隔 */
+  listRefreshInterval: string
 }
 
 export interface SearchOptions {
-  useRegex: boolean
-  caseSensitive: boolean
-  searchInTitle: boolean
-  searchInContent: boolean
-  searchInTags: boolean
+  useRegex?: boolean
+  caseSensitive?: boolean
+  searchInTitle?: boolean
+  searchInContent?: boolean
+  searchInTags?: boolean
+}
+
+export interface SearchHistory {
+  query: string
+  timestamp: number
 }
 
 export interface DebounceOptions {
@@ -180,8 +113,8 @@ export interface NoteCreateRequest {
 }
 
 export interface NoteUpdateRequest {
-  title: string
-  content: string
+  title?: string
+  content?: string
   tags?: string[]
 }
 
@@ -194,8 +127,4 @@ export interface NotesImportedEvent extends CustomEvent {
     count: number
     format: ImportFormat
   }
-}
-
-export interface EditorToolbarProps {
-  onInsertText: (_before: string, _after: string) => void
 }

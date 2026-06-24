@@ -1,12 +1,12 @@
-﻿import { Pool } from 'pg'
+import { Pool } from 'pg'
 import axios from 'axios'
+import { checkAuth, setCorsHeaders } from './_utils/auth.js'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 
-const PASSWORD = process.env.PASSWORD || ''
 const WEBDAV_URL = process.env.WEBDAV_URL || ''
 const WEBDAV_USER = process.env.WEBDAV_USER || ''
 const WEBDAV_PASS = process.env.WEBDAV_PASS || ''
@@ -23,7 +23,7 @@ async function initDatabase() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `)
-    
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS logs (
         id SERIAL PRIMARY KEY,
@@ -33,7 +33,7 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
-    
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -41,7 +41,7 @@ async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
-    
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS order_data (
         key TEXT PRIMARY KEY,
@@ -57,24 +57,19 @@ async function initDatabase() {
 
 async function appendLog(level, message, meta = null) {
   try {
-    await pool.query(
-      'INSERT INTO logs (level, message, meta) VALUES ($1, $2, $3)',
-      [level, message, meta ? JSON.stringify(meta) : null]
-    )
+    await pool.query('INSERT INTO logs (level, message, meta) VALUES ($1, $2, $3)', [
+      level,
+      message,
+      meta ? JSON.stringify(meta) : null,
+    ])
   } catch (e) {
     console.error('Failed to append log:', e)
   }
 }
 
-function checkAuth(req) {
-  if (!PASSWORD) return true
-  const auth = req.headers.authorization
-  return auth && auth === `Bearer ${PASSWORD}`
-}
-
 async function getAllNotes() {
   const result = await pool.query('SELECT * FROM notes ORDER BY updated_at DESC')
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     id: row.id,
     title: row.title,
     content: row.content,
@@ -91,11 +86,11 @@ async function uploadToWebDAV(content) {
 
   const url = `${WEBDAV_URL}/notes.md`
   const auth = Buffer.from(`${WEBDAV_USER}:${WEBDAV_PASS}`).toString('base64')
-  
+
   await axios.put(url, content, {
     headers: {
       'Content-Type': 'text/markdown',
-      'Authorization': `Basic ${auth}`,
+      Authorization: `Basic ${auth}`,
     },
   })
 }
@@ -107,26 +102,24 @@ async function downloadFromWebDAV() {
 
   const url = `${WEBDAV_URL}/notes.md`
   const auth = Buffer.from(`${WEBDAV_USER}:${WEBDAV_PASS}`).toString('base64')
-  
+
   const response = await axios.get(url, {
     headers: {
-      'Authorization': `Basic ${auth}`,
+      Authorization: `Basic ${auth}`,
     },
   })
-  
+
   return response.data
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
+  setCorsHeaders(req, res)
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  if (!checkAuth(req)) {
+  if (!(await checkAuth(req, pool))) {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
@@ -135,7 +128,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const notes = await getAllNotes()
-      
+
       if (notes.length === 0) {
         return res.json({ success: false, error: '没有笔记可备份' })
       }
@@ -155,7 +148,12 @@ export default async function handler(req, res) {
       try {
         await uploadToWebDAV(markdown)
         await appendLog('info', '笔记已成功上传到云端', `文件: notes.md, 笔记数量: ${notes.length}`)
-        return res.json({ success: true, message: `笔记已成功上传到云端`, fileName: 'notes.md', totalNotes: notes.length })
+        return res.json({
+          success: true,
+          message: `笔记已成功上传到云端`,
+          fileName: 'notes.md',
+          totalNotes: notes.length,
+        })
       } catch (e) {
         await appendLog('error', 'WebDAV 上传失败', e.message)
         return res.status(500).json({ success: false, error: `上传失败: ${e.message}` })
@@ -165,31 +163,36 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       try {
         const markdown = await downloadFromWebDAV()
-        
+
         const notes = []
-        const noteContents = markdown.split('\n\n---\n\n').filter(note => note.trim())
-        
+        const noteContents = markdown.split('\n\n---\n\n').filter((note) => note.trim())
+
         noteContents.forEach((noteContent, index) => {
           const trimmedContent = noteContent.trim()
           if (!trimmedContent) return
-          
+
           const lines = trimmedContent.split('\n')
-          
+
           let title = lines[0] || `导入笔记 ${index + 1}`
           if (title.startsWith('# ')) {
             title = title.slice(2)
           }
-          
+
           let tags = []
           let createdAt = new Date().toISOString()
           let updatedAt = new Date().toISOString()
           let contentStartIndex = 1
-          
+
           for (let j = 1; j < lines.length; j++) {
             const line = lines[j]
             if (line.startsWith('标签: ')) {
               const tagStr = line.slice(3).trim()
-              tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t) : []
+              tags = tagStr
+                ? tagStr
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter((t) => t)
+                : []
             } else if (line.startsWith('创建时间: ')) {
               createdAt = line.slice(5).trim() || createdAt
             } else if (line.startsWith('更新时间: ')) {
@@ -199,9 +202,9 @@ export default async function handler(req, res) {
               break
             }
           }
-          
+
           const noteContentText = lines.slice(contentStartIndex).join('\n')
-          
+
           if (noteContentText.trim()) {
             notes.push({
               id: `imported-${Date.now()}-${index}`,
@@ -219,21 +222,24 @@ export default async function handler(req, res) {
         }
 
         await pool.query('DELETE FROM notes')
-        
+
         if (notes.length > 0) {
-          const values = notes.map(note => [
+          const values = notes.map((note) => [
             note.id,
             note.title,
             note.content,
             JSON.stringify(note.tags),
             note.createdAt,
-            note.updatedAt
+            note.updatedAt,
           ])
-          
-          const placeholders = values.map((_, i) => 
-            `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})`
-          ).join(', ')
-          
+
+          const placeholders = values
+            .map(
+              (_, i) =>
+                `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})`
+            )
+            .join(', ')
+
           const flatValues = values.flat()
           await pool.query(
             `INSERT INTO notes (id, title, content, tags, created_at, updated_at) VALUES ${placeholders}`,
@@ -241,8 +247,18 @@ export default async function handler(req, res) {
           )
         }
 
-        await appendLog('info', '笔记已成功从云端下载并导入', `文件: notes.md, 导入: ${notes.length} 条`)
-        return res.json({ success: true, message: `笔记已成功从云端下载并导入`, fileName: 'notes.md', importedCount: notes.length, updatedCount: 0 })
+        await appendLog(
+          'info',
+          '笔记已成功从云端下载并导入',
+          `文件: notes.md, 导入: ${notes.length} 条`
+        )
+        return res.json({
+          success: true,
+          message: `笔记已成功从云端下载并导入`,
+          fileName: 'notes.md',
+          importedCount: notes.length,
+          updatedCount: 0,
+        })
       } catch (e) {
         await appendLog('error', 'WebDAV 下载失败', e.message)
         return res.status(500).json({ success: false, error: `下载失败: ${e.message}` })

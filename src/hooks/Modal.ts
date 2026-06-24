@@ -38,54 +38,60 @@ export interface SelectState {
 export const useModal = () => {
   const [alertState, setAlertState] = useState<ModalState>({
     isOpen: false,
-    message: ''
+    message: '',
   })
 
   const [confirmState, setConfirmState] = useState<ModalState>({
     isOpen: false,
-    message: ''
+    message: '',
   })
 
   const [promptState, setPromptState] = useState<PromptState>({
     isOpen: false,
-    message: ''
+    message: '',
   })
 
   const [selectState, setSelectState] = useState<SelectState>({
     isOpen: false,
     message: '',
-    options: []
+    options: [],
   })
 
-  const showAlert = useCallback((message: string, options: Omit<ModalState, 'isOpen' | 'message'> = {}) => {
-    setAlertState({
-      isOpen: true,
-      title: options.title || '提示',
-      message: message,
-      type: options.type || 'info',
-      confirmText: options.confirmText || '确定',
-      onConfirm: options.onConfirm
-    })
-  }, [])
-
-  const showConfirm = useCallback((message: string, options: Omit<ModalState, 'isOpen' | 'message'>): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setConfirmState({
+  const showAlert = useCallback(
+    (message: string, options: Omit<ModalState, 'isOpen' | 'message'> = {}) => {
+      setAlertState({
         isOpen: true,
-        title: options.title || '确认',
-        message,
-        type: options.type || 'warning',
+        title: options.title || '提示',
+        message: message,
+        type: options.type || 'info',
         confirmText: options.confirmText || '确定',
-        cancelText: options.cancelText || '取消',
-        onConfirm: () => {
-          resolve(true)
-        },
-        onCancel: () => {
-          resolve(false)
-        }
+        onConfirm: options.onConfirm,
       })
-    })
-  }, [])
+    },
+    []
+  )
+
+  const showConfirm = useCallback(
+    (message: string, options: Omit<ModalState, 'isOpen' | 'message'>): Promise<boolean> => {
+      return new Promise((resolve) => {
+        setConfirmState({
+          isOpen: true,
+          title: options.title || '确认',
+          message,
+          type: options.type || 'warning',
+          confirmText: options.confirmText || '确定',
+          cancelText: options.cancelText || '取消',
+          onConfirm: () => {
+            resolve(true)
+          },
+          onCancel: () => {
+            resolve(false)
+          },
+        })
+      })
+    },
+    []
+  )
 
   const showPrompt = useCallback((options: Omit<PromptState, 'isOpen'>) => {
     setPromptState({
@@ -97,44 +103,47 @@ export const useModal = () => {
       confirmText: options.confirmText || '确定',
       cancelText: options.cancelText || '取消',
       onConfirm: options.onConfirm,
-      onCancel: options.onCancel
+      onCancel: options.onCancel,
     })
   }, [])
 
-  const showSelect = useCallback((message: string, options: Omit<SelectState, 'isOpen' | 'message'>): Promise<string | null> => {
-    return new Promise((resolve) => {
-      setSelectState({
-        isOpen: true,
-        title: options.title || '选择',
-        message,
-        options: options.options,
-        defaultValue: options.defaultValue || '',
-        confirmText: options.confirmText || '确定',
-        cancelText: options.cancelText || '取消',
-        onConfirm: (value: string) => {
-          resolve(value)
-        },
-        onCancel: () => {
-          resolve(null)
-        }
+  const showSelect = useCallback(
+    (message: string, options: Omit<SelectState, 'isOpen' | 'message'>): Promise<string | null> => {
+      return new Promise((resolve) => {
+        setSelectState({
+          isOpen: true,
+          title: options.title || '选择',
+          message,
+          options: options.options,
+          defaultValue: options.defaultValue || '',
+          confirmText: options.confirmText || '确定',
+          cancelText: options.cancelText || '取消',
+          onConfirm: (value: string) => {
+            resolve(value)
+          },
+          onCancel: () => {
+            resolve(null)
+          },
+        })
       })
-    })
-  }, [])
+    },
+    []
+  )
 
   const closeAlert = useCallback(() => {
-    setAlertState(prev => ({ ...prev, isOpen: false }))
+    setAlertState((prev) => ({ ...prev, isOpen: false }))
   }, [])
 
   const closeConfirm = useCallback(() => {
-    setConfirmState(prev => ({ ...prev, isOpen: false }))
+    setConfirmState((prev) => ({ ...prev, isOpen: false }))
   }, [])
 
   const closePrompt = useCallback(() => {
-    setPromptState(prev => ({ ...prev, isOpen: false }))
+    setPromptState((prev) => ({ ...prev, isOpen: false }))
   }, [])
 
   const closeSelect = useCallback(() => {
-    setSelectState(prev => ({ ...prev, isOpen: false }))
+    setSelectState((prev) => ({ ...prev, isOpen: false }))
   }, [])
 
   return {
@@ -142,7 +151,7 @@ export const useModal = () => {
     confirmState,
     promptState,
     selectState,
-    
+
     showAlert,
     showConfirm,
     showPrompt,
@@ -150,7 +159,7 @@ export const useModal = () => {
     closeAlert,
     closeConfirm,
     closePrompt,
-    closeSelect
+    closeSelect,
   }
 }
 
@@ -177,13 +186,16 @@ class ModalManager {
     }
   }
 
-  confirm(message: string, options?: Partial<Omit<ModalState, 'isOpen' | 'message'>>): Promise<boolean> {
+  confirm(
+    message: string,
+    options?: Partial<Omit<ModalState, 'isOpen' | 'message'>>
+  ): Promise<boolean> {
     return new Promise((resolve) => {
       if (this.modalHook) {
         this.modalHook.showConfirm(message, {
           onConfirm: () => resolve(true),
           onCancel: () => resolve(false),
-          ...options
+          ...options,
         })
       } else {
         resolve(window.confirm(message))
@@ -191,7 +203,11 @@ class ModalManager {
     })
   }
 
-  prompt(message: string, defaultValue?: string, options?: Partial<Omit<PromptState, 'isOpen' | 'message'>>): Promise<string | null> {
+  prompt(
+    message: string,
+    defaultValue?: string,
+    options?: Partial<Omit<PromptState, 'isOpen' | 'message'>>
+  ): Promise<string | null> {
     return new Promise((resolve) => {
       if (this.modalHook) {
         this.modalHook.showPrompt({
@@ -199,7 +215,7 @@ class ModalManager {
           defaultValue: defaultValue || '',
           onConfirm: (value) => resolve(value),
           onCancel: () => resolve(null),
-          ...options
+          ...options,
         })
       } else {
         const result = window.prompt(message, defaultValue)

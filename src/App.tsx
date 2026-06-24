@@ -3,7 +3,8 @@ import { Suspense, lazy } from 'react'
 import { AuthProvider } from '@/contexts/Context'
 import ProtectedRoute from '@/components/Protected'
 import ErrorBoundary from '@/components/Boundary'
-import { PageLoading } from '@/components/ui'
+import SwUp from '@/components/SwUp'
+import { RouteShell } from '@/components/RouteShell'
 
 import LoginPage from '@/pages/Login'
 
@@ -16,15 +17,12 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Routes>
-          <Route 
-            path="/login" 
-            element={<LoginPage />} 
-          />
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/notes"
             element={
               <ProtectedRoute>
-                <Suspense fallback={<PageLoading />}>
+                <Suspense fallback={<RouteShell />}>
                   <ListPage />
                 </Suspense>
               </ProtectedRoute>
@@ -34,7 +32,7 @@ function App() {
             path="/notes/:id"
             element={
               <ProtectedRoute>
-                <Suspense fallback={<PageLoading />}>
+                <Suspense fallback={<RouteShell />}>
                   <ViewPage />
                 </Suspense>
               </ProtectedRoute>
@@ -44,7 +42,7 @@ function App() {
             path="/notes/:id/edit"
             element={
               <ProtectedRoute>
-                <Suspense fallback={<PageLoading />}>
+                <Suspense fallback={<RouteShell />}>
                   <EditPage />
                 </Suspense>
               </ProtectedRoute>
@@ -52,6 +50,7 @@ function App() {
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
+        <SwUp />
       </AuthProvider>
     </ErrorBoundary>
   )

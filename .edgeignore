@@ -30,3 +30,8 @@ build/
 *.swp
 *.swo
 Thumbs.db
+wrangler.toml
+scripts/
+.cfignore
+.vercelignore
+vercel.json

@@ -1,6 +1,5 @@
 declare global {
   interface Window {
-
     addEventListener(
       type: 'settings-changed',
       listener: (event: CustomEvent<Partial<import('./types').AppSettings>>) => void,
@@ -8,7 +7,9 @@ declare global {
     ): void
     addEventListener(
       type: 'notes-imported',
-      listener: (event: CustomEvent<{ count: number; format: import('./types').ImportFormat }>) => void,
+      listener: (
+        event: CustomEvent<{ count: number; format: import('./types').ImportFormat }>
+      ) => void,
       options?: boolean | AddEventListenerOptions
     ): void
     addEventListener(

@@ -33,7 +33,11 @@ export interface D1ExecResult {
 
 export interface R2Bucket {
   get(key: string): Promise<R2Object | null>
-  put(key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob, options?: R2PutOptions): Promise<R2Object>
+  put(
+    key: string,
+    value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob,
+    options?: R2PutOptions
+  ): Promise<R2Object>
   delete(keys: string | string[]): Promise<void>
   list(options?: R2ListOptions): Promise<R2Objects>
   head(key: string): Promise<R2Object | null>
@@ -106,20 +110,28 @@ export interface PagesFunctionEnv {
   NOTESD?: D1Database
   NOTESR?: R2Bucket
   PASSWORD?: string
+  DATABASE_URL?: string
+  JWT_SECRET?: string
+  NODE_ENV?: string
+  ALLOWED_ORIGINS?: string
+  SESSION_TTL_SEC?: string
+  LOG_RETENTION_DAYS?: string
   [key: string]: unknown
 }
 
 export type PagesFunction<TEnv extends PagesFunctionEnv = PagesFunctionEnv> = (
-  context: {
-    request: Request
-    env: TEnv
-    waitUntil?: (promise: Promise<unknown>) => void
-    passThroughOnException?: () => void
-    next?: (input?: Request | string, init?: RequestInit) => Promise<Response>
-    params?: Record<string, string | undefined>
-    data?: unknown
-  } | {
-    request: Request
-    env: TEnv
-  }
+  context:
+    | {
+        request: Request
+        env: TEnv
+        waitUntil?: (promise: Promise<unknown>) => void
+        passThroughOnException?: () => void
+        next?: (input?: Request | string, init?: RequestInit) => Promise<Response>
+        params?: Record<string, string | undefined>
+        data?: unknown
+      }
+    | {
+        request: Request
+        env: TEnv
+      }
 ) => Response | Promise<Response>

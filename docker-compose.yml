@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 services:
   postgres:
     image: postgres:15-alpine
@@ -9,13 +9,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
     restart: unless-stopped
 
   notes:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - PASSWORD=${PASSWORD}
       - DATABASE_URL=postgresql://notes:${POSTGRES_PASSWORD}@postgres:5432/notes
@@ -32,4 +32,3 @@ services:
 
 volumes:
   postgres_data:
-

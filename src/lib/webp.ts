@@ -4,7 +4,7 @@ export function loadAndApplyBackground(
   onError?: () => void
 ) {
   const bg = imageUrl?.trim()
-  
+
   if (!bg) {
     document.documentElement.style.removeProperty('--app-bg-image')
     onSuccess?.()
@@ -12,7 +12,7 @@ export function loadAndApplyBackground(
   }
 
   document.documentElement.style.setProperty('--app-bg-image', `url('${bg}')`)
-  
+
   const body = document.body
   if (body) {
     body.style.backgroundImage = `url('${bg}')`
@@ -21,32 +21,29 @@ export function loadAndApplyBackground(
     body.style.backgroundRepeat = 'no-repeat'
     body.style.backgroundAttachment = 'fixed'
   }
-  
+
   const img = new Image()
-  
+
   img.onload = () => {
     onSuccess?.()
   }
-  
+
   img.onerror = () => {
     console.error('背景图验证失败:', bg.substring(0, 50) + '...')
     onError?.()
   }
-  
+
   img.src = bg
 }
 
-export function applyBackgroundFromSettings(
-  onSuccess?: () => void,
-  onError?: () => void
-) {
+export function applyBackgroundFromSettings(onSuccess?: () => void, onError?: () => void) {
   try {
     const saved = localStorage.getItem('app-settings')
     if (!saved) {
       onSuccess?.()
       return
     }
-    
+
     const parsed = JSON.parse(saved)
     loadAndApplyBackground(parsed.backgroundImageUrl, onSuccess, onError)
   } catch (error) {

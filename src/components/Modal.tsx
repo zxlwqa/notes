@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useCallback, useId, useRef } from 'react'
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react'
+import { useEscapeClose, useFocusTrap } from '@/hooks/Trap'
 
 export interface ModalProps {
   isOpen: boolean
@@ -64,20 +65,25 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   type = 'info',
-  showCloseButton = true
+  showCloseButton = true,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useFocusTrap(isOpen, dialogRef)
+  useEscapeClose(isOpen, onClose)
+
   if (!isOpen) return null
 
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-600" />
+        return <CheckCircle className="size-6 text-green-600" />
       case 'warning':
-        return <AlertTriangle className="h-6 w-6 text-yellow-600" />
+        return <AlertTriangle className="size-6 text-yellow-600" />
       case 'error':
-        return <AlertCircle className="h-6 w-6 text-red-600" />
+        return <AlertCircle className="size-6 text-red-600" />
       default:
-        return <Info className="h-6 w-6 text-blue-600" />
+        return <Info className="size-6 text-blue-600" />
     }
   }
 
@@ -95,26 +101,42 @@ export const Modal: React.FC<ModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[70]">
-      <div className="bg-white/50 backdrop-blur-xl rounded-lg shadow-xl w-full max-w-md mx-4 border border-white/50">
-        <div className={`${getHeaderColor()} px-6 py-4 border-b border-white/50 flex justify-between items-center`}>
+    <div className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/30"
+        aria-label="关闭对话框"
+        onClick={onClose}
+      />
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        className="relative mx-4 w-full max-w-md rounded-lg border border-white/50 bg-white/50 shadow-xl backdrop-blur-xl"
+      >
+        <div
+          className={`${getHeaderColor()} flex items-center justify-between border-b border-white/50 px-6 py-4`}
+        >
           <div className="flex items-center gap-3">
             {getIcon()}
-            <h3 className="font-semibold text-gray-900">{title}</h3>
+            <h3 id={titleId} className="font-semibold text-gray-900">
+              {title}
+            </h3>
           </div>
           {showCloseButton && (
             <button
+              type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="关闭"
+              className="text-gray-400 transition-colors hover:text-gray-600"
             >
-              <X className="h-5 w-5" />
+              <X className="size-5" />
             </button>
           )}
         </div>
 
-        <div className="px-6 py-4">
-          {children}
-        </div>
+        <div className="px-6 py-4">{children}</div>
       </div>
     </div>
   )
@@ -127,12 +149,12 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   message,
   type = 'info',
   confirmText = '确定',
-  onConfirm
+  onConfirm,
 }) => {
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     onConfirm?.()
     onClose()
-  }
+  }, [onConfirm, onClose])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -147,17 +169,15 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       const handleGlobalKeyPress = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           handleConfirm()
-        } else if (e.key === 'Escape') {
-          onClose()
         }
       }
-      
+
       document.addEventListener('keydown', handleGlobalKeyPress)
       return () => {
         document.removeEventListener('keydown', handleGlobalKeyPress)
       }
     }
-  }, [isOpen])
+  }, [isOpen, handleConfirm])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} type={type}>
@@ -167,14 +187,14 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           <button
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
-            className={`px-4 py-2 font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              type === 'error' 
+            className={`rounded-md px-4 py-2 font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              type === 'error'
                 ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                 : type === 'warning'
-                ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
-                : type === 'success'
-                ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
-                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                  ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
+                  : type === 'success'
+                    ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                    : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
             }`}
           >
             {confirmText}
@@ -194,17 +214,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelText = '取消',
   onConfirm,
   onCancel,
-  type = 'warning'
+  type = 'warning',
 }) => {
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     onConfirm()
     onClose()
-  }
+  }, [onConfirm, onClose])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onCancel?.()
     onClose()
-  }
+  }, [onCancel, onClose])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -219,17 +239,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       const handleGlobalKeyPress = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           handleConfirm()
-        } else if (e.key === 'Escape') {
-          handleCancel()
         }
       }
-      
+
       document.addEventListener('keydown', handleGlobalKeyPress)
       return () => {
         document.removeEventListener('keydown', handleGlobalKeyPress)
       }
     }
-  }, [isOpen])
+  }, [isOpen, handleConfirm])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} type={type}>
@@ -239,19 +257,19 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             onClick={handleCancel}
             onKeyDown={handleKeyPress}
-            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
-            className={`px-4 py-2 font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-150 ease-in-out ${
-              type === 'error' 
+            className={`rounded-md px-4 py-2 font-medium text-white transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              type === 'error'
                 ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
                 : type === 'warning'
-                ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
-                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                  ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
+                  : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
             }`}
           >
             {confirmText}
@@ -272,7 +290,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   confirmText = '确定',
   cancelText = '取消',
   onConfirm,
-  onCancel
+  onCancel,
 }) => {
   const [value, setValue] = React.useState(defaultValue)
 
@@ -304,7 +322,9 @@ export const PromptModal: React.FC<PromptModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={title} type="info">
       <div className="space-y-4">
         <p className="text-gray-700">{message}</p>
-        <label htmlFor="modal-input" className="sr-only">输入</label>
+        <label htmlFor="modal-input" className="sr-only">
+          输入
+        </label>
         <input
           id="modal-input"
           type="text"
@@ -312,19 +332,19 @@ export const PromptModal: React.FC<PromptModalProps> = ({
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder={placeholder}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
           autoFocus
         />
         <div className="flex justify-end gap-3">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
+            className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {confirmText}
           </button>
@@ -344,7 +364,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   confirmText = '确定',
   cancelText = '取消',
   onConfirm,
-  onCancel
+  onCancel,
 }) => {
   const [selectedValue, setSelectedValue] = React.useState(defaultValue)
 
@@ -376,16 +396,16 @@ export const SelectModal: React.FC<SelectModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={title} type="info">
       <div className="space-y-4">
         <p className="text-gray-700">{message}</p>
-        
-        <div className="space-y-2 max-h-64 overflow-y-auto">
+
+        <div className="max-h-64 space-y-2 overflow-y-auto">
           {options.map((option) => (
             <label
               key={option.value}
-              className="flex items-start p-3 rounded-lg border cursor-pointer"
-              style={{ 
+              className="flex cursor-pointer items-start rounded-lg border p-3"
+              style={{
                 borderColor: selectedValue === option.value ? '#3b82f6' : '#e5e7eb',
                 backgroundColor: selectedValue === option.value ? '#eff6ff' : '#ffffff',
-                transition: 'none'
+                transition: 'none',
               }}
               onMouseEnter={(e) => {
                 if (selectedValue !== option.value) {
@@ -406,16 +426,12 @@ export const SelectModal: React.FC<SelectModalProps> = ({
                 value={option.value}
                 checked={selectedValue === option.value}
                 onChange={(e) => setSelectedValue(e.target.value)}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                className="mt-1 size-4 border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <div className="ml-3 flex-1">
-                <div className="font-medium text-gray-900">
-                  {option.label}
-                </div>
+                <div className="font-medium text-gray-900">{option.label}</div>
                 {option.description && (
-                  <div className="text-gray-500 mt-1">
-                    {option.description}
-                  </div>
+                  <div className="mt-1 text-gray-500">{option.description}</div>
                 )}
               </div>
             </label>
@@ -426,7 +442,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
           <button
             onClick={handleCancel}
             onKeyDown={handleKeyPress}
-            className="px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ease-in-out"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {cancelText}
           </button>
@@ -434,7 +450,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             onClick={handleConfirm}
             onKeyDown={handleKeyPress}
             disabled={!selectedValue}
-            className="px-4 py-2 font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 ease-in-out"
+            className="rounded-md border border-transparent bg-blue-600 px-4 py-2 font-medium text-white transition-colors duration-150 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {confirmText}
           </button>

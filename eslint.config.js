@@ -1,6 +1,70 @@
 import js from '@eslint/js'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
+import eslintConfigPrettier from 'eslint-config-prettier'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tailwindcss from 'eslint-plugin-tailwindcss'
+import globals from 'globals'
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const tailwindConfigPath = path.join(projectRoot, 'tailwind.config.cjs')
+
+const tsUnusedVarsRule = [
+  'warn',
+  {
+    argsIgnorePattern: '^_',
+    varsIgnorePattern: '^_',
+    caughtErrorsIgnorePattern: '^_',
+    ignoreRestSiblings: true,
+    args: 'after-used',
+  },
+]
+
+const reactRules = {
+  'react-hooks/rules-of-hooks': 'error',
+  'react-hooks/exhaustive-deps': 'warn',
+  'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+}
+
+const jsStrictRules = {
+  eqeqeq: ['error', 'always', { null: 'ignore' }],
+  'no-var': 'error',
+  'prefer-const': 'warn',
+  curly: ['warn', 'multi-line'],
+  'no-throw-literal': 'error',
+  'prefer-promise-reject-errors': 'error',
+  'no-duplicate-imports': 'error',
+  'no-implicit-coercion': 'warn',
+  'no-return-await': 'warn',
+  'require-await': 'warn',
+  'no-console': ['warn', { allow: ['warn', 'error'] }],
+  'no-debugger': 'warn',
+  'no-empty': ['warn', { allowEmptyCatch: true }],
+  'no-extra-boolean-cast': 'warn',
+  'no-unexpected-multiline': 'error',
+}
+
+const edgeGlobals = {
+  Request: 'readonly',
+  Response: 'readonly',
+  fetch: 'readonly',
+  Headers: 'readonly',
+  URL: 'readonly',
+  URLSearchParams: 'readonly',
+  ReadableStream: 'readonly',
+  WritableStream: 'readonly',
+  TransformStream: 'readonly',
+  TextEncoder: 'readonly',
+  TextDecoder: 'readonly',
+  btoa: 'readonly',
+  atob: 'readonly',
+  crypto: 'readonly',
+  console: 'readonly',
+  setTimeout: 'readonly',
+}
 
 export default [
   js.configs.recommended,
@@ -14,11 +78,32 @@ export default [
       '*.config.js',
       '*.config.ts',
       'postcss.js',
-      'tailwind.js',
+      'tailwind.config.cjs',
       'vite.config.ts',
       'eslint.config.js',
+      'prettier.config.js',
+      'stylelint.config.js',
     ],
   },
+
+  ...tailwindcss.configs['flat/recommended'].map((config) => ({
+    ...config,
+    files: ['src/**/*.{ts,tsx}'],
+    settings: {
+      tailwindcss: {
+        config: tailwindConfigPath,
+        callees: ['clsx'],
+      },
+    },
+    rules: {
+      ...config.rules,
+      'tailwindcss/classnames-order': 'warn',
+      'tailwindcss/enforces-shorthand': 'warn',
+      'tailwindcss/enforces-negative-arbitrary-values': 'warn',
+      'tailwindcss/no-unnecessary-arbitrary-value': 'warn',
+      'tailwindcss/no-custom-classname': 'off',
+    },
+  })),
 
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -33,32 +118,22 @@ export default [
         project: './tsconfig.json',
       },
       globals: {
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        console: 'readonly',
+        ...globals.browser,
       },
     },
     plugins: {
       '@typescript-eslint': tseslint,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-          args: 'after-used',
-        },
-      ],
+      ...reactRules,
+      '@typescript-eslint/no-unused-vars': tsUnusedVarsRule,
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-unused-expressions': 'warn',
-
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'warn',
       'prefer-const': 'warn',
@@ -132,18 +207,12 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-          args: 'after-used',
-        },
-      ],
+      ...reactRules,
+      '@typescript-eslint/no-unused-vars': tsUnusedVarsRule,
       'no-unused-vars': 'off',
     },
   },
@@ -160,19 +229,7 @@ export default [
         },
       },
       globals: {
-        Request: 'readonly',
-        Response: 'readonly',
-        fetch: 'readonly',
-        Headers: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        ReadableStream: 'readonly',
-        WritableStream: 'readonly',
-        TransformStream: 'readonly',
-        TextEncoder: 'readonly',
-        TextDecoder: 'readonly',
-        crypto: 'readonly',
-        console: 'readonly',
+        ...edgeGlobals,
       },
     },
     plugins: {
@@ -196,30 +253,33 @@ export default [
   },
 
   {
-    files: ['server/**/*.js', 'api/**/*.js'],
+    files: ['server/**/*.js', 'api/**/*.js', 'shared/**/*.js'],
     languageOptions: {
-      ecmaVersion: 2020,
-      sourceType: 'module',
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+      },
       globals: {
-        process: 'readonly',
-        Buffer: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        console: 'readonly',
-        global: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        fetch: 'readonly',
-        TextEncoder: 'readonly',
-        TextDecoder: 'readonly',
-        crypto: 'readonly',
+        ...globals.node,
       },
     },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      'no-undef': 'error',
-      'no-empty': ['warn', { allowEmptyCatch: true }],
+      ...jsStrictRules,
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
       'no-useless-escape': 'warn',
     },
   },
@@ -227,33 +287,47 @@ export default [
   {
     files: ['edge-functions/**/*.js'],
     languageOptions: {
-      ecmaVersion: 2020,
-      sourceType: 'module',
-      globals: {
-        Request: 'readonly',
-        Response: 'readonly',
-        fetch: 'readonly',
-        Headers: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        ReadableStream: 'readonly',
-        WritableStream: 'readonly',
-        TransformStream: 'readonly',
-        TextEncoder: 'readonly',
-        TextDecoder: 'readonly',
-        btoa: 'readonly',
-        atob: 'readonly',
-        crypto: 'readonly',
-        console: 'readonly',
-        setTimeout: 'readonly',
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
       },
+      globals: edgeGlobals,
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
     },
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      'no-undef': 'error',
-      'no-empty': ['warn', { allowEmptyCatch: true }],
+      ...jsStrictRules,
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
     },
   },
 
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      'no-undef': 'off',
+    },
+  },
+
+  eslintConfigPrettier,
 ]

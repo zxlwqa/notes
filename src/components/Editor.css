@@ -1,11 +1,11 @@
 #custom-toolbar,
 #custom-toolbar.toolbar-fixed-width,
 #custom-toolbar[style],
-#custom-toolbar[style*="width"],
-#custom-toolbar[style*="auto"] {
-  width: 153px !important;
-  min-width: 153px !important;
-  max-width: 153px !important;
+#custom-toolbar[style*='width'],
+#custom-toolbar[style*='auto'] {
+  width: 192px !important;
+  min-width: 192px !important;
+  max-width: 192px !important;
   box-sizing: border-box !important;
 }
 
@@ -13,53 +13,99 @@
   #custom-toolbar,
   #custom-toolbar.toolbar-fixed-width,
   #custom-toolbar[style],
-  #custom-toolbar[style*="width"],
-  #custom-toolbar[style*="auto"] {
-    width: 153px !important;
-    min-width: 153px !important;
-    max-width: 153px !important;
+  #custom-toolbar[style*='width'],
+  #custom-toolbar[style*='auto'] {
+    width: 192px !important;
+    min-width: 192px !important;
+    max-width: 192px !important;
     box-sizing: border-box !important;
   }
 }
 
 div#custom-toolbar.toolbar-fixed-width {
-  width: 153px !important;
-  min-width: 153px !important;
-  max-width: 153px !important;
+  width: 192px !important;
+  min-width: 192px !important;
+  max-width: 192px !important;
   box-sizing: border-box !important;
 }
 
 div#custom-toolbar[style] {
-  width: 153px !important;
-  min-width: 153px !important;
-  max-width: 153px !important;
+  width: 192px !important;
+  min-width: 192px !important;
+  max-width: 192px !important;
   box-sizing: border-box !important;
 }
 
 html body div#custom-toolbar.toolbar-fixed-width {
-  width: 153px !important;
-  min-width: 153px !important;
-  max-width: 153px !important;
+  width: 192px !important;
+  min-width: 192px !important;
+  max-width: 192px !important;
   box-sizing: border-box !important;
 }
 
 html body div#custom-toolbar[style],
-html body div#custom-toolbar[style*="width"],
-html body div#custom-toolbar[style*="auto"] {
-  width: 153px !important;
-  min-width: 153px !important;
-  max-width: 153px !important;
+html body div#custom-toolbar[style*='width'],
+html body div#custom-toolbar[style*='auto'] {
+  width: 192px !important;
+  min-width: 192px !important;
+  max-width: 192px !important;
   box-sizing: border-box !important;
 }
 
 #custom-toolbar > div {
   width: 100% !important;
   max-width: 100% !important;
-  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+#custom-toolbar,
+#custom-toolbar > div {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(59 130 246 / 50%) transparent;
+}
+
+#custom-toolbar::-webkit-scrollbar,
+#custom-toolbar > div::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+#custom-toolbar::-webkit-scrollbar-track,
+#custom-toolbar > div::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+#custom-toolbar::-webkit-scrollbar-thumb,
+#custom-toolbar > div::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(255 255 255 / 55%), rgb(59 130 246 / 45%));
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  background-clip: padding-box;
+}
+
+#custom-toolbar::-webkit-scrollbar-thumb:hover,
+#custom-toolbar > div::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(37 99 235 / 65%));
+}
+
+#custom-toolbar::-webkit-scrollbar-thumb:active,
+#custom-toolbar > div::-webkit-scrollbar-thumb:active {
+  background: rgb(37 99 235 / 75%);
+}
+
+#custom-toolbar::-webkit-scrollbar-corner,
+#custom-toolbar > div::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .notes-editor-container {
   position: relative !important;
+  width: 100%;
+  min-width: 0;
   transform: none !important;
   top: auto !important;
   left: auto !important;
@@ -71,84 +117,83 @@ html body div#custom-toolbar[style*="auto"] {
 .notes-editor-container .CodeMirror,
 .notes-editor-container .CodeMirror-scroll,
 .notes-editor-container .CodeMirror-wrap,
-.notes-editor-container .CodeMirror-wrap .CodeMirror-scroll { 
-  overflow-x: hidden !important; 
+.notes-editor-container .CodeMirror-wrap .CodeMirror-scroll {
+  overflow-x: hidden !important;
 }
 
-.notes-editor-container .editor-statusbar { 
-  display: none !important; 
-  border: none !important; 
-  box-shadow: none !important; 
-  background: transparent !important; 
-  height: 0 !important; 
-  padding: 0 !important; 
+.notes-editor-container .editor-statusbar {
+  display: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  height: 0 !important;
+  padding: 0 !important;
 }
 
-.notes-editor-container .CodeMirror { 
-  border: none !important; 
-  box-shadow: none !important; 
+.notes-editor-container .CodeMirror {
+  border: none !important;
+  box-shadow: none !important;
 }
 
-.notes-editor-container .editor-toolbar { 
-  border-bottom: none !important; 
+.notes-editor-container .editor-toolbar {
+  border-bottom: none !important;
 }
 
 .notes-editor-container .CodeMirror-hscrollbar,
-.notes-editor-container .CodeMirror-hscrollbar > div { 
-  display: none !important; 
-  height: 0 !important; 
+.notes-editor-container .CodeMirror-hscrollbar > div {
+  display: none !important;
+  height: 0 !important;
 }
 
-.notes-editor-container .CodeMirror-sizer { 
-  min-width: 0 !important; 
+.notes-editor-container .CodeMirror-sizer {
+  min-width: 0 !important;
 }
 
 .notes-editor-container .editor-preview,
-.notes-editor-container .editor-preview-side { 
-  overflow-x: hidden !important; 
+.notes-editor-container .editor-preview-side {
+  overflow-x: hidden !important;
 }
 
-.notes-editor-container .CodeMirror pre { 
-  white-space: pre-wrap !important; 
-  word-wrap: break-word !important; 
+.notes-editor-container .editor-preview mark,
+.notes-editor-container .editor-preview-side mark {
+  background: rgb(250 204 21 / 35%);
+  color: inherit;
+  padding: 0.05em 0.2em;
+  border-radius: 0.2em;
+}
+
+.notes-editor-container .editor-preview u,
+.notes-editor-container .editor-preview-side u {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.notes-editor-container .CodeMirror pre {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
   word-break: break-all !important;
   overflow-wrap: break-word !important;
 }
 
-.notes-editor-container .CodeMirror, 
-.notes-editor-container .editor-toolbar, 
-.notes-editor-container .editor-statusbar { 
-  background: transparent !important; 
+.notes-editor-container .CodeMirror,
+.notes-editor-container .editor-toolbar,
+.notes-editor-container .editor-statusbar {
+  background: transparent !important;
 }
 
-.notes-editor-container .CodeMirror-gutters { 
-  background: transparent !important; 
-  border: none !important; 
+.notes-editor-container .CodeMirror-gutters {
+  background: transparent !important;
+  border: none !important;
 }
 
 .notes-editor-container .CodeMirror .CodeMirror-cursor {
   border-left: 2px solid #3b82f6 !important;
   border-right: none !important;
-  width: 0 !important;
-  height: 1.2em !important;
-  background: transparent !important;
-  animation: cursor-blink 1s infinite !important;
-  position: relative !important;
-  vertical-align: baseline !important;
-  display: inline-block !important;
-  line-height: 1.6 !important;
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 .notes-editor-container .CodeMirror.CodeMirror-focused .CodeMirror-cursor {
   border-left-width: 3px !important;
   border-left-color: #2563eb !important;
-}
-
-@keyframes cursor-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.3; }
 }
 
 .notes-editor-container .CodeMirror {
@@ -173,7 +218,7 @@ html body div#custom-toolbar[style*="auto"] {
   font-size: var(--editor-font-size, 14px) !important;
   font-family: var(--editor-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace) !important;
   white-space: pre-wrap !important;
-  word-wrap: break-word !important; 
+  word-wrap: break-word !important;
   word-break: break-all !important;
   overflow-wrap: break-word !important;
 }

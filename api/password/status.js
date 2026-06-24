@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import { checkAuth, setCorsHeaders } from '../_utils/auth.js'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -22,22 +23,14 @@ async function initDatabase() {
   }
 }
 
-function checkAuth(req) {
-  if (!PASSWORD) return true
-  const auth = req.headers.authorization
-  return auth && auth === `Bearer ${PASSWORD}`
-}
-
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
+  setCorsHeaders(req, res)
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end()
   }
 
-  if (!checkAuth(req)) {
+  if (!(await checkAuth(req, pool))) {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
@@ -48,8 +41,8 @@ export default async function handler(req, res) {
   try {
     await initDatabase()
 
-    const hasEnvPassword = !!PASSWORD
-    
+    const hasEnvPassword = Boolean(PASSWORD)
+
     const result = await pool.query('SELECT value FROM settings WHERE key = $1', ['password'])
     const hasDbPassword = result.rows.length > 0 && result.rows[0].value
 
@@ -59,7 +52,7 @@ export default async function handler(req, res) {
       usingPostgreSQL: true,
       hasEnvPassword,
       hasDbPassword,
-      passwordSource: hasEnvPassword ? 'env' : (hasDbPassword ? 'postgresql' : 'none')
+      passwordSource: hasEnvPassword ? 'env' : hasDbPassword ? 'postgresql' : 'none',
     })
   } catch (e) {
     console.error('Password status API error:', e)

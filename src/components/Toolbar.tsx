@@ -1,426 +1,261 @@
-import React, { useState, useEffect } from 'react'
-import { EditorToolbarProps } from '@/types'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { GripVertical } from 'lucide-react'
+import { toolbarInsert } from '@/lib/edIns'
+import {
+  orderToolbarTools,
+  readToolbarOrder,
+  saveToolbarOrder,
+  type ToolbarTool,
+} from '@/lib/toolbar'
 
-const EditorToolbar: React.FC<EditorToolbarProps> = ({ onInsertText }) => {
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight
-  })
+const TOOLBAR_W = 192
+
+interface EditorToolbarProps {
+  embedded?: boolean
+}
+
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ embedded = false }) => {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  const [toolOrder, setToolOrder] = useState(readToolbarOrder)
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const skipInsertRef = useRef(false)
 
   useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      })
-    }
-
-    setWindowSize({
-      width: window.innerWidth,
-      height: window.innerHeight
-    })
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
-  const getToolbarPosition = () => {
-    const { width } = windowSize
-    
-    if (width < 768) {
-      return {
-        position: 'fixed' as const,
+  const tools = orderToolbarTools(toolOrder)
+
+  const reorderTool = useCallback((fromId: string, toId: string) => {
+    if (fromId === toId) return
+    setToolOrder((prev) => {
+      const fromIndex = prev.indexOf(fromId)
+      const toIndex = prev.indexOf(toId)
+      if (fromIndex === -1 || toIndex === -1) return prev
+      const next = [...prev]
+      const [item] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, item)
+      saveToolbarOrder(next)
+      return next
+    })
+  }, [])
+
+  const toolbarStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
         bottom: '20px',
         left: '50%',
         transform: 'translateX(-50%)',
-        maxWidth: '90vw'
+        maxWidth: '90vw',
+        width: 'auto',
+        background: 'rgba(255,255,255,0.40)',
+        backdropFilter: 'blur(16px)',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        border: '1px solid rgba(255,255,255,0.30)',
+        padding: '8px 12px',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        gap: '8px',
+        zIndex: 1100,
+        pointerEvents: 'auto',
+        flexWrap: 'nowrap',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        whiteSpace: 'nowrap',
       }
-    } else {
-      return {
-        position: 'fixed' as const,
-        left: '0px',
-        top: '64px',
-        height: 'calc(100vh - 64px)',
-        maxHeight: 'calc(100vh - 64px)',
-        width: '153px',
-        marginLeft: '0px',
-        marginRight: '0px'
+    : {
+        position: 'sticky',
+        top: '4rem',
+        width: '100%',
+        maxHeight: 'calc(100vh - 4rem - 1.5rem)',
+        background: embedded ? 'transparent' : 'rgba(255,255,255,0.40)',
+        backdropFilter: embedded ? 'none' : 'blur(16px)',
+        borderRadius: embedded ? 0 : '8px',
+        boxShadow: embedded
+          ? 'none'
+          : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        border: embedded ? 'none' : '1px solid rgba(255,255,255,0.30)',
+        padding: embedded ? '12px 10px' : '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        gap: '8px',
+        pointerEvents: 'auto',
+        flexWrap: 'nowrap',
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        whiteSpace: 'nowrap',
       }
-    }
-  }
 
-  const toolbarStyle = {
-    ...getToolbarPosition(),
-    background: 'rgba(255,255,255,0.40)',
-    backdropFilter: 'blur(16px)',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-    border: '1px solid rgba(255,255,255,0.30)',
-    padding: '16px',
-    marginLeft: '0px',
-    marginRight: '0px',
-    display: 'flex',
-    flexDirection: windowSize.width < 768 ? 'row' as const : 'column' as const,
-    alignItems: 'stretch',
-    gap: '8px',
-    zIndex: 1000,
-    flexWrap: windowSize.width < 768 ? 'wrap' as const : 'nowrap' as const,
-    overflow: 'hidden',
-    whiteSpace: 'nowrap'
-  }
+  const defaultTextColor = '#FFFFFF'
 
-  const getButtonStyle = () => ({
-    width: '100%',
-    textAlign: 'left' as const,
-    padding: windowSize.width < 768 ? '8px 12px' : '6px 12px',
+  const getButtonStyle = (dragging: boolean): React.CSSProperties => ({
+    width: isMobile ? 'auto' : '100%',
+    minWidth: isMobile ? '44px' : undefined,
+    minHeight: isMobile ? '44px' : '40px',
+    flexShrink: isMobile ? 0 : undefined,
+    textAlign: 'left',
+    padding: isMobile ? '10px 12px' : '8px 10px 8px 6px',
     borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: isMobile ? 'center' : 'flex-start',
+    gap: isMobile ? 0 : '4px',
     backgroundColor: 'transparent',
-    color: '#FFFFFF',
-    fontWeight: 'normal',
+    color: defaultTextColor,
+    fontWeight: '500',
+    fontSize: 'var(--global-font-size, 14px)',
+    lineHeight: 1.4,
     transition: 'none',
-    cursor: 'pointer',
+    cursor: dragging ? 'grabbing' : 'pointer',
     border: 'none',
-    outline: 'none'
+    outline: 'none',
+    opacity: dragging ? 0.55 : 1,
   })
 
-  return (
-    <div 
-      id="custom-toolbar" 
+  const handleHoverIn = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.background = 'rgba(255,255,255,0.3)'
+    e.currentTarget.style.color = defaultTextColor
+    e.currentTarget.style.fontWeight = '500'
+  }
+
+  const handleHoverOut = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.background = 'transparent'
+    e.currentTarget.style.color = defaultTextColor
+    e.currentTarget.style.fontWeight = '500'
+  }
+
+  const renderToolButton = (tool: ToolbarTool) => {
+    const dragging = draggedId === tool.id
+    return (
+      <button
+        key={tool.id}
+        type="button"
+        title={`${tool.title}（拖拽 ⋮⋮ 可排序）`}
+        aria-label={tool.ariaLabel}
+        draggable
+        onDragStart={(e) => {
+          skipInsertRef.current = true
+          setDraggedId(tool.id)
+          e.dataTransfer.setData('text/plain', tool.id)
+          e.dataTransfer.effectAllowed = 'move'
+        }}
+        onDragEnd={() => {
+          setDraggedId(null)
+          window.setTimeout(() => {
+            skipInsertRef.current = false
+          }, 0)
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault()
+          const fromId = e.dataTransfer.getData('text/plain')
+          if (fromId) reorderTool(fromId, tool.id)
+          setDraggedId(null)
+        }}
+        onMouseDown={(e) => {
+          if (skipInsertRef.current) return
+          if ((e.target as HTMLElement).closest('[data-drag-handle]')) {
+            e.preventDefault()
+            return
+          }
+          toolbarInsert(e, tool.prefix, tool.suffix)
+        }}
+        style={getButtonStyle(dragging)}
+        onMouseEnter={handleHoverIn}
+        onMouseLeave={handleHoverOut}
+      >
+        {!isMobile && (
+          <span
+            data-drag-handle
+            draggable
+            aria-hidden
+            title="拖拽排序"
+            onMouseDown={(e) => e.stopPropagation()}
+            onDragStart={(e) => {
+              setDraggedId(tool.id)
+              e.dataTransfer.setData('text/plain', tool.id)
+              e.dataTransfer.effectAllowed = 'move'
+              e.stopPropagation()
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '18px',
+              flexShrink: 0,
+              cursor: 'grab',
+              color: 'inherit',
+              opacity: 0.65,
+            }}
+          >
+            <GripVertical className="size-3.5" />
+          </span>
+        )}
+        {!isMobile ? (
+          <span style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                width: '16px',
+                height: '16px',
+                marginRight: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                ...tool.iconStyle,
+              }}
+            >
+              {tool.icon}
+            </span>
+            {tool.label}
+          </span>
+        ) : (
+          tool.icon
+        )}
+      </button>
+    )
+  }
+
+  const toolbar = (
+    <div
+      id="custom-toolbar"
       style={toolbarStyle}
       className="toolbar-fixed-width"
-      data-width="153px"
+      data-width={`${TOOLBAR_W}px`}
+      role="toolbar"
+      aria-label="Markdown 格式工具栏"
     >
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <button 
-        title="任务列表" 
-        onClick={() => onInsertText('- [ ] ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'row' : 'column',
+          gap: '8px',
+          flexWrap: 'nowrap',
         }}
       >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>☐</span>
-            任务列表
-          </span>
-        ) : (
-          '☐'
-        )}
-      </button>
-      
-      <button 
-        title="链接" 
-        onClick={() => onInsertText('[', '](url)')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔗</span>
-            链接
-          </span>
-        ) : (
-          '🔗'
-        )}
-      </button>
-      
-      <button 
-        title="图片" 
-        onClick={() => onInsertText('![', '](url)')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🖼️</span>
-            图片
-          </span>
-        ) : (
-          '🖼️'
-        )}
-      </button>
-      
-      <button 
-        title="粗体" 
-        onClick={() => onInsertText('**', '**')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>B</span>
-            粗体
-          </span>
-        ) : (
-          'B'
-        )}
-      </button>
-      
-      <button 
-        title="斜体" 
-        onClick={() => onInsertText('*', '*')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>I</span>
-            斜体
-          </span>
-        ) : (
-          'I'
-        )}
-      </button>
-      
-      <button 
-        title="代码块" 
-        onClick={() => onInsertText('```\n', '\n```')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&lt;/&gt;</span>
-            代码块
-          </span>
-        ) : (
-          '&lt;/&gt;'
-        )}
-      </button>
-      
-      <button 
-        title="标题" 
-        onClick={() => onInsertText('# ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>H1</span>
-            标题
-          </span>
-        ) : (
-          'H1'
-        )}
-      </button>
-      
-      <button 
-        title="二级标题" 
-        onClick={() => onInsertText('## ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>H2</span>
-            二级标题
-          </span>
-        ) : (
-          'H2'
-        )}
-      </button>
-      
-      <button 
-        title="三级标题" 
-        onClick={() => onInsertText('### ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>H3</span>
-            三级标题
-          </span>
-        ) : (
-          'H3'
-        )}
-      </button>
-      
-      <button 
-        title="删除线" 
-        onClick={() => onInsertText('~~', '~~')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
-            删除线
-          </span>
-        ) : (
-          'S'
-        )}
-      </button>
-      
-      <button 
-        title="引用" 
-        onClick={() => onInsertText('> ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&gt;</span>
-            引用
-          </span>
-        ) : (
-          '&gt;'
-        )}
-      </button>
-      
-      <button 
-        title="无序列表" 
-        onClick={() => onInsertText('- ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>•</span>
-            无序列表
-          </span>
-        ) : (
-          '•'
-        )}
-      </button>
-      
-      <button 
-        title="有序列表" 
-        onClick={() => onInsertText('1. ', '')} 
-        style={getButtonStyle()} 
-        onMouseEnter={(e) => { 
-          e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; 
-          e.currentTarget.style.color = '#111827'; 
-          e.currentTarget.style.fontWeight = '500'; 
-        }} 
-        onMouseLeave={(e) => { 
-          e.currentTarget.style.background = 'transparent'; 
-          e.currentTarget.style.color = '#FFFFFF'; 
-          e.currentTarget.style.fontWeight = 'normal'; 
-        }}
-      >
-        {windowSize.width >= 768 ? (
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '12px', height: '12px', marginRight: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1.</span>
-            有序列表
-          </span>
-        ) : (
-          '1.'
-        )}
-      </button>
+        {tools.map(renderToolButton)}
       </div>
-      
     </div>
+  )
+
+  if (isMobile) {
+    return createPortal(toolbar, document.body)
+  }
+
+  return (
+    <aside className="hidden shrink-0 md:block" style={{ width: TOOLBAR_W }}>
+      {toolbar}
+    </aside>
   )
 }
 

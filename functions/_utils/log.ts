@@ -1,6 +1,11 @@
 import type { D1Database } from '../types'
 
-export async function logToD1(env: { NOTESD?: D1Database }, level: string, message: string, meta?: unknown) {
+export async function logToD1(
+  env: { NOTESD?: D1Database },
+  level: string,
+  message: string,
+  meta?: unknown
+) {
   try {
     if (!env?.NOTESD) return
     await env.NOTESD.prepare(
@@ -18,7 +23,9 @@ export async function logToD1(env: { NOTESD?: D1Database }, level: string, messa
     const metaJson = meta ? JSON.stringify(meta) : null
     await env.NOTESD.prepare(
       `INSERT INTO logs(level, message, meta, created_at) VALUES(?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S','now','+8 hours'))`
-    ).bind(level, message, metaJson).run()
+    )
+      .bind(level, message, metaJson)
+      .run()
   } catch (e) {
     console.error('logToD1 error:', e)
   }

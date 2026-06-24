@@ -8,7 +8,8 @@ const BackToTop: React.FC<BackToTopProps> = ({ threshold = 200 }) => {
   const [visible, setVisible] = useState(false)
 
   const handleScroll = useCallback(() => {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
+    const scrollTop =
+      window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
     setVisible(scrollTop > threshold)
   }, [threshold])
 
@@ -46,7 +47,7 @@ const BackToTop: React.FC<BackToTopProps> = ({ threshold = 200 }) => {
         cursor: 'pointer',
         boxShadow: '0 10px 25px rgba(59, 130, 246, 0.4)',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease',
-        fontSize: '24px'
+        fontSize: '24px',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)'

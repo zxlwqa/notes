@@ -1,69 +1,201 @@
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Save, ArrowLeft, Settings, Home } from 'lucide-react'
 import BackToTop from '@/components/BackTop'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/ui/Loading'
+import { AlertModal, ConfirmModal } from '@/components/Modal'
+import NotesEditor from '@/components/Editor'
+import EditorToolbar from '@/components/Toolbar'
+import { useModal } from '@/hooks/Modal'
 import { notesApi } from '@/lib/api'
+import { toNoteSummary, updateNotesCache, findCachedNote } from '@/lib/notes'
+import { upsertSearchIndexEntry } from '@/lib/search'
+import {
+  acquireEditLock,
+  broadcastNoteUpdated,
+  isNoteLockedByOtherTab,
+  onNoteUpdated,
+  refreshEditLock,
+  releaseEditLock,
+} from '@/lib/noteSync'
+import type { Note } from '@/types'
+import '@/components/Editor.css'
 
 const SettingsModal = lazy(() => import('@/components/Settings'))
 
-import NotesEditor from '@/components/Editor'
-import EditorToolbar from '@/components/Toolbar'
-import '@/components/Editor.css'
-
-interface Note {
-  id: string
-  title: string
-  content: string
-  tags: string[]
-  createdAt: string
-  updatedAt: string
+function snapshotNote(note: Pick<Note, 'title' | 'content' | 'tags'>): string {
+  return JSON.stringify({
+    title: note.title,
+    content: note.content,
+    tags: note.tags,
+  })
 }
 
 const Edit: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const [note, setNote] = useState<Note | null>(() => {
     const state = location.state as { note?: Note; isNew?: boolean } | null
+    if (state?.isNew && state.note) return state.note
     if (state?.note) return state.note
-    try {
-      const cache = sessionStorage.getItem('note-cache:' + (window.location.pathname || ''))
-      if (cache) return JSON.parse(cache) as Note
-    } catch {}
-    return null
+    return id ? (findCachedNote(id) ?? null) : null
   })
   const [loading, setLoading] = useState<boolean>(() => {
     const state = location.state as { note?: Note; isNew?: boolean } | null
-    return !state?.note
+    if (state?.note || state?.isNew) return false
+    return id ? !findCachedNote(id) : true
+  })
+  const [contentLoading, setContentLoading] = useState<boolean>(() => {
+    const state = location.state as { note?: Note; isNew?: boolean } | null
+    if (state?.isNew && state.note) return false
+    const initial = state?.note ?? (id ? findCachedNote(id) : undefined)
+    return initial?.content == null && Boolean(initial)
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isNewNote, setIsNewNote] = useState(false)
+  const [isNewNote, setIsNewNote] = useState(() => {
+    const state = location.state as { note?: Note; isNew?: boolean } | null
+    return Boolean(state?.isNew)
+  })
   const [tagInput, setTagInput] = useState('')
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [editorReady] = useState(true)
-  const [mainMarginLeft, setMainMarginLeft] = useState<string>('0px')
-  const [isDesktop, setIsDesktop] = useState<boolean>(window.innerWidth >= 768)
+  const initialNoteSnapshotRef = useRef<string | null>(null)
+  const remoteUpdatedAtRef = useRef<string | null>(null)
+  const navNoteInitRef = useRef(false)
+  const modal = useModal()
+  const [conflictWarning, setConflictWarning] = useState('')
+
+  const captureInitialSnapshot = useCallback((value: Note) => {
+    initialNoteSnapshotRef.current = snapshotNote(value)
+  }, [])
+
+  const isDirty = useCallback(() => {
+    if (!note || !initialNoteSnapshotRef.current) return false
+    return snapshotNote(note) !== initialNoteSnapshotRef.current
+  }, [note])
+
+  const confirmDiscardChanges = useCallback(async () => {
+    if (!isDirty()) return true
+    return modal.showConfirm('有未保存的更改，确定放弃吗？', {
+      title: '放弃更改',
+      type: 'warning',
+      confirmText: '放弃',
+      cancelText: '继续编辑',
+    })
+  }, [isDirty, modal])
+
+  const loadNote = useCallback(async () => {
+    if (!id) return
+
+    const hasShell = note != null
+    try {
+      if (hasShell) {
+        setContentLoading(true)
+      } else {
+        setLoading(true)
+      }
+      setError('')
+      const response = await notesApi.getNote(id)
+
+      if (response.data && response.data.id) {
+        const loadedNote = {
+          id: response.data.id,
+          title: response.data.title || '无标题',
+          content: response.data.content || '',
+          tags: response.data.tags || [],
+          createdAt: response.data.createdAt || new Date().toISOString(),
+          updatedAt: response.data.updatedAt || new Date().toISOString(),
+        }
+        setNote(loadedNote)
+        remoteUpdatedAtRef.current = loadedNote.updatedAt
+        captureInitialSnapshot(loadedNote)
+      } else {
+        throw new Error('笔记数据格式不正确')
+      }
+    } catch (err: unknown) {
+      console.error('Load note error:', err)
+      const errorMessage = err instanceof Error ? err.message : '未知错误'
+      setError('加载笔记失败: ' + errorMessage)
+    } finally {
+      setLoading(false)
+      setContentLoading(false)
+    }
+  }, [id, note, captureInitialSnapshot])
 
   useEffect(() => {
+    initialNoteSnapshotRef.current = null
+    remoteUpdatedAtRef.current = null
+    navNoteInitRef.current = false
+    setConflictWarning('')
+  }, [id])
 
+  useEffect(() => {
+    if (!id || isNewNote) return
+
+    if (isNoteLockedByOtherTab(id)) {
+      setConflictWarning('其他标签页正在编辑此笔记，保存前请注意冲突。')
+    } else {
+      acquireEditLock(id)
+    }
+
+    const lockTimer = window.setInterval(() => refreshEditLock(id), 60_000)
+    const unsubscribe = onNoteUpdated((message) => {
+      if (message.noteId !== id) return
+      if (remoteUpdatedAtRef.current && message.updatedAt > remoteUpdatedAtRef.current) {
+        remoteUpdatedAtRef.current = message.updatedAt
+        setConflictWarning('其他标签页已保存此笔记，你的未保存更改可能与之冲突。')
+      }
+    })
+
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      void notesApi.getNote(id).then((response) => {
+        const remoteUpdatedAt = response.data.updatedAt
+        if (remoteUpdatedAtRef.current && remoteUpdatedAt > remoteUpdatedAtRef.current) {
+          remoteUpdatedAtRef.current = remoteUpdatedAt
+          setConflictWarning('此笔记已在其他地方更新，保存前请确认是否覆盖。')
+        }
+      })
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      window.clearInterval(lockTimer)
+      unsubscribe()
+      document.removeEventListener('visibilitychange', onVisible)
+      releaseEditLock(id)
+    }
+  }, [id, isNewNote])
+
+  useEffect(() => {
     const state = location.state as { note?: Note; isNew?: boolean }
     if (state?.note && state?.isNew) {
-      setNote(state.note)
-      setIsNewNote(true)
-      setLoading(false)
-    } else {
-      if (!note) {
-        loadNote()
-      } else {
+      if (!navNoteInitRef.current) {
+        navNoteInitRef.current = true
+        setNote(state.note)
+        remoteUpdatedAtRef.current = state.note.updatedAt
+        setIsNewNote(true)
+        captureInitialSnapshot(state.note)
         setLoading(false)
       }
+    } else if (note && note.content == null) {
+      loadNote()
+    } else if (note && initialNoteSnapshotRef.current === null) {
+      remoteUpdatedAtRef.current = note.updatedAt
+      captureInitialSnapshot(note)
+      setLoading(false)
+      setContentLoading(false)
+    } else if (!note) {
+      loadNote()
+    } else {
+      setLoading(false)
     }
-    
+
     const settingsHandler = (event: CustomEvent) => {
       const settings = event.detail
       if (settings && settings.backgroundImageUrl) {
@@ -94,102 +226,19 @@ const Edit: React.FC = () => {
       }
     }
     window.addEventListener('settings-changed', settingsHandler as EventListener)
-    
-    const updateMainMarginLeft = () => {
-      const width = window.innerWidth
-      const isDesktopView = width >= 768
-      setIsDesktop(isDesktopView)
-      
-      const toolbar = document.getElementById('custom-toolbar')
-      if (isDesktopView) {
-        const fallback = '153px'
-        let toolbarWidth = fallback
-        if (toolbar) {
-          const rect = toolbar.getBoundingClientRect()
-          if (rect && rect.width) {
-            toolbarWidth = `${Math.round(rect.width)}px`
-          }
-        }
-        setMainMarginLeft(toolbarWidth)
-      } else {
-        setMainMarginLeft('0px')
-      }
-    }
-    
-    updateMainMarginLeft()
-    
-    window.addEventListener('resize', updateMainMarginLeft)
-    
-    let resizeObserver: ResizeObserver | null = null
-    const setupResizeObserver = () => {
-      const toolbar = document.getElementById('custom-toolbar')
-      if (toolbar && 'ResizeObserver' in window) {
-        resizeObserver = new ResizeObserver(() => {
-          updateMainMarginLeft()
-        })
-        resizeObserver.observe(toolbar)
-      } else if (!toolbar) {
-        setTimeout(setupResizeObserver, 100)
-      }
-    }
-    setupResizeObserver()
-    
+
     return () => {
       window.removeEventListener('settings-changed', settingsHandler as EventListener)
-      window.removeEventListener('resize', updateMainMarginLeft)
-      if (resizeObserver) {
-        resizeObserver.disconnect()
-      }
-      
     }
-  }, [id, location.state])
-
-  const loadNote = async () => {
-    if (!id) return
-    
-    try {
-      setLoading(true)
-      setError('')
-      const response = await notesApi.getNote(id)
-      
-      if (response.data && response.data.id) {
-        setNote({
-          id: response.data.id,
-          title: response.data.title || '无标题',
-          content: response.data.content || '',
-          tags: response.data.tags || [],
-          createdAt: response.data.createdAt || new Date().toISOString(),
-          updatedAt: response.data.updatedAt || new Date().toISOString()
-        })
-        try {
-          sessionStorage.setItem('note-cache:' + window.location.pathname, JSON.stringify({
-            id: response.data.id,
-            title: response.data.title || '无标题',
-            content: response.data.content || '',
-            tags: response.data.tags || [],
-            createdAt: response.data.createdAt || new Date().toISOString(),
-            updatedAt: response.data.updatedAt || new Date().toISOString()
-          }))
-        } catch {}
-      } else {
-        throw new Error('笔记数据格式不正确')
-      }
-    } catch (err: unknown) {
-      console.error('Load note error:', err)
-      const errorMessage = err instanceof Error ? err.message : '未知错误'
-      setError('加载笔记失败: ' + errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [id, location.state, loadNote, note, captureInitialSnapshot])
 
   const handleContentChange = useCallback((value: string) => {
-    setNote(prev => prev ? { ...prev, content: value } : null)
+    setNote((prev) => (prev ? { ...prev, content: value } : null))
   }, [])
 
   const handleTitleChange = (value: string) => {
     if (note) {
-      setNote(prev => prev ? { ...prev, title: value } : null)
+      setNote((prev) => (prev ? { ...prev, title: value } : null))
     }
   }
 
@@ -197,7 +246,7 @@ const Edit: React.FC = () => {
     if (tagInput.trim() && note) {
       const newTag = tagInput.trim()
       if (!note.tags.includes(newTag)) {
-        setNote(prev => prev ? { ...prev, tags: [...prev.tags, newTag] } : null)
+        setNote((prev) => (prev ? { ...prev, tags: [...prev.tags, newTag] } : null))
       }
       setTagInput('')
     }
@@ -205,7 +254,9 @@ const Edit: React.FC = () => {
 
   const handleRemoveTag = (tagToRemove: string) => {
     if (note) {
-      setNote(prev => prev ? { ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) } : null)
+      setNote((prev) =>
+        prev ? { ...prev, tags: prev.tags.filter((tag) => tag !== tagToRemove) } : null
+      )
     }
   }
 
@@ -216,14 +267,31 @@ const Edit: React.FC = () => {
     }
   }
 
-  const handleInsertText = (before: string, after: string) => {
-    if (note) {
-      const event = new CustomEvent('insert-text', {
-        detail: { before, after }
-      })
-      window.dispatchEvent(event)
+  const checkRemoteConflict = useCallback(async (): Promise<boolean> => {
+    if (!note?.id || isNewNote) return false
+
+    try {
+      const response = await notesApi.getNote(note.id)
+      const remoteUpdatedAt = response.data.updatedAt
+      const baseline = remoteUpdatedAtRef.current
+
+      if (baseline && remoteUpdatedAt > baseline && isDirty()) {
+        const overwrite = await modal.showConfirm(
+          '其他标签页或窗口已更新此笔记。是否仍要保存并覆盖远程版本？',
+          {
+            title: '编辑冲突',
+            type: 'warning',
+            confirmText: '覆盖保存',
+            cancelText: '取消',
+          }
+        )
+        return !overwrite
+      }
+      return false
+    } catch {
+      return false
     }
-  }
+  }, [isDirty, isNewNote, modal, note?.id])
 
   const handleSave = async () => {
     if (!note) {
@@ -239,108 +307,160 @@ const Edit: React.FC = () => {
     try {
       setSaving(true)
       setError('')
-      
+
+      if (await checkRemoteConflict()) {
+        setSaving(false)
+        return
+      }
+
       const noteData = {
         title: note.title || '无标题',
         content: note.content || '',
-        tags: note.tags || []
+        tags: note.tags || [],
       }
-      
-      
+
       if (isNewNote) {
         const response = await notesApi.createNote(noteData)
-        const newNoteId = (response.data && response.data.id) ? response.data.id : note.id
+        const newNoteId = response.data && response.data.id ? response.data.id : note.id
+        const createdAt = new Date().toISOString()
+        void upsertSearchIndexEntry({
+          id: newNoteId,
+          ...noteData,
+          createdAt,
+          updatedAt: createdAt,
+        })
         setIsNewNote(false)
-        
+
         try {
-          localStorage.setItem('note-flash', JSON.stringify({
-            action: 'created',
-            title: noteData.title,
-            noteId: newNoteId,
-            timestamp: Date.now()
-          }))
+          localStorage.setItem(
+            'note-flash',
+            JSON.stringify({
+              action: 'created',
+              title: noteData.title,
+              noteId: newNoteId,
+              timestamp: Date.now(),
+            })
+          )
         } catch {}
 
         setShowSuccessMessage(true)
-        
+
         setTimeout(() => {
           setShowSuccessMessage(false)
-          navigate(`/notes/${newNoteId}`, { state: { note: {
-            id: newNoteId,
-            title: noteData.title,
-            content: noteData.content,
-            tags: noteData.tags,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          } } })
+          navigate(`/notes/${newNoteId}`, {
+            state: {
+              note: {
+                id: newNoteId,
+                title: noteData.title,
+                content: noteData.content,
+                tags: noteData.tags,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          })
           try {
-            const cacheRaw = sessionStorage.getItem('notes-cache')
-            const list = cacheRaw ? (JSON.parse(cacheRaw) as Array<{ id: string; title?: string; content?: string; tags?: string[]; createdAt?: string; updatedAt?: string }>) : []
-            const merged = [{
-              id: newNoteId,
-              title: noteData.title,
-              content: noteData.content,
-              tags: noteData.tags,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }, ...list]
-            sessionStorage.setItem('notes-cache', JSON.stringify(merged))
+            updateNotesCache((list) => [
+              toNoteSummary({
+                id: newNoteId,
+                title: noteData.title,
+                content: noteData.content,
+                tags: noteData.tags,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }),
+              ...list,
+            ])
           } catch {}
         }, 1500)
-        
+
         return
       } else {
         await notesApi.updateNote(note.id, noteData)
+        const savedUpdatedAt = new Date().toISOString()
+        void upsertSearchIndexEntry({
+          id: note.id,
+          title: noteData.title,
+          content: noteData.content,
+          tags: noteData.tags,
+          createdAt: note.createdAt,
+          updatedAt: savedUpdatedAt,
+        })
+        remoteUpdatedAtRef.current = savedUpdatedAt
+        broadcastNoteUpdated(note.id, savedUpdatedAt)
+        setConflictWarning('')
 
         try {
-          localStorage.setItem('note-flash', JSON.stringify({
-            action: 'updated',
-            title: note.title || '无标题',
-            noteId: note.id,
-            timestamp: Date.now()
-          }))
+          localStorage.setItem(
+            'note-flash',
+            JSON.stringify({
+              action: 'updated',
+              title: note.title || '无标题',
+              noteId: note.id,
+              timestamp: Date.now(),
+            })
+          )
         } catch {}
       }
-      
-      setNote(prev => prev ? { 
-        ...prev, 
-        updatedAt: new Date().toISOString() 
-      } : null)
-      
+
+      setNote((prev) =>
+        prev
+          ? {
+              ...prev,
+              updatedAt: new Date().toISOString(),
+            }
+          : null
+      )
+
       setShowSuccessMessage(true)
-      
+      captureInitialSnapshot({
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+        id: note.id,
+        createdAt: note.createdAt,
+        updatedAt: new Date().toISOString(),
+      })
+
       setTimeout(() => {
         setShowSuccessMessage(false)
-        navigate(`/notes/${note.id}`, { state: { note: {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          tags: note.tags,
-          createdAt: note.createdAt,
-          updatedAt: new Date().toISOString()
-        } } })
-        try {
-          const cacheRaw = sessionStorage.getItem('notes-cache')
-          if (cacheRaw) {
-            const list = JSON.parse(cacheRaw) as Array<{ id: string; title?: string; content?: string; tags?: string[]; createdAt?: string; updatedAt?: string }>
-            const updated = list.map(n => n.id === note.id ? {
-              ...n,
+        navigate(`/notes/${note.id}`, {
+          state: {
+            note: {
+              id: note.id,
               title: note.title,
+              content: note.content,
               tags: note.tags,
-              updatedAt: new Date().toISOString()
-            } : n)
-            sessionStorage.setItem('notes-cache', JSON.stringify(updated))
-          }
+              createdAt: note.createdAt,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        })
+        try {
+          updateNotesCache((list) =>
+            list.map((n) =>
+              n.id === note.id
+                ? toNoteSummary({
+                    ...n,
+                    title: note.title,
+                    tags: note.tags,
+                    content: note.content,
+                    updatedAt: new Date().toISOString(),
+                  })
+                : n
+            )
+          )
         } catch {}
       }, 1500)
-      
     } catch (err: unknown) {
       console.error('Save note error:', err)
       if (err && typeof err === 'object' && 'response' in err) {
-        const errorWithResponse = err as { response?: { data?: { error?: string }; status?: number } }
+        const errorWithResponse = err as {
+          response?: { data?: { error?: string }; status?: number }
+        }
         console.error('Error response:', errorWithResponse.response?.data)
         console.error('Error status:', errorWithResponse.response?.status)
-        
+
         if (errorWithResponse.response?.status === 401) {
           setError('未授权访问，请重新登录')
         } else if (errorWithResponse.response?.status === 404) {
@@ -363,15 +483,19 @@ const Edit: React.FC = () => {
     }
   }
 
-  const handleBack = () => {
-    if (note) {
-      navigate(`/notes/${note.id}`, { state: { note } })
-    } else {
+  const handleBack = async () => {
+    if (!(await confirmDiscardChanges())) return
+
+    if (isNewNote || !note?.id) {
       navigate('/notes')
+      return
     }
+
+    navigate(`/notes/${note.id}`, { state: { note } })
   }
 
-  const handleHome = () => {
+  const handleHome = async () => {
+    if (!(await confirmDiscardChanges())) return
     navigate('/notes')
   }
 
@@ -379,22 +503,57 @@ const Edit: React.FC = () => {
     setIsSettingsOpen(true)
   }
 
-  if (loading) {
+  if (loading && !note) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" text="加载笔记中..." />
+      <div
+        className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60"
+        style={{
+          backgroundImage: "var(--app-bg-image, url('/background.webp'))",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+        }}
+      >
+        <header className="border-b border-white/30 bg-white/30 shadow-sm backdrop-blur-md">
+          <div className="w-full">
+            <div className="flex h-16 items-center">
+              <Button onClick={handleBack} variant="primary">
+                <ArrowLeft className="mr-2 size-4" />
+                返回
+              </Button>
+              <div className="flex flex-1 justify-center px-2">
+                <span className="font-semibold text-gray-900">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="w-full">
+          <div className="w-full pb-6">
+            <div
+              data-layout-card
+              className="overflow-hidden rounded-lg border border-white/40 bg-white/60 shadow backdrop-blur-md"
+            >
+              <Loading inline size="md" text="加载笔记中..." />
+            </div>
+          </div>
+        </main>
       </div>
     )
   }
 
   if (!note) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="font-bold text-gray-900 mb-4" style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.25)' }}>笔记不存在</h2>
-          <p className="text-gray-600 mb-6">您要查看的笔记可能已被删除或不存在。</p>
+          <h2
+            className="mb-4 font-bold text-gray-900"
+            style={{ fontSize: 'calc(var(--global-font-size, 16px) * 1.25)' }}
+          >
+            笔记不存在
+          </h2>
+          <p className="mb-6 text-gray-600">您要查看的笔记可能已被删除或不存在。</p>
           <Button onClick={handleBack} variant="secondary">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 size-4" />
             返回笔记列表
           </Button>
         </div>
@@ -403,59 +562,51 @@ const Edit: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60" style={{ backgroundImage: "var(--app-bg-image, url('/background.webp'))", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
-      <header className="bg-white/30 backdrop-blur-md shadow-sm border-b border-white/30">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-100/60 to-gray-200/60"
+      style={{
+        backgroundImage: "var(--app-bg-image, url('/background.webp'))",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      <header className="border-b border-white/30 bg-white/30 shadow-sm backdrop-blur-md">
         <div className="w-full">
-          <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
-            <Button
-              onClick={handleBack}
-              variant="ghost"
-              size="lg"
-              className="-ml-4 sm:-ml-6 lg:-ml-8"
-            >
-              <ArrowLeft className="h-6 w-6 mr-2" />
+          <div className="flex h-16 items-center">
+            <Button onClick={handleBack} variant="primary">
+              <ArrowLeft className="mr-2 size-4" />
               返回
             </Button>
-            <Button
-              onClick={handleHome}
-              variant="ghost"
-              size="lg"
-              className="ml-2"
-            >
-              <Home className="h-6 w-6 mr-2" />
+            <Button onClick={handleHome} variant="primary" className="ml-2">
+              <Home className="mr-2 size-4" />
               首页
             </Button>
-            <div className="flex-1 flex flex-col items-center space-y-2">
-              <label htmlFor="note-title" className="sr-only">笔记标题</label>
+            <div className="flex flex-1 flex-col items-center space-y-2">
+              <label htmlFor="note-title" className="sr-only">
+                笔记标题
+              </label>
               <input
                 id="note-title"
                 type="text"
                 value={note.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="输入笔记标题..."
-                className="title-input font-semibold bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-center max-w-md"
-                style={{ 
+                className="title-input max-w-md border-none bg-transparent text-center font-semibold text-gray-900 placeholder-gray-400 outline-none"
+                style={{
                   fontSize: 'calc(var(--global-font-size, 16px) * 1.5)',
                   fontFamily: 'var(--editor-font-family, inherit)',
-                  lineHeight: 'var(--global-line-height, 1.6)'
+                  lineHeight: 'var(--global-line-height, 1.6)',
                 }}
               />
-
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                onClick={handleSave}
-                loading={saving}
-                variant="success"
-              >
-                <Save className="h-4 w-4 mr-2" />
+              <Button onClick={handleSave} loading={saving} variant="success">
+                <Save className="mr-2 size-4" />
                 保存
               </Button>
-              <Button
-                onClick={handleSettings}
-                variant="secondary"
-              >
-                <Settings className="h-4 w-4 mr-2" />
+              <Button onClick={handleSettings} variant="primary">
+                <Settings className="mr-2 size-4" />
                 设置
               </Button>
             </div>
@@ -463,53 +614,86 @@ const Edit: React.FC = () => {
         </div>
       </header>
 
-      <main style={{ 
-        marginLeft: isDesktop ? mainMarginLeft : '0px',
-        width: isDesktop ? `calc(100% - ${mainMarginLeft})` : '100%'
-      }}>
-        <div className={`${isDesktop ? 'w-full' : 'max-w-7xl mx-auto'} ${isDesktop ? 'px-0' : 'px-8'} pt-0 pb-[15px]`}>
+      <main className="w-full">
+        <div className="w-full pb-6">
+          {conflictWarning && (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-4">
+              <div className="text-amber-800">{conflictWarning}</div>
+            </div>
+          )}
+
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4">
               <div className="text-red-600">{error}</div>
             </div>
           )}
 
-          <div className="bg-white/30 backdrop-blur-md rounded-lg shadow border border-white/30">
-            {editorReady ? (
-              <NotesEditor
-                value={note.content}
-                onChange={handleContentChange}
-                placeholder="开始编写您的笔记..."
-                tags={note.tags}
-                tagInput={tagInput}
-                onTagInputChange={(value) => setTagInput(value)}
-                onAddTag={handleAddTag}
-                onRemoveTag={handleRemoveTag}
-                onTagInputKeyPress={handleTagInputKeyPress}
-              />
-            ) : (
-              <div className="p-8 text-center">
-                <Loading size="md" text="初始化编辑器中..." />
-              </div>
-            )}
+          <div
+            data-layout-card
+            className="flex flex-col overflow-hidden border-y border-white/30 bg-white/30 shadow backdrop-blur-md md:flex-row md:items-stretch"
+            data-edit-row
+          >
+            <EditorToolbar embedded />
+
+            <div className="min-w-0 flex-1 md:border-l md:border-white/30">
+              {contentLoading ? (
+                <div className="p-8 text-center">
+                  <Loading size="md" text="加载笔记中..." inline />
+                </div>
+              ) : editorReady ? (
+                <NotesEditor
+                  value={note.content ?? ''}
+                  onChange={handleContentChange}
+                  placeholder="开始编写您的笔记..."
+                  tags={note.tags}
+                  tagInput={tagInput}
+                  onTagInputChange={(value) => setTagInput(value)}
+                  onAddTag={handleAddTag}
+                  onRemoveTag={handleRemoveTag}
+                  onTagInputKeyPress={handleTagInputKeyPress}
+                />
+              ) : (
+                <div className="p-8 text-center">
+                  <Loading size="md" text="初始化编辑器中..." />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
 
-      <EditorToolbar onInsertText={handleInsertText} />
-
       <Suspense fallback={null}>
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-        />
+        <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </Suspense>
 
       {showSuccessMessage && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+        <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-green-500 px-6 py-3 text-white shadow-lg">
           保存成功！
         </div>
       )}
+
+      <AlertModal
+        isOpen={modal.alertState.isOpen}
+        onClose={modal.closeAlert}
+        title={modal.alertState.title}
+        message={modal.alertState.message}
+        type={modal.alertState.type}
+        confirmText={modal.alertState.confirmText}
+        onConfirm={modal.alertState.onConfirm}
+      />
+
+      <ConfirmModal
+        isOpen={modal.confirmState.isOpen}
+        onClose={modal.closeConfirm}
+        title={modal.confirmState.title}
+        message={modal.confirmState.message}
+        type={modal.confirmState.type}
+        confirmText={modal.confirmState.confirmText}
+        cancelText={modal.confirmState.cancelText}
+        onConfirm={modal.confirmState.onConfirm || (() => {})}
+        onCancel={modal.confirmState.onCancel}
+      />
+
       <BackToTop />
     </div>
   )
